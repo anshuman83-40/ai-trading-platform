@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>TradePulse — Login</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&display=swap');
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080c10;--bg2:#0d1117;--bg3:#111820;
+  --border:rgba(0,200,120,0.15);--border2:rgba(0,200,120,0.3);
+  --green:#00e676;--red:#ff4b4b;--amber:#ffb800;
+  --text:#e8f0e8;--muted:#5a7060;
+  --mono:'Share Tech Mono',monospace;
+  --sans:'Barlow',sans-serif;
+  --cond:'Barlow Condensed',sans-serif;
+}
+html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--text);overflow-x:hidden}
+
+/* GRID BG */
+body::before{content:'';position:fixed;inset:0;z-index:0;
+  background-image:linear-gradient(rgba(0,230,118,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,230,118,0.04) 1px,transparent 1px);
+  background-size:44px 44px;animation:gridMove 25s linear infinite;pointer-events:none}
+@keyframes gridMove{from{background-position:0 0}to{background-position:44px 44px}}
+
+/* SCANLINES */
+body::after{content:'';position:fixed;inset:0;z-index:0;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.04) 2px,rgba(0,0,0,0.04) 4px);
+  pointer-events:none}
+
+.page{position:relative;z-index:1;display:grid;grid-template-columns:1fr 1fr;min-height:100vh}
+
+/* LEFT */
+.left{background:linear-gradient(155deg,#091510 0%,#080c10 60%);border-right:1px solid var(--border);
+  padding:56px 48px;display:flex;flex-direction:column;justify-content:center;gap:36px}
+.brand-logo{font-family:var(--cond);font-size:40px;font-weight:700;letter-spacing:6px;
+  color:var(--green);text-shadow:0 0 30px rgba(0,230,118,0.35)}
+.brand-logo span{color:var(--text)}
+.brand-tag{font-family:var(--mono);font-size:11px;letter-spacing:3px;color:var(--muted);margin-top:5px}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{background:rgba(0,230,118,0.04);border:1px solid var(--border);border-radius:4px;padding:14px 16px}
+.stat-val{font-family:var(--mono);font-size:20px;color:var(--text);margin-bottom:3px}
+.stat-val.up{color:var(--green)}
+.stat-lbl{font-family:var(--cond);font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase}
+.features{display:flex;flex-direction:column;gap:9px}
+.feat{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--muted)}
+.feat-icon{color:var(--green);font-size:13px;flex-shrink:0}
+.disc{font-family:var(--mono);font-size:10px;color:var(--muted);opacity:0.4;letter-spacing:1px}
+
+/* RIGHT */
+.right{display:flex;align-items:center;justify-content:center;padding:40px}
+.card{width:100%;max-width:400px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:34px}
+
+/* TABS */
+.tabs{display:flex;margin-bottom:26px;border-bottom:1px solid var(--border)}
+.tab{flex:1;background:none;border:none;padding:10px;cursor:pointer;
+  font-family:var(--cond);font-size:13px;letter-spacing:3px;color:var(--muted);
+  text-transform:uppercase;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.2s}
+.tab.active{color:var(--green);border-bottom-color:var(--green)}
+.tab:hover{color:var(--text)}
+
+/* FORM */
+.fg{margin-bottom:16px}
+.fl{display:block;font-family:var(--cond);font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:5px;text-transform:uppercase}
+.fi{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:3px;
+  height:42px;padding:0 13px;color:var(--text);font-family:var(--sans);font-size:14px;
+  outline:none;transition:border-color 0.2s;-webkit-appearance:none}
+.fi:focus{border-color:var(--green);box-shadow:0 0 10px rgba(0,230,118,0.1)}
+.fi option{background:var(--bg2)}
+select.fi{cursor:pointer}
+
+.rem-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;font-size:12px}
+.ck-lbl{display:flex;align-items:center;gap:6px;color:var(--muted);cursor:pointer}
+.ck-lbl input{accent-color:var(--green)}
+.fgt{color:var(--muted);text-decoration:none;font-size:12px;transition:color 0.2s}
+.fgt:hover{color:var(--green)}
+
+.btn-login{width:100%;height:46px;background:var(--green);color:#000;border:none;border-radius:3px;
+  cursor:pointer;font-family:var(--cond);font-size:14px;font-weight:700;letter-spacing:3px;
+  text-transform:uppercase;transition:all 0.2s;margin-bottom:14px}
+.btn-login:hover{background:#00ff88;box-shadow:0 0 20px rgba(0,230,118,0.3)}
+
+.divider{text-align:center;position:relative;margin:0 0 14px;font-size:11px;color:var(--muted)}
+.divider::before,.divider::after{content:'';position:absolute;top:50%;width:42%;height:0.5px;background:var(--border)}
+.divider::before{left:0}.divider::after{right:0}
+
+.demo-btn{display:flex;align-items:center;gap:14px;padding:13px;border:1px dashed var(--border);
+  border-radius:3px;cursor:pointer;transition:border-color 0.2s;width:100%;background:none}
+.demo-btn:hover{border-color:var(--green)}
+.demo-icon{color:var(--green);font-size:20px;line-height:1}
+.demo-title{font-family:var(--cond);font-size:13px;letter-spacing:2px;color:var(--text);display:block}
+.demo-sub{font-size:11px;color:var(--muted);margin-top:2px;display:block}
+
+.err{margin-top:12px;font-size:12px;color:var(--red);font-family:var(--mono);letter-spacing:1px;
+  min-height:18px;text-align:center}
+
+/* BLINK */
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+.live-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);
+  box-shadow:0 0 8px var(--green);animation:blink 1.4s infinite;vertical-align:middle;margin-right:4px}
+
+@media(max-width:768px){.page{grid-template-columns:1fr}.left{display:none}}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- LEFT BRANDING -->
+  <div class="left">
+    <div>
+      <div class="brand-logo">TRADE<span>PULSE</span></div>
+      <div class="brand-tag">INTRADAY INTELLIGENCE PLATFORM</div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat"><div class="stat-val" id="lNifty">22,608</div><div class="stat-lbl">NIFTY 50</div></div>
+      <div class="stat"><div class="stat-val" id="lSensex">74,520</div><div class="stat-lbl">SENSEX</div></div>
+      <div class="stat"><div class="stat-val up">+0.42%</div><div class="stat-lbl">TODAY</div></div>
+      <div class="stat"><div class="stat-val"><span class="live-dot"></span>LIVE</div><div class="stat-lbl">MARKET</div></div>
+    </div>
+    <div class="features">
+      <div class="feat"><span class="feat-icon">◈</span> Real-time Buy / Sell signals</div>
+      <div class="feat"><span class="feat-icon">◈</span> Live candlestick price charts</div>
+      <div class="feat"><span class="feat-icon">◈</span> Portfolio P&amp;L tracker</div>
+      <div class="feat"><span class="feat-icon">◈</span> Price alerts &amp; notifications</div>
+      <div class="feat"><span class="feat-icon">◈</span> Market depth &amp; order book</div>
+    </div>
+    <div class="disc">For educational purposes only. Not financial advice.</div>
+  </div>
+
+  <!-- RIGHT FORM -->
+  <div class="right">
+    <div class="card">
+      <div class="tabs">
+        <button class="tab active" id="tabLogin" onclick="switchTab('login')">LOGIN</button>
+        <button class="tab" id="tabSignup" onclick="switchTab('signup')">SIGN UP</button>
+      </div>
+
+      <!-- LOGIN -->
+      <div id="loginForm">
+        <div class="fg"><label class="fl">Email Address</label><input type="email" class="fi" id="loginEmail" placeholder="trader@example.com"/></div>
+        <div class="fg"><label class="fl">Password</label><input type="password" class="fi" id="loginPass" placeholder="••••••••"/></div>
+        <div class="rem-row">
+          <label class="ck-lbl"><input type="checkbox"/> Remember me</label>
+          <a href="#" class="fgt">Forgot password?</a>
+        </div>
+        <button class="btn-login" onclick="handleLogin()" id="loginBtn">LOGIN TO DASHBOARD</button>
+        <div class="divider">OR</div>
+        <button class="demo-btn" onclick="demoLogin()">
+          <span class="demo-icon">▶</span>
+          <span><span class="demo-title">DEMO ACCESS</span><span class="demo-sub">Enter without registration</span></span>
+        </button>
+      </div>
+
+      <!-- SIGNUP -->
+      <div id="signupForm" style="display:none">
+        <div class="fg"><label class="fl">Full Name</label><input type="text" class="fi" id="signupName" placeholder="Your Full Name"/></div>
+        <div class="fg"><label class="fl">Email Address</label><input type="email" class="fi" id="signupEmail" placeholder="trader@example.com"/></div>
+        <div class="fg"><label class="fl">Password</label><input type="password" class="fi" id="signupPass" placeholder="Minimum 6 characters"/></div>
+        <div class="fg">
+          <label class="fl">Trading Experience</label>
+          <select class="fi" id="signupExp">
+            <option value="">Select level...</option>
+            <option>Beginner (0–1 year)</option>
+            <option>Intermediate (1–3 years)</option>
+            <option>Expert (3+ years)</option>
+          </select>
+        </div>
+        <button class="btn-login" onclick="handleSignup()">CREATE ACCOUNT</button>
+      </div>
+
+      <div class="err" id="errMsg"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Animate live stats
+setInterval(()=>{
+  const n=document.getElementById('lNifty'), s=document.getElementById('lSensex');
+  if(n) n.textContent=(22600+Math.random()*40).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+  if(s) s.textContent=(74500+Math.random()*80).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+},2000);
+
+function switchTab(t){
+  document.getElementById('loginForm').style.display  = t==='login'  ?'block':'none';
+  document.getElementById('signupForm').style.display = t==='signup' ?'block':'none';
+  document.getElementById('tabLogin').classList.toggle('active',  t==='login');
+  document.getElementById('tabSignup').classList.toggle('active', t==='signup');
+  document.getElementById('errMsg').textContent='';
+}
+function showErr(m){document.getElementById('errMsg').textContent=m}
+
+function handleLogin(){
+  const email=document.getElementById('loginEmail').value.trim();
+  const pass =document.getElementById('loginPass').value;
+  if(!email||!pass){showErr('⚠ Please fill all fields');return}
+  const users=JSON.parse(localStorage.getItem('tp_users')||'[]');
+  const user =users.find(u=>u.email===email&&u.pass===pass);
+  if(!user){showErr('⚠ Invalid email or password');return}
+  localStorage.setItem('tp_loggedin',JSON.stringify({name:user.name,email:user.email}));
+  document.getElementById('loginBtn').textContent='LOADING...';
+  setTimeout(()=>{window.location.href='index.html'},500);
+}
+function handleSignup(){
+  const name =document.getElementById('signupName').value.trim();
+  const email=document.getElementById('signupEmail').value.trim();
+  const pass =document.getElementById('signupPass').value;
+  if(!name||!email||!pass){showErr('⚠ Please fill all fields');return}
+  if(pass.length<6){showErr('⚠ Password must be 6+ characters');return}
+  const users=JSON.parse(localStorage.getItem('tp_users')||'[]');
+  if(users.find(u=>u.email===email)){showErr('⚠ Email already registered');return}
+  users.push({name,email,pass});
+  localStorage.setItem('tp_users',JSON.stringify(users));
+  localStorage.setItem('tp_loggedin',JSON.stringify({name,email}));
+  setTimeout(()=>{window.location.href='index.html'},300);
+}
+function demoLogin(){
+  localStorage.setItem('tp_loggedin',JSON.stringify({name:'Demo Trader',email:'demo@tradepulse.in'}));
+  window.location.href='index.html';
+}
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Enter')return;
+  const isLogin=document.getElementById('loginForm').style.display!=='none';
+  isLogin?handleLogin():handleSignup();
+});
+</script>
+</body>
+</html>
