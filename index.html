@@ -424,7 +424,8 @@ const LP={};
 Object.keys(DB).forEach(s=>{LP[s]=DB[s].p});
 
 // ── REAL DATA FROM BACKEND (server.py → Yahoo Finance) ──
-const BACKEND='http://localhost:5000/api';
+// served by server.py (localhost:5000, phone on Wi-Fi, or Render) → same site; opened as a file or via Live Server → backend on port 5000
+const BACKEND=(location.protocol==='file:'||location.port==='5500')?`http://${location.hostname||'localhost'}:5000/api`:'/api';
 let LIVE=false; // true once real prices have loaded
 function fmtVol(v){v=+v||0;if(v>=1e7)return(v/1e7).toFixed(1)+'Cr';if(v>=1e5)return(v/1e5).toFixed(1)+'L';if(v>=1e3)return(v/1e3).toFixed(1)+'K';return String(v)}
 async function api(path,ms=15000){

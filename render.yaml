@@ -1,0 +1,9 @@
+# Render.com deployment — https://render.com
+services:
+  - type: web
+    name: tradepulse
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn server:app --workers 1 --threads 4 --timeout 120
+    healthCheckPath: /api/status

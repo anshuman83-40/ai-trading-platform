@@ -5,7 +5,7 @@
 #  Run: python server.py   →   http://localhost:5000
 # ============================================================
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory, abort
 from flask_cors import CORS
 from email.utils import parsedate_to_datetime
 from urllib.parse import quote_plus
@@ -409,6 +409,23 @@ def get_groww_portfolio():
     except Exception as e:
         return jsonify({"error": str(e), "holdings": []}), 500
 
+# ============================================================
+#  WEBSITE — open http://<this-pc-ip>:5000 on any device on your Wi-Fi
+#  (only the website files are served — never server.py itself)
+# ============================================================
+SITE_DIR = os.path.dirname(os.path.abspath(__file__))
+SITE_FILES = {"index.html", "login.html", "style.css", "script.js", "login.js", "login.css"}
+
+@app.route("/")
+def site_home():
+    return send_from_directory(SITE_DIR, "login.html")
+
+@app.route("/<name>")
+def site_file(name):
+    if name not in SITE_FILES:
+        abort(404)
+    return send_from_directory(SITE_DIR, name)
+
 @app.route("/api/status")
 def get_status():
     return jsonify({
@@ -420,7 +437,17 @@ def get_status():
 
 
 if __name__ == "__main__":
+    import socket
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        lan_ip = s.getsockname()[0]
+        s.close()
+    except Exception:
+        lan_ip = "YOUR-PC-IP"
     print("\n  ✅ TradePulse backend — REAL prices from Yahoo Finance")
-    print("  🌐 http://localhost:5000/api/status")
+    print("  💻 On this PC : http://localhost:5000")
+    print(f"  📱 On phone   : http://{lan_ip}:5000   (same Wi-Fi)")
+    print("  🌐 API status : http://localhost:5000/api/status")
     print("  📊 http://localhost:5000/api/live/all\n")
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=True)
