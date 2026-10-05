@@ -16,6 +16,7 @@ import requests
 import time
 import os
 import re
+import json
 import html as html_lib
 from datetime import date, datetime, timedelta, timezone
 
@@ -103,9 +104,27 @@ def peek(key):
         hit = _cache.get(key)
     return hit[1] if hit else None
 
+def store(key, value):
+    with _lock:
+        _cache[key] = (time.time(), value)
+
+# ============================================================
+#  DATA-SOURCE HEALTH — what worked / failed last time (see /api/health)
+# ============================================================
+IST = timezone(timedelta(hours=5, minutes=30))
+_health = {}
+
+def _mark(source, ok, info=""):
+    _health[source] = {"ok": ok, "at": datetime.now(IST).strftime("%d %b %H:%M:%S IST"), "info": str(info)[:200]}
+
+# NSE / BSE often silently ignore requests from cloud servers (like Render) instead of refusing them,
+# so every outside website gets a short connect + read time limit and is only called from background threads
+QUICK = (5, 15)
+
 # ============================================================
 #  ALL INDIAN STOCKS — official NSE + BSE lists (~5,300 companies)
 #  Merged by ISIN so a company listed on both appears once (NSE preferred)
+#  Loaded by the background thread — user requests never wait for it
 # ============================================================
 NSE_LIST_URL = "https://archives.nseindia.com/content/equities/EQUITY_L.csv"
 BSE_LIST_URL = ("https://api.bseindia.com/BseIndiaAPI/api/ListofScripData/w"
@@ -116,45 +135,76 @@ BROWSER_HEADERS = {
     "Referer": "https://www.bseindia.com/", "Origin": "https://www.bseindia.com",
     "Accept": "application/json, text/csv, */*",
 }
+DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+BSE_SNAPSHOT = os.path.join(DATA_DIR, "bse_scrips.json")   # saved copy for servers that BSE blocks (e.g. Render)
+FALLBACK_UNIVERSE = {s: {"name": NEWS_NAMES.get(s, s), "exchange": "NSE", "yahoo": y, "bse_code": None}
+                     for s, y in STOCKS.items()}
 
 def _nse_csv(url):
-    r = requests.get(url, headers=BROWSER_HEADERS, timeout=20)
+    r = requests.get(url, headers=BROWSER_HEADERS, timeout=QUICK)
     r.raise_for_status()
     df = pd.read_csv(io.StringIO(r.text))
     df.columns = [c.strip() for c in df.columns]
     return df
 
+def _bse_rows():
+    """Active BSE equities as [symbol, name, isin, code]: live from BSE, else the saved copy."""
+    err = "empty response"
+    try:
+        live = requests.get(BSE_LIST_URL, headers=BROWSER_HEADERS, timeout=QUICK).json()
+        rows = [[(r.get("scrip_id") or "").strip().upper(), (r.get("Scrip_Name") or "").strip(),
+                 (r.get("ISIN_NUMBER") or "").strip(), r.get("SCRIP_CD")] for r in live if r.get("scrip_id")]
+        if rows:
+            _mark("bse_list", True, f"live from BSE: {len(rows)} scrips")
+            try:   # refresh the saved copy whenever BSE answers (e.g. on your laptop) — push it to update Render
+                os.makedirs(DATA_DIR, exist_ok=True)
+                with open(BSE_SNAPSHOT, "w", encoding="utf-8") as f:
+                    json.dump({"saved": datetime.now(IST).strftime("%Y-%m-%d"), "rows": rows}, f, separators=(",", ":"))
+            except OSError:
+                pass
+            return rows
+    except Exception as e:
+        err = e
+    try:
+        with open(BSE_SNAPSHOT, encoding="utf-8") as f:
+            snap = json.load(f)
+        _mark("bse_list", True, f"saved copy from {snap.get('saved')} ({len(snap['rows'])} scrips); live BSE failed: {err}")
+        return snap["rows"]
+    except Exception as e:
+        _mark("bse_list", False, f"live BSE failed: {err} | no saved copy: {e}")
+        return []
+
+def _load_universe():
+    out, nse_by_isin = {}, {}
+    try:
+        for _, r in _nse_csv(NSE_LIST_URL).iterrows():
+            sym = str(r["SYMBOL"]).strip()
+            out[sym] = {"name": str(r["NAME OF COMPANY"]).strip(), "exchange": "NSE",
+                        "yahoo": STOCKS.get(sym, sym + ".NS"), "bse_code": None}
+            nse_by_isin[str(r.get("ISIN NUMBER", "")).strip()] = sym
+        _mark("nse_list", True, f"{len(out)} companies")
+    except Exception as e:
+        _mark("nse_list", False, e)
+    for sym, name, isin, code in _bse_rows():
+        if not sym:
+            continue
+        if isin in nse_by_isin:                 # listed on both → keep NSE entry, mark it
+            v = out[nse_by_isin[isin]]
+            v["exchange"], v["bse_code"] = "NSE+BSE", code
+            continue
+        if sym in out:                          # same symbol, different company → keep NSE one
+            continue
+        out[sym] = {"name": name or sym, "exchange": "BSE", "yahoo": sym + ".BO", "bse_code": code}
+    return out or None
+
+def refresh_universe():
+    u = _load_universe()
+    if u:
+        store("all_stocks", u)
+
 def all_stocks():
-    """{SYMBOL: {name, exchange, yahoo, bse_code}} for every active NSE and BSE equity. Refreshed daily."""
-    def load():
-        out, nse_by_isin = {}, {}
-        try:
-            for _, r in _nse_csv(NSE_LIST_URL).iterrows():
-                sym = str(r["SYMBOL"]).strip()
-                out[sym] = {"name": str(r["NAME OF COMPANY"]).strip(), "exchange": "NSE",
-                            "yahoo": STOCKS.get(sym, sym + ".NS"), "bse_code": None}
-                nse_by_isin[str(r.get("ISIN NUMBER", "")).strip()] = sym
-        except Exception as e:
-            print(f"  [!] NSE stock list: {e}")
-        try:
-            bse = requests.get(BSE_LIST_URL, headers=BROWSER_HEADERS, timeout=30).json()
-            for r in bse:
-                sym, isin = (r.get("scrip_id") or "").strip().upper(), (r.get("ISIN_NUMBER") or "").strip()
-                if not sym:
-                    continue
-                if isin in nse_by_isin:                 # listed on both → keep NSE entry, mark it
-                    v = out[nse_by_isin[isin]]
-                    v["exchange"], v["bse_code"] = "NSE+BSE", r.get("SCRIP_CD")
-                    continue
-                if sym in out:                          # same symbol, different company → keep NSE one
-                    continue
-                out[sym] = {"name": (r.get("Scrip_Name") or sym).strip(), "exchange": "BSE",
-                            "yahoo": sym + ".BO", "bse_code": r.get("SCRIP_CD")}
-        except Exception as e:
-            print(f"  [!] BSE stock list: {e}")
-        return out or None
-    return cached("all_stocks", 86400, load) or {
-        s: {"name": NEWS_NAMES.get(s, s), "exchange": "NSE", "yahoo": y, "bse_code": None} for s, y in STOCKS.items()}
+    """{SYMBOL: {name, exchange, yahoo, bse_code}} — every NSE + BSE stock once loaded (never waits on the network)."""
+    return peek("all_stocks") or FALLBACK_UNIVERSE
 
 def search_stocks(q, limit=10):
     """Match by symbol, company name or BSE scrip code (e.g. 'tata steel', 'TATASTEEL', '500470')."""
@@ -280,19 +330,34 @@ def build_quote(symbol, df):
 # ============================================================
 _yf_lock = threading.Lock()  # yf.download uses global state — never run two at once
 _last_rate_limit = 0.0       # when Yahoo last answered "Too Many Requests"
+_waiting = [0]               # visitors' requests waiting for Yahoo — the background scan steps aside for them
+_waiting_lock = threading.Lock()
 
-def _download(tickers, **kw):
+def _download(tickers, threads=True, background=False, **kw):
     global _last_rate_limit
-    with _yf_lock:
-        data = yf.download(tickers, group_by="ticker", progress=False,
-                           threads=True, auto_adjust=False, **kw)
-        try:
-            errors = getattr(yf.shared, "_ERRORS", {}) or {}
-            if any("rate limit" in str(e).lower() or "too many requests" in str(e).lower() for e in errors.values()):
-                _last_rate_limit = time.time()
-        except Exception:
-            pass
-        return data
+    if background:                       # let any waiting visitor go first (max ~15 s)
+        for _ in range(75):
+            if not _waiting[0]:
+                break
+            time.sleep(0.2)
+    else:
+        with _waiting_lock:
+            _waiting[0] += 1
+    try:
+        with _yf_lock:
+            data = yf.download(tickers, group_by="ticker", progress=False,
+                               threads=threads, auto_adjust=False, **kw)
+            try:
+                errors = getattr(yf.shared, "_ERRORS", {}) or {}
+                if any("rate limit" in str(e).lower() or "too many requests" in str(e).lower() for e in errors.values()):
+                    _last_rate_limit = time.time()
+            except Exception:
+                pass
+            return data
+    finally:
+        if not background:
+            with _waiting_lock:
+                _waiting[0] -= 1
 
 def fetch_all_quotes():
     """One batched Yahoo call for all watchlist stocks (~2 seconds)."""
@@ -406,13 +471,14 @@ def search():
 def universe():
     s = all_stocks()
     count = lambda e: sum(1 for v in s.values() if v["exchange"] == e)
-    return jsonify({"total": len(s), "nse_only": count("NSE"), "bse_only": count("BSE"), "both": count("NSE+BSE")})
+    return jsonify({"total": len(s), "nse_only": count("NSE"), "bse_only": count("BSE"), "both": count("NSE+BSE"),
+                    "loaded": peek("all_stocks") is not None})
 
 # ============================================================
 #  MARKET MOVERS — choose NIFTY 50 / NIFTY 200 / NIFTY 500 / ALL INDIA (NSE+BSE)
 #  A background thread keeps today's % change for every stock in memory:
-#    • NIFTY 500 stocks: refreshed every 5 min  (~15 s download)
-#    • all other NSE + BSE stocks: every 15 min (~2-3 min download)
+#    • NIFTY 500 stocks: refreshed every 5 min
+#    • all other NSE + BSE stocks: every 30 min (gently, in small batches)
 # ============================================================
 INDEX_LISTS = {
     "NIFTY50":  "https://archives.nseindia.com/content/indices/ind_nifty50list.csv",
@@ -422,29 +488,33 @@ INDEX_LISTS = {
 UNIVERSE_NAMES = {"NIFTY50": "NIFTY 50", "NIFTY200": "NIFTY 200", "NIFTY500": "NIFTY 500", "ALL": "ALL INDIA (NSE+BSE)"}
 _moves = {}          # symbol -> {"symbol", "price", "change_pct", "volume", "exchange"}
 _full_scan_done = False
+ON_RENDER = bool(os.environ.get("RENDER"))   # Render sets this; its free server is small, so start gently
+
+def refresh_index_lists():
+    for key, url in INDEX_LISTS.items():
+        try:
+            store(f"members:{key}", [str(s).strip() for s in _nse_csv(url)["Symbol"]])
+            _mark(f"list_{key.lower()}", True, "ok")
+        except Exception as e:
+            _mark(f"list_{key.lower()}", False, e)
 
 def index_members(key):
-    def load():
-        try:
-            return [str(s).strip() for s in _nse_csv(INDEX_LISTS[key])["Symbol"]]
-        except Exception as e:
-            print(f"  [!] {key} list: {e}")
-            return None
-    return cached(f"members:{key}", 86400, load) or []
+    """Index constituents once loaded by the background thread (never waits on the network)."""
+    return peek(f"members:{key}") or []
 
-def refresh_moves(symbols, pause=0.0):
-    """Download today's change for these symbols in chunks of 100 (live requests run in between)."""
+def refresh_moves(symbols, pause=0.0, batch=50):
+    """Download today's change for these symbols in small batches (live requests run in between)."""
     stocks = all_stocks()
     tick = {s: (stocks.get(s, {}).get("yahoo") or STOCKS.get(s, s + ".NS")) for s in symbols}
     items = list(tick.items())
-    for i in range(0, len(items), 100):
-        chunk = items[i:i + 100]
+    for i in range(0, len(items), batch):
+        chunk = items[i:i + batch]
         if i and pause:
-            time.sleep(pause)                                   # be gentle with Yahoo
+            time.sleep(pause)                                   # be gentle with Yahoo and the server CPU
         try:
-            data = _download([t for _, t in chunk], period="5d", interval="1d")
+            data = _download([t for _, t in chunk], threads=8, background=True, period="5d", interval="1d")
         except Exception as e:
-            print(f"  [!] movers chunk: {e}")
+            _mark("yahoo_movers", False, e)
             continue
         if time.time() - _last_rate_limit < 5:
             print("  [!] Yahoo rate limit hit — pausing the market scan for 2 minutes")
@@ -463,19 +533,26 @@ def refresh_moves(symbols, pause=0.0):
                 pass
 
 def _movers_worker():
+    """Background thread: stock lists once a day, NIFTY 500 every 5 min, the rest of India every 30 min."""
     global _full_scan_done
-    all_stocks()  # warm the NSE+BSE list so the first search is instant
+    # Render's free server has 0.1 CPU: start the full scan after 5 min, run it hourly and slowly
+    first_full_scan, every, gap = (1, 12, 2.5) if ON_RENDER else (0, 6, 1.5)
     loop = 0
     while True:
         try:
+            if loop % 288 == 0:                                  # at start, then once a day
+                refresh_universe()
+                refresh_index_lists()
             n500 = index_members("NIFTY500") or list(STOCKS)
-            refresh_moves(n500)
-            if loop % 6 == 0:                                   # every ~30 min: the rest of India
+            refresh_moves(n500, pause=0.5)
+            _mark("yahoo_movers", True, f"NIFTY 500 updated ({len(_moves)} stocks known)")
+            if loop % every == first_full_scan:                  # the rest of India (every 30 min; hourly on Render)
                 n500_set = set(n500)
-                refresh_moves([s for s in all_stocks() if s not in n500_set], pause=1.0)
+                refresh_moves([s for s in all_stocks() if s not in n500_set], pause=gap)
                 _full_scan_done = True
+                _mark("yahoo_movers", True, f"full India scan done ({len(_moves)} stocks)")
         except Exception as e:
-            print(f"  [!] movers: {e}")
+            _mark("yahoo_movers", False, e)
         loop += 1
         time.sleep(300)
 
@@ -514,10 +591,6 @@ def get_gainers():
 def get_losers():
     q = sorted(get_movers(request.args.get("universe", "NIFTY500"))[0], key=lambda x: x["change_pct"])
     return jsonify([x for x in q if x["change_pct"] < 0][:5])
-
-# Start the movers thread (skip the parent process of Flask's debug reloader)
-if __name__ != "__main__" or os.environ.get("WERKZEUG_RUN_MAIN") == "true":
-    threading.Thread(target=_movers_worker, daemon=True).start()
 
 # ============================================================
 #  ROUTE — real news + VADER sentiment (like sentiment_analyzer.py)
@@ -593,7 +666,6 @@ def get_news():
 # ============================================================
 IPO_GMP_URL = "https://www.investorgain.com/report/live-ipo-gmp/331/"
 IPO_SITE = "https://www.investorgain.com"
-IST = timezone(timedelta(hours=5, minutes=30))
 
 def ist_today():
     return datetime.now(IST).date()
@@ -680,7 +752,7 @@ def _ipo_row(name, kind, status, price, lot, size_cr, sub, gmp, gmp_pct, gmp_low
     }
 
 def _ipos_investorgain():
-    r = requests.get(IPO_GMP_URL, timeout=20, headers={
+    r = requests.get(IPO_GMP_URL, timeout=QUICK, headers={
         "User-Agent": BROWSER_HEADERS["User-Agent"], "Accept": "text/html", "Accept-Language": "en-US,en;q=0.9"})
     r.raise_for_status()
     page = re.sub(r'<(a|span)[^>]*data-cfemail="([0-9a-f]+)"[^>]*>.*?</\1>', _cf_decode, r.text, flags=re.S)
@@ -743,7 +815,7 @@ def _ipos_nse():
     s = requests.Session()
     s.headers.update({"User-Agent": BROWSER_HEADERS["User-Agent"], "Accept": "application/json, text/plain, */*",
                       "Referer": "https://www.nseindia.com/market-data/all-upcoming-issues-ipo"})
-    s.get("https://www.nseindia.com", timeout=15)        # sets the cookies NSE requires
+    s.get("https://www.nseindia.com", timeout=(5, 10))   # sets the cookies NSE requires
     base = "https://www.nseindia.com/api/"
     today = ist_today()
     nse_day = lambda t: datetime.strptime(t.strip(), "%d-%b-%Y").date() if t and t.strip() not in ("-", "") else None
@@ -768,11 +840,11 @@ def _ipos_nse():
             open_d=open_d, close_d=close_d, allot_d=allot_d, listing_d=listing_d,
             url=f"https://www.nseindia.com/market-data/all-upcoming-issues-ipo", symbol=sym))
 
-    for r in s.get(base + "ipo-current-issue", timeout=15).json() + \
-             s.get(base + "all-upcoming-issues?category=ipo", timeout=15).json():
+    for r in s.get(base + "ipo-current-issue", timeout=(5, 10)).json() + \
+             s.get(base + "all-upcoming-issues?category=ipo", timeout=(5, 10)).json():
         if r.get("series") in ("EQ", "SME"):
             add(r, r.get("issueStartDate"), r.get("issueEndDate"), r.get("issuePrice"), r.get("noOfTime"))
-    past = [r for r in s.get(base + "public-past-issues", timeout=15).json() if r.get("securityType") in ("EQ", "SME")]
+    past = [r for r in s.get(base + "public-past-issues", timeout=(5, 10)).json() if r.get("securityType") in ("EQ", "SME")]
     for r in past[:40]:
         add(r, r.get("ipoStartDate"), r.get("ipoEndDate"), r.get("issuePrice") if (r.get("issuePrice") or "-").strip() != "-"
             else r.get("priceRange"), listing_txt=r.get("listingDate"))
@@ -801,7 +873,7 @@ def ipo_registrar(detail_url):
         return None
     if detail_url in _registrars:
         return _registrars[detail_url]
-    page = requests.get(detail_url, timeout=20, headers={
+    page = requests.get(detail_url, timeout=QUICK, headers={
         "User-Agent": BROWSER_HEADERS["User-Agent"], "Accept": "text/html"}).text
     names = re.findall(r'ipo-registrar-review/\d+/\d+/\\?"\s+title=\\?"([^"\\]+?) Review', page)
     direct = [u for u in re.findall(r'\\?"ipo_allotment_url\\?"\s*:\s*\\?"([^"\\]*)', page) if re.match(r"^https?://", u)]
@@ -833,20 +905,35 @@ def _short_registrar(name):
     words = name.replace(".", " ").split()
     return " ".join(words[:2]) if words[0].upper() == "MUFG" else words[0]
 
+_ipo_tried = False   # has the background thread finished at least one attempt?
+
+def refresh_ipos():
+    """Fetch IPO data (investorgain → NSE fallback). Runs in the background thread, never on a user request."""
+    global _ipo_tried
+    for source, fn in (("investorgain.com", _ipos_investorgain), ("nseindia.com", _ipos_nse)):
+        tag = "ipo_" + source.split(".")[0]
+        try:
+            rows = fn()
+            if rows:
+                store("ipos", {"source": source, "rows": rows,
+                               "fetched": datetime.now(IST).strftime("%d %b %Y, %I:%M %p IST")})
+                _mark(tag, True, f"{len(rows)} IPOs")
+                _ipo_tried = True
+                if source == "investorgain.com":
+                    _prefetch_registrars(rows)        # registrar links for open / closed IPOs
+                return
+            _mark(tag, False, "no IPO rows found")
+        except Exception as e:
+            _mark(tag, False, e)
+    _ipo_tried = True
+
+def _ipo_worker():
+    while True:
+        refresh_ipos()
+        time.sleep(600)                    # every 10 minutes
+
 def fetch_ipos():
-    def load():
-        for source, fn in (("investorgain.com", _ipos_investorgain), ("nseindia.com", _ipos_nse)):
-            try:
-                rows = fn()
-                if rows:
-                    if source == "investorgain.com":
-                        threading.Thread(target=_prefetch_registrars, args=(rows,), daemon=True).start()
-                    return {"source": source, "rows": rows,
-                            "fetched": datetime.now(IST).strftime("%d %b %Y, %I:%M %p IST")}
-            except Exception as e:
-                print(f"  [!] IPO source {source}: {e}")
-        return None
-    return cached("ipos", 600, load)       # refresh every 10 minutes
+    return peek("ipos")
 
 def _with_registrar(r):
     info = _registrars.get(r["url"]) or {}
@@ -860,7 +947,7 @@ def _with_registrar(r):
 def ipo():
     d = fetch_ipos()
     if not d:
-        return jsonify({"error": "IPO data is unavailable right now"}), 503
+        return jsonify({"error": "unavailable" if _ipo_tried else "loading"}), 503
     rows = [_with_registrar(r) for r in d["rows"]]
     far = "9999-12-31"
     pick = lambda st: [r for r in rows if r["status"] == st]
@@ -969,8 +1056,31 @@ def get_status():
         "backend":    "running",
         "data":       "yahoo_finance (real NSE prices, ~15 min delay possible)",
         "groww_api":  "connected" if is_groww_configured() else "not configured — orders simulated",
-        "version":    "TradePulse v3.1"
+        "version":    "TradePulse v3.2"
     })
+
+@app.route("/api/health")
+def health():
+    """Which outside data sources work right now — useful when the site runs on Render."""
+    try:
+        import resource                                   # Linux only (Render)
+        peak_mb = round(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024)
+    except Exception:
+        peak_mb = None
+    with _lock:
+        movers_known = len(_moves)
+    d = peek("ipos")
+    return jsonify({
+        "sources": _health,
+        "stocks_loaded": len(all_stocks()), "movers_known": movers_known, "full_scan_done": _full_scan_done,
+        "ipo_source": d["source"] if d else None, "registrars_known": len(_registrars),
+        "peak_memory_mb": peak_mb, "on_render": ON_RENDER,
+    })
+
+# Start the background threads (skip the parent process of Flask's debug reloader)
+if __name__ != "__main__" or os.environ.get("WERKZEUG_RUN_MAIN") == "true":
+    threading.Thread(target=_movers_worker, daemon=True).start()
+    threading.Thread(target=_ipo_worker, daemon=True).start()
 
 
 if __name__ == "__main__":

@@ -5,5 +5,5 @@ services:
     runtime: python
     plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn server:app --workers 1 --threads 4 --timeout 120
+    startCommand: gunicorn server:app --workers 1 --threads 8 --timeout 120
     healthCheckPath: /api/status

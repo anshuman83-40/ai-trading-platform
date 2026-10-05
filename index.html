@@ -1095,11 +1095,15 @@ function renderIPO(){
     +'Refund date = T+2 (one working day after allotment) under SEBI\'s T+3 listing timeline. Est. Listing = Price + GMP. Click a listed IPO\'s name to analyse its stock. '
     +`Source: <a href="${esc(IPO.source_url)}" target="_blank" rel="noopener">${esc(IPO.source)}</a> · refreshed every 10 min.`;
 }
+let ipoRetry=null;
 async function loadIPO(){
+  clearTimeout(ipoRetry);
   try{IPO=await api('/ipo',30000);renderIPO()}
   catch(e){
-    document.getElementById('ipoSrc').textContent='UNAVAILABLE';
-    if(!IPO)document.getElementById('ipoBody').innerHTML='<tr><td colspan="12" style="color:var(--muted);text-align:center;padding:22px">IPO data is unavailable right now. Please try again later.</td></tr>';
+    const loading=/loading/i.test(e.message||'')||e.name==='TimeoutError';   // server just (re)started
+    document.getElementById('ipoSrc').textContent=loading?'LOADING...':'UNAVAILABLE';
+    if(!IPO)document.getElementById('ipoBody').innerHTML=`<tr><td colspan="12" style="color:var(--muted);text-align:center;padding:22px">${loading?'Loading IPO data...':'IPO data is unavailable right now. Please try again later.'}</td></tr>`;
+    if(loading)ipoRetry=setTimeout(loadIPO,15000);
   }
 }
 
