@@ -5,4 +5,6 @@ venv/
 .env
 .vscode/
 *.png
+!icon-*.png
+!apple-touch-icon.png
 *.csv

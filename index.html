@@ -4,6 +4,14 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>TradePulse — Dashboard</title>
+<!-- phone app (PWA): install from the browser, opens full-screen like an app -->
+<link rel="manifest" href="/manifest.json"/>
+<meta name="theme-color" content="#080c10"/>
+<link rel="icon" href="/icon-192.png"/>
+<link rel="apple-touch-icon" href="/apple-touch-icon.png"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&display=swap');
 
@@ -36,6 +44,10 @@ nav{position:sticky;top:0;z-index:200;background:rgba(8,12,16,0.96);backdrop-fil
 .avatar{width:28px;height:28px;border-radius:50%;background:rgba(0,230,118,0.12);border:1px solid var(--green);display:flex;align-items:center;justify-content:center;font-family:var(--cond);font-size:13px;color:var(--green);font-weight:700}
 .btn-logout{background:none;border:1px solid var(--border);border-radius:3px;padding:5px 11px;color:var(--muted);font-family:var(--cond);font-size:11px;letter-spacing:2px;cursor:pointer;transition:all 0.2s}
 .btn-logout:hover{border-color:var(--red);color:var(--red)}
+.btn-install{border-color:var(--green);color:var(--green)}
+.btn-install:hover{border-color:var(--green);color:#000;background:var(--green)}
+.btn-install .sm{display:none}
+@media(max-width:680px){.btn-install .lg{display:none}.btn-install .sm{display:inline}}
 
 /* TICKER */
 .ticker-bar{background:var(--bg2);border-bottom:1px solid var(--border);padding:7px 0;overflow:hidden;white-space:nowrap}
@@ -363,6 +375,7 @@ footer span{color:var(--green)}
   <div class="nav-right">
     <div class="nav-time"><div class="live-dot"></div><span id="clk">--:--:--</span>&nbsp;IST</div>
     <div class="user-wrap"><div class="avatar" id="av">T</div><span id="uname">Trader</span></div>
+    <button class="btn-logout btn-install" id="installBtn" onclick="installApp()" style="display:none"><span class="lg">⬇ INSTALL APP</span><span class="sm">⬇ APP</span></button>
     <button class="btn-logout" onclick="logout()">LOGOUT</button>
   </div>
 </nav>
@@ -1104,6 +1117,18 @@ async function loadIPO(){
     if(!IPO)document.getElementById('ipoBody').innerHTML=`<tr><td colspan="12" style="color:var(--muted);text-align:center;padding:22px">${loading?'Loading IPO data...':'IPO data is unavailable right now. Please try again later.'}</td></tr>`;
     if(loading)ipoRetry=setTimeout(loadIPO,15000);
   }
+}
+
+// PHONE APP (PWA) — register the service worker; show "INSTALL APP" when the browser allows installing
+if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('/sw.js').catch(()=>{});
+let installPrompt=null;
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();installPrompt=e;document.getElementById('installBtn').style.display=''});
+addEventListener('appinstalled',()=>{installPrompt=null;document.getElementById('installBtn').style.display='none';toast('✓ TradePulse app installed — find it on your home screen')});
+async function installApp(){
+  if(!installPrompt)return;
+  installPrompt.prompt();
+  await installPrompt.userChoice;
+  installPrompt=null;document.getElementById('installBtn').style.display='none';
 }
 
 // PHONES — gainers/losers toggle and bottom-menu highlight
