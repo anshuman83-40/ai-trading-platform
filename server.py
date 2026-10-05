@@ -598,11 +598,17 @@ def screener_movers(losers=False):
                          "volume": int(x.get("regularMarketVolume") or 0), "exchange": "BSE" if ex == "BO" else "NSE"})
         _mark("yahoo_screener", True, f"{r.get('total')} stocks ranked")
         return {"rows": rows, "total": r.get("total") or len(rows)}
+    global _screener_failed_at
+    if time.time() - _screener_failed_at < 1800:                 # Yahoo refused recently — retry every 30 min
+        return None
     try:
         return cached(f"screen:{losers}", 120, load)             # refresh every 2 minutes
     except Exception as e:
-        _mark("yahoo_screener", False, e)
+        _screener_failed_at = time.time()
+        _mark("yahoo_screener", False, f"{e} (Yahoo blocks its screener for some cloud servers; showing NIFTY 500)")
         return None
+
+_screener_failed_at = 0.0
 
 def get_movers(universe="NIFTY500"):
     universe = universe.upper().replace(" ", "")
@@ -630,6 +636,7 @@ def movers():
     rows, name, key, loading = get_movers(request.args.get("universe", "NIFTY500"))   # (ALL falls back to NIFTY 500)
     rows = sorted(rows, key=lambda x: x["change_pct"], reverse=True)
     return jsonify({"universe": name, "key": key, "count": len(rows), "loading": loading,
+                    "all_unavailable": key == "ALL",
                     "gainers": [r for r in rows if r["change_pct"] > 0][:n],
                     "losers": [r for r in reversed(rows) if r["change_pct"] < 0][:n]})
 
