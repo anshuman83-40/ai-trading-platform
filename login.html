@@ -101,7 +101,15 @@ select.fi{cursor:pointer}
 .live-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);
   box-shadow:0 0 8px var(--green);animation:blink 1.4s infinite;vertical-align:middle;margin-right:4px}
 
-@media(max-width:768px){.page{grid-template-columns:1fr}.left{display:none}}
+.m-brand{display:none}
+@media(max-width:768px){
+  .page{grid-template-columns:1fr}.left{display:none}
+  .right{flex-direction:column;justify-content:center;padding:28px 16px}
+  .m-brand{display:block;text-align:center;margin-bottom:22px}
+  .m-brand .brand-logo{font-size:30px;letter-spacing:5px}
+  .card{padding:26px 20px}
+  .fi{font-size:16px}   /* 16px = no auto-zoom on iPhone */
+}
 </style>
 </head>
 <body>
@@ -131,6 +139,7 @@ select.fi{cursor:pointer}
 
   <!-- RIGHT FORM -->
   <div class="right">
+    <div class="m-brand"><div class="brand-logo">TRADE<span>PULSE</span></div><div class="brand-tag">INTRADAY INTELLIGENCE PLATFORM</div></div>
     <div class="card">
       <div class="tabs">
         <button class="tab active" id="tabLogin" onclick="switchTab('login')">LOGIN</button>
