@@ -495,8 +495,8 @@ def universe():
 # ============================================================
 #  MARKET MOVERS — choose NIFTY 50 / NIFTY 200 / NIFTY 500 / ALL INDIA (NSE+BSE)
 #  A background thread keeps today's % change for every stock in memory:
-#    • NIFTY 50 / 200 / 500: background thread downloads NIFTY 500 every 5 min
-#    • ALL INDIA: Yahoo's stock screener (one request, refreshed every 2 min)
+#    every 5 min the background thread fetches today's change for ALL ~5,300 NSE + BSE stocks
+#    (NIFTY 500 first) from Yahoo's lightweight spark endpoint; every list is built from that
 # ============================================================
 INDEX_LISTS = {
     "NIFTY50":  "https://archives.nseindia.com/content/indices/ind_nifty50list.csv",
@@ -519,40 +519,58 @@ def index_members(key):
     """Index constituents once loaded by the background thread (never waits on the network)."""
     return peek(f"members:{key}") or []
 
-def refresh_moves(symbols, pause=0.0, batch=25):
-    """Download today's change for these symbols in small batches (live requests run in between)."""
-    stocks = all_stocks()
-    tick = {s: (stocks.get(s, {}).get("yahoo") or STOCKS.get(s, s + ".NS")) for s in symbols}
-    items = list(tick.items())
-    for i in range(0, len(items), batch):
-        chunk = items[i:i + batch]
-        if i and pause:
-            time.sleep(pause)                                   # be gentle with Yahoo and the server CPU
-        try:
-            data = _download([t for _, t in chunk], threads=4, background=True, period="5d", interval="1d")
-        except Exception as e:
-            _mark("yahoo_movers", False, e)
+# Yahoo's "spark" endpoint (the one behind its mini-charts) returns today's price and % change for up to
+# 20 stocks per request as small JSON — no login cookie and no heavy data tables, so it also works on Render.
+# All of India (~5,300 stocks) = ~270 small requests, a few seconds with 4 parallel connections.
+SPARK_URL = "https://query2.finance.yahoo.com/v8/finance/spark"
+_spark = requests.Session()
+_spark.headers.update({"User-Agent": BROWSER_HEADERS["User-Agent"]})
+_full_pass_done = False
+
+def _spark_batch(pairs):
+    """pairs: [(our symbol, yahoo ticker)] (max 20) → list of mover rows."""
+    r = _get(SPARK_URL, total=20, session=_spark,
+             params={"symbols": ",".join(t for _, t in pairs), "range": "1d", "interval": "1d"})
+    if r.status_code == 429:
+        raise RuntimeError("Yahoo rate limit (HTTP 429)")
+    r.raise_for_status()
+    data, stale, rows = r.json(), time.time() - 4 * 86400, []
+    for sym, t in pairs:
+        v = data.get(t) or {}
+        price, prev = v.get("fulldayPrice"), v.get("chartPreviousClose")
+        if not price or not prev or (v.get("timestamp") or [0])[-1] < stale:   # no price / not traded for days
             continue
-        if time.time() - _last_rate_limit < 5:
-            print("  [!] Yahoo rate limit hit — pausing the market scan for 2 minutes")
-            time.sleep(120)
-        for s, t in chunk:
-            try:
-                c = (data[t] if len(chunk) > 1 else data).dropna(subset=["Close"])
-                if len(c) < 2: continue
-                p, prev, vol = float(c["Close"].iloc[-1]), float(c["Close"].iloc[-2]), int(c["Volume"].iloc[-1] or 0)
-                if prev <= 0 or vol <= 0: continue          # skip untraded stocks
-                row = {"symbol": s, "price": round(p, 2), "change_pct": round((p - prev) / prev * 100, 2),
-                       "volume": vol, "exchange": "BSE" if t.endswith(".BO") else "NSE"}
-                with _lock:
-                    _moves[s] = row
-            except Exception:
-                pass
-        del data
-        gc.collect()                                            # keep memory low on Render's 512 MB server
+        rows.append({"symbol": sym, "price": round(float(price), 2),
+                     "change_pct": round(float(v.get("fulldayChangePercent") or (price - prev) / prev * 100), 2),
+                     "volume": None, "exchange": "BSE" if t.endswith(".BO") else "NSE"})
+    return rows
+
+def refresh_moves(symbols):
+    """Today's price + % change for these symbols, 20 per request, 4 requests at a time."""
+    from concurrent.futures import ThreadPoolExecutor
+    stocks = all_stocks()
+    pairs = [(s, stocks.get(s, {}).get("yahoo") or STOCKS.get(s, s + ".NS")) for s in symbols
+             if not re.search(r"-RE\d*$", s)]                  # skip rights entitlements (not normal shares)
+    batches = [pairs[i:i + 20] for i in range(0, len(pairs), 20)]
+    errors = []
+    def work(b):
+        try:
+            return _spark_batch(b)
+        except Exception as e:
+            errors.append(str(e))
+            return []
+    with ThreadPoolExecutor(4) as ex:
+        for rows in ex.map(work, batches):
+            with _lock:
+                for row in rows:
+                    _moves[row["symbol"]] = row
+    if errors:
+        _mark("yahoo_movers", False, f"{len(errors)} of {len(batches)} requests failed: {errors[0]}")
+    return len(batches) - len(errors)
 
 def _movers_worker():
-    """Background thread: stock lists once a day, NIFTY 500 movers every 5 min."""
+    """Background thread: stock lists once a day; live movers for ALL of India every 5 min."""
+    global _full_pass_done
     loop = 0
     while True:
         try:
@@ -560,55 +578,15 @@ def _movers_worker():
                 refresh_universe()
                 refresh_index_lists()
             n500 = index_members("NIFTY500") or list(STOCKS)
-            refresh_moves(n500, pause=0.5)
-            _mark("yahoo_movers", True, f"NIFTY 500 updated ({len(_moves)} stocks known)")
+            n500_set = set(n500)
+            refresh_moves(n500)                                  # NIFTY lists first (ready in seconds)…
+            refresh_moves([s for s in all_stocks() if s not in n500_set])   # …then the rest of India
+            _full_pass_done = True
+            _mark("yahoo_movers", True, f"all India updated ({len(_moves)} stocks)")
         except Exception as e:
             _mark("yahoo_movers", False, e)
         loop += 1
         time.sleep(300)
-
-# ALL INDIA: Yahoo's stock screener ranks every actively traded NSE + BSE stock in one request
-# (much lighter than downloading 5,000+ stocks one by one)
-def screener_movers(losers=False):
-    def load():
-        from yfinance import EquityQuery as Q
-        query = Q("and", [Q("is-in", ["exchange", "NSI", "BSE"]), Q("gt", ["dayvolume", 10000])])
-        try:
-            r = yf.screen(query, sortField="percentchange", sortAsc=losers, size=100)
-        except Exception as first:
-            # Yahoo sometimes rejects cloud servers' login cookie (HTTP 401) — switch yfinance's cookie mode and retry
-            try:
-                from yfinance.data import YfData
-                d = YfData()
-                d._set_cookie_strategy("csrf" if getattr(d, "_cookie_strategy", "basic") == "basic" else "basic")
-            except Exception:
-                raise first
-            r = yf.screen(query, sortField="percentchange", sortAsc=losers, size=100)
-        rows, seen = [], set()
-        for x in r.get("quotes", []):
-            base, _, ex = (x.get("symbol") or "").rpartition(".")
-            if not base or "-RE" in base:                        # skip rights entitlements (not normal shares)
-                continue
-            base = re.sub(r"-(SM|ST|BE|BZ|E1|X1)$", "", base)    # NSE series suffix, e.g. HIMALAYAN-SM
-            if base in seen:                                     # same company on NSE and BSE → keep once
-                continue
-            seen.add(base)
-            rows.append({"symbol": base, "price": round(float(x.get("regularMarketPrice") or 0), 2),
-                         "change_pct": round(float(x.get("regularMarketChangePercent") or 0), 2),
-                         "volume": int(x.get("regularMarketVolume") or 0), "exchange": "BSE" if ex == "BO" else "NSE"})
-        _mark("yahoo_screener", True, f"{r.get('total')} stocks ranked")
-        return {"rows": rows, "total": r.get("total") or len(rows)}
-    global _screener_failed_at
-    if time.time() - _screener_failed_at < 1800:                 # Yahoo refused recently — retry every 30 min
-        return None
-    try:
-        return cached(f"screen:{losers}", 120, load)             # refresh every 2 minutes
-    except Exception as e:
-        _screener_failed_at = time.time()
-        _mark("yahoo_screener", False, f"{e} (Yahoo blocks its screener for some cloud servers; showing NIFTY 500)")
-        return None
-
-_screener_failed_at = 0.0
 
 def get_movers(universe="NIFTY500"):
     universe = universe.upper().replace(" ", "")
@@ -616,27 +594,22 @@ def get_movers(universe="NIFTY500"):
         universe = "NIFTY500"
     with _lock:
         snapshot = dict(_moves)
-    members = index_members("NIFTY500" if universe == "ALL" else universe)
-    rows = [snapshot[s] for s in members if s in snapshot]
+    if universe == "ALL":
+        rows = list(snapshot.values())
+    else:
+        rows = [snapshot[s] for s in index_members(universe) if s in snapshot]
     if not rows:  # background thread hasn't finished its first pass yet
         rows = [{"symbol": x["symbol"], "price": x["price"], "change_pct": x["change"],
                  "volume": x["volume"], "exchange": "NSE"} for x in fetch_all_quotes().values()]
         return rows, "WATCHLIST", universe, True
-    return rows, UNIVERSE_NAMES["NIFTY500" if universe == "ALL" else universe], universe, False
+    return rows, UNIVERSE_NAMES[universe], universe, universe == "ALL" and not _full_pass_done
 
 @app.route("/api/movers")
 def movers():
     n = min(int(request.args.get("n", 10)), 50)
-    if request.args.get("universe", "").upper() == "ALL":
-        g, l = screener_movers(False), screener_movers(True)
-        if g and l:
-            return jsonify({"universe": UNIVERSE_NAMES["ALL"], "key": "ALL", "count": g["total"], "loading": False,
-                            "gainers": [r for r in g["rows"] if r["change_pct"] > 0][:n],
-                            "losers": [r for r in l["rows"] if r["change_pct"] < 0][:n]})
-    rows, name, key, loading = get_movers(request.args.get("universe", "NIFTY500"))   # (ALL falls back to NIFTY 500)
+    rows, name, key, loading = get_movers(request.args.get("universe", "NIFTY500"))
     rows = sorted(rows, key=lambda x: x["change_pct"], reverse=True)
     return jsonify({"universe": name, "key": key, "count": len(rows), "loading": loading,
-                    "all_unavailable": key == "ALL",
                     "gainers": [r for r in rows if r["change_pct"] > 0][:n],
                     "losers": [r for r in reversed(rows) if r["change_pct"] < 0][:n]})
 

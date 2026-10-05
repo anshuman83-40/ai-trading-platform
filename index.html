@@ -781,12 +781,7 @@ async function loadMovers(){
     fill('losers',m.losers,false);
     document.getElementById('gainTitle').textContent=`▲ TOP ${m.gainers.length} GAINERS`;
     document.getElementById('loseTitle').textContent=`▼ TOP ${m.losers.length} LOSERS`;
-    document.getElementById('moversSrc').textContent=`${m.universe==='WATCHLIST'?'WATCHLIST (LOADING MARKET...)':m.count+' STOCKS'}${m.loading&&m.universe!=='WATCHLIST'?' · SCANNING...':''}`;
-    if(m.all_unavailable&&m.universe!=='WATCHLIST'){   // this server can't rank all of India (Yahoo blocks it) — say so
-      document.getElementById('optAll').textContent='ALL INDIA → NIFTY 500 (ONLINE)';
-      document.getElementById('moversSrc').textContent=`NIFTY 500 · ${m.count} STOCKS (ALL INDIA ONLY ON LOCAL SERVER)`;
-    }
-    MKT_MOVERS=m.universe!=='WATCHLIST';
+    document.getElementById('moversSrc').textContent=`${m.universe==='WATCHLIST'?'WATCHLIST (LOADING MARKET...)':m.count+' STOCKS'}${m.loading&&m.universe!=='WATCHLIST'?' · SCANNING...':''}`;    MKT_MOVERS=m.universe!=='WATCHLIST';
     if(m.loading)moversRetry=setTimeout(loadMovers,20000); // server still downloading
   }catch(e){}
 }
