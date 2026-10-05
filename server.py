@@ -17,6 +17,7 @@ import time
 import os
 import re
 import json
+import gc
 import html as html_lib
 from datetime import date, datetime, timedelta, timezone
 
@@ -518,7 +519,7 @@ def index_members(key):
     """Index constituents once loaded by the background thread (never waits on the network)."""
     return peek(f"members:{key}") or []
 
-def refresh_moves(symbols, pause=0.0, batch=50):
+def refresh_moves(symbols, pause=0.0, batch=25):
     """Download today's change for these symbols in small batches (live requests run in between)."""
     stocks = all_stocks()
     tick = {s: (stocks.get(s, {}).get("yahoo") or STOCKS.get(s, s + ".NS")) for s in symbols}
@@ -528,7 +529,7 @@ def refresh_moves(symbols, pause=0.0, batch=50):
         if i and pause:
             time.sleep(pause)                                   # be gentle with Yahoo and the server CPU
         try:
-            data = _download([t for _, t in chunk], threads=8, background=True, period="5d", interval="1d")
+            data = _download([t for _, t in chunk], threads=4, background=True, period="5d", interval="1d")
         except Exception as e:
             _mark("yahoo_movers", False, e)
             continue
@@ -547,6 +548,8 @@ def refresh_moves(symbols, pause=0.0, batch=50):
                     _moves[s] = row
             except Exception:
                 pass
+        del data
+        gc.collect()                                            # keep memory low on Render's 512 MB server
 
 def _movers_worker():
     """Background thread: stock lists once a day, NIFTY 500 movers every 5 min."""
@@ -570,7 +573,17 @@ def screener_movers(losers=False):
     def load():
         from yfinance import EquityQuery as Q
         query = Q("and", [Q("is-in", ["exchange", "NSI", "BSE"]), Q("gt", ["dayvolume", 10000])])
-        r = yf.screen(query, sortField="percentchange", sortAsc=losers, size=100)
+        try:
+            r = yf.screen(query, sortField="percentchange", sortAsc=losers, size=100)
+        except Exception as first:
+            # Yahoo sometimes rejects cloud servers' login cookie (HTTP 401) — switch yfinance's cookie mode and retry
+            try:
+                from yfinance.data import YfData
+                d = YfData()
+                d._set_cookie_strategy("csrf" if getattr(d, "_cookie_strategy", "basic") == "basic" else "basic")
+            except Exception:
+                raise first
+            r = yf.screen(query, sortField="percentchange", sortAsc=losers, size=100)
         rows, seen = [], set()
         for x in r.get("quotes", []):
             base, _, ex = (x.get("symbol") or "").rpartition(".")
