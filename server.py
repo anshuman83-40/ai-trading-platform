@@ -494,8 +494,8 @@ def universe():
 # ============================================================
 #  MARKET MOVERS — choose NIFTY 50 / NIFTY 200 / NIFTY 500 / ALL INDIA (NSE+BSE)
 #  A background thread keeps today's % change for every stock in memory:
-#    • NIFTY 500 stocks: refreshed every 5 min
-#    • all other NSE + BSE stocks: every 30 min (gently, in small batches)
+#    • NIFTY 50 / 200 / 500: background thread downloads NIFTY 500 every 5 min
+#    • ALL INDIA: Yahoo's stock screener (one request, refreshed every 2 min)
 # ============================================================
 INDEX_LISTS = {
     "NIFTY50":  "https://archives.nseindia.com/content/indices/ind_nifty50list.csv",
@@ -504,7 +504,6 @@ INDEX_LISTS = {
 }
 UNIVERSE_NAMES = {"NIFTY50": "NIFTY 50", "NIFTY200": "NIFTY 200", "NIFTY500": "NIFTY 500", "ALL": "ALL INDIA (NSE+BSE)"}
 _moves = {}          # symbol -> {"symbol", "price", "change_pct", "volume", "exchange"}
-_full_scan_done = False
 ON_RENDER = bool(os.environ.get("RENDER"))   # Render sets this; its free server is small, so start gently
 
 def refresh_index_lists():
@@ -550,10 +549,7 @@ def refresh_moves(symbols, pause=0.0, batch=50):
                 pass
 
 def _movers_worker():
-    """Background thread: stock lists once a day, NIFTY 500 every 5 min, the rest of India every 30 min."""
-    global _full_scan_done
-    # Render's free server has 0.1 CPU: start the full scan after 5 min, run it hourly and slowly
-    first_full_scan, every, gap = (1, 12, 2.5) if ON_RENDER else (0, 6, 1.5)
+    """Background thread: stock lists once a day, NIFTY 500 movers every 5 min."""
     loop = 0
     while True:
         try:
@@ -563,15 +559,37 @@ def _movers_worker():
             n500 = index_members("NIFTY500") or list(STOCKS)
             refresh_moves(n500, pause=0.5)
             _mark("yahoo_movers", True, f"NIFTY 500 updated ({len(_moves)} stocks known)")
-            if loop % every == first_full_scan:                  # the rest of India (every 30 min; hourly on Render)
-                n500_set = set(n500)
-                refresh_moves([s for s in all_stocks() if s not in n500_set], pause=gap)
-                _full_scan_done = True
-                _mark("yahoo_movers", True, f"full India scan done ({len(_moves)} stocks)")
         except Exception as e:
             _mark("yahoo_movers", False, e)
         loop += 1
         time.sleep(300)
+
+# ALL INDIA: Yahoo's stock screener ranks every actively traded NSE + BSE stock in one request
+# (much lighter than downloading 5,000+ stocks one by one)
+def screener_movers(losers=False):
+    def load():
+        from yfinance import EquityQuery as Q
+        query = Q("and", [Q("is-in", ["exchange", "NSI", "BSE"]), Q("gt", ["dayvolume", 10000])])
+        r = yf.screen(query, sortField="percentchange", sortAsc=losers, size=100)
+        rows, seen = [], set()
+        for x in r.get("quotes", []):
+            base, _, ex = (x.get("symbol") or "").rpartition(".")
+            if not base or "-RE" in base:                        # skip rights entitlements (not normal shares)
+                continue
+            base = re.sub(r"-(SM|ST|BE|BZ|E1|X1)$", "", base)    # NSE series suffix, e.g. HIMALAYAN-SM
+            if base in seen:                                     # same company on NSE and BSE → keep once
+                continue
+            seen.add(base)
+            rows.append({"symbol": base, "price": round(float(x.get("regularMarketPrice") or 0), 2),
+                         "change_pct": round(float(x.get("regularMarketChangePercent") or 0), 2),
+                         "volume": int(x.get("regularMarketVolume") or 0), "exchange": "BSE" if ex == "BO" else "NSE"})
+        _mark("yahoo_screener", True, f"{r.get('total')} stocks ranked")
+        return {"rows": rows, "total": r.get("total") or len(rows)}
+    try:
+        return cached(f"screen:{losers}", 120, load)             # refresh every 2 minutes
+    except Exception as e:
+        _mark("yahoo_screener", False, e)
+        return None
 
 def get_movers(universe="NIFTY500"):
     universe = universe.upper().replace(" ", "")
@@ -579,22 +597,25 @@ def get_movers(universe="NIFTY500"):
         universe = "NIFTY500"
     with _lock:
         snapshot = dict(_moves)
-    if universe == "ALL":
-        rows = list(snapshot.values())
-    else:
-        rows = [snapshot[s] for s in index_members(universe) if s in snapshot]
+    members = index_members("NIFTY500" if universe == "ALL" else universe)
+    rows = [snapshot[s] for s in members if s in snapshot]
     if not rows:  # background thread hasn't finished its first pass yet
         rows = [{"symbol": x["symbol"], "price": x["price"], "change_pct": x["change"],
                  "volume": x["volume"], "exchange": "NSE"} for x in fetch_all_quotes().values()]
         return rows, "WATCHLIST", universe, True
-    loading = universe == "ALL" and not _full_scan_done
-    return rows, UNIVERSE_NAMES[universe], universe, loading
+    return rows, UNIVERSE_NAMES["NIFTY500" if universe == "ALL" else universe], universe, False
 
 @app.route("/api/movers")
 def movers():
-    rows, name, key, loading = get_movers(request.args.get("universe", "NIFTY500"))
-    rows = sorted(rows, key=lambda x: x["change_pct"], reverse=True)
     n = min(int(request.args.get("n", 10)), 50)
+    if request.args.get("universe", "").upper() == "ALL":
+        g, l = screener_movers(False), screener_movers(True)
+        if g and l:
+            return jsonify({"universe": UNIVERSE_NAMES["ALL"], "key": "ALL", "count": g["total"], "loading": False,
+                            "gainers": [r for r in g["rows"] if r["change_pct"] > 0][:n],
+                            "losers": [r for r in l["rows"] if r["change_pct"] < 0][:n]})
+    rows, name, key, loading = get_movers(request.args.get("universe", "NIFTY500"))   # (ALL falls back to NIFTY 500)
+    rows = sorted(rows, key=lambda x: x["change_pct"], reverse=True)
     return jsonify({"universe": name, "key": key, "count": len(rows), "loading": loading,
                     "gainers": [r for r in rows if r["change_pct"] > 0][:n],
                     "losers": [r for r in reversed(rows) if r["change_pct"] < 0][:n]})
@@ -1089,7 +1110,7 @@ def health():
     d = peek("ipos")
     out = {
         "sources": _health,
-        "stocks_loaded": len(all_stocks()), "movers_known": movers_known, "full_scan_done": _full_scan_done,
+        "stocks_loaded": len(all_stocks()), "movers_known": movers_known,
         "ipo_source": d["source"] if d else None, "registrars_known": len(_registrars),
         "peak_memory_mb": peak_mb, "on_render": ON_RENDER, "pid": os.getpid(),
     }
