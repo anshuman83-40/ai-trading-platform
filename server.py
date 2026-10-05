@@ -121,6 +121,23 @@ def _mark(source, ok, info=""):
 # so every outside website gets a short connect + read time limit and is only called from background threads
 QUICK = (5, 15)
 
+def _get(url, total=30, session=None, **kw):
+    """GET with a hard overall deadline. requests' own timeout only limits each read, so a site that
+    trickles data slowly could otherwise hold a thread forever."""
+    deadline = time.time() + total
+    kw.setdefault("timeout", QUICK)
+    r = (session or requests).get(url, stream=True, **kw)
+    try:
+        chunks = []
+        for chunk in r.iter_content(65536):
+            chunks.append(chunk)
+            if time.time() > deadline:
+                raise TimeoutError(f"{url.split('/')[2]} took longer than {total}s")
+        r._content, r._content_consumed = b"".join(chunks), True    # lets r.text / r.json() work
+        return r
+    finally:
+        r.close()
+
 # ============================================================
 #  ALL INDIAN STOCKS — official NSE + BSE lists (~5,300 companies)
 #  Merged by ISIN so a company listed on both appears once (NSE preferred)
@@ -141,7 +158,7 @@ FALLBACK_UNIVERSE = {s: {"name": NEWS_NAMES.get(s, s), "exchange": "NSE", "yahoo
                      for s, y in STOCKS.items()}
 
 def _nse_csv(url):
-    r = requests.get(url, headers=BROWSER_HEADERS, timeout=QUICK)
+    r = _get(url, headers=BROWSER_HEADERS)
     r.raise_for_status()
     df = pd.read_csv(io.StringIO(r.text))
     df.columns = [c.strip() for c in df.columns]
@@ -151,7 +168,7 @@ def _bse_rows():
     """Active BSE equities as [symbol, name, isin, code]: live from BSE, else the saved copy."""
     err = "empty response"
     try:
-        live = requests.get(BSE_LIST_URL, headers=BROWSER_HEADERS, timeout=QUICK).json()
+        live = _get(BSE_LIST_URL, headers=BROWSER_HEADERS).json()
         rows = [[(r.get("scrip_id") or "").strip().upper(), (r.get("Scrip_Name") or "").strip(),
                  (r.get("ISIN_NUMBER") or "").strip(), r.get("SCRIP_CD")] for r in live if r.get("scrip_id")]
         if rows:
@@ -752,7 +769,7 @@ def _ipo_row(name, kind, status, price, lot, size_cr, sub, gmp, gmp_pct, gmp_low
     }
 
 def _ipos_investorgain():
-    r = requests.get(IPO_GMP_URL, timeout=QUICK, headers={
+    r = _get(IPO_GMP_URL, headers={
         "User-Agent": BROWSER_HEADERS["User-Agent"], "Accept": "text/html", "Accept-Language": "en-US,en;q=0.9"})
     r.raise_for_status()
     page = re.sub(r'<(a|span)[^>]*data-cfemail="([0-9a-f]+)"[^>]*>.*?</\1>', _cf_decode, r.text, flags=re.S)
@@ -815,7 +832,7 @@ def _ipos_nse():
     s = requests.Session()
     s.headers.update({"User-Agent": BROWSER_HEADERS["User-Agent"], "Accept": "application/json, text/plain, */*",
                       "Referer": "https://www.nseindia.com/market-data/all-upcoming-issues-ipo"})
-    s.get("https://www.nseindia.com", timeout=(5, 10))   # sets the cookies NSE requires
+    _get("https://www.nseindia.com", total=20, session=s)   # sets the cookies NSE requires
     base = "https://www.nseindia.com/api/"
     today = ist_today()
     nse_day = lambda t: datetime.strptime(t.strip(), "%d-%b-%Y").date() if t and t.strip() not in ("-", "") else None
@@ -840,11 +857,11 @@ def _ipos_nse():
             open_d=open_d, close_d=close_d, allot_d=allot_d, listing_d=listing_d,
             url=f"https://www.nseindia.com/market-data/all-upcoming-issues-ipo", symbol=sym))
 
-    for r in s.get(base + "ipo-current-issue", timeout=(5, 10)).json() + \
-             s.get(base + "all-upcoming-issues?category=ipo", timeout=(5, 10)).json():
+    for r in _get(base + "ipo-current-issue", total=20, session=s).json() + \
+             _get(base + "all-upcoming-issues?category=ipo", total=20, session=s).json():
         if r.get("series") in ("EQ", "SME"):
             add(r, r.get("issueStartDate"), r.get("issueEndDate"), r.get("issuePrice"), r.get("noOfTime"))
-    past = [r for r in s.get(base + "public-past-issues", timeout=(5, 10)).json() if r.get("securityType") in ("EQ", "SME")]
+    past = [r for r in _get(base + "public-past-issues", total=20, session=s).json() if r.get("securityType") in ("EQ", "SME")]
     for r in past[:40]:
         add(r, r.get("ipoStartDate"), r.get("ipoEndDate"), r.get("issuePrice") if (r.get("issuePrice") or "-").strip() != "-"
             else r.get("priceRange"), listing_txt=r.get("listingDate"))
@@ -873,7 +890,7 @@ def ipo_registrar(detail_url):
         return None
     if detail_url in _registrars:
         return _registrars[detail_url]
-    page = requests.get(detail_url, timeout=QUICK, headers={
+    page = _get(detail_url, total=20, headers={
         "User-Agent": BROWSER_HEADERS["User-Agent"], "Accept": "text/html"}).text
     names = re.findall(r'ipo-registrar-review/\d+/\d+/\\?"\s+title=\\?"([^"\\]+?) Review', page)
     direct = [u for u in re.findall(r'\\?"ipo_allotment_url\\?"\s*:\s*\\?"([^"\\]*)', page) if re.match(r"^https?://", u)]
@@ -1070,17 +1087,41 @@ def health():
     with _lock:
         movers_known = len(_moves)
     d = peek("ipos")
-    return jsonify({
+    out = {
         "sources": _health,
         "stocks_loaded": len(all_stocks()), "movers_known": movers_known, "full_scan_done": _full_scan_done,
         "ipo_source": d["source"] if d else None, "registrars_known": len(_registrars),
-        "peak_memory_mb": peak_mb, "on_render": ON_RENDER,
-    })
+        "peak_memory_mb": peak_mb, "on_render": ON_RENDER, "pid": os.getpid(),
+    }
+    if request.args.get("debug"):    # where is each background thread right now?
+        import sys, traceback
+        frames = sys._current_frames()
+        out["threads"] = {
+            t.name: ([f"{os.path.basename(f.filename)}:{f.lineno} {f.name}"
+                      for f in traceback.extract_stack(frames[t.ident])][-8:] if t.ident in frames else "not running")
+            for t in threading.enumerate() if t.name.endswith("worker")}
+        out["workers_started"] = _workers_started
+    return jsonify(out)
 
-# Start the background threads (skip the parent process of Flask's debug reloader)
-if __name__ != "__main__" or os.environ.get("WERKZEUG_RUN_MAIN") == "true":
-    threading.Thread(target=_movers_worker, daemon=True).start()
-    threading.Thread(target=_ipo_worker, daemon=True).start()
+# Start the background threads inside the process that answers visitors, on its first request.
+# (Starting them while the module loads breaks under gunicorn --preload, which Render uses: the threads
+#  would live in gunicorn's master process, and the worker that serves visitors would never see their data.)
+_workers_started = []
+_workers_pid = None
+_workers_lock = threading.Lock()
+
+@app.before_request
+def _start_workers_once():
+    global _workers_pid
+    if _workers_pid == os.getpid():
+        return
+    with _workers_lock:
+        if _workers_pid == os.getpid():
+            return
+        _workers_pid = os.getpid()
+        for fn, name in ((_movers_worker, "movers-worker"), (_ipo_worker, "ipo-worker")):
+            threading.Thread(target=fn, name=name, daemon=True).start()
+            _workers_started.append(f"{name} (pid {os.getpid()})")
 
 
 if __name__ == "__main__":
