@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>TradePulse — Dashboard</title>
 <!-- phone app (PWA): install from the browser, opens full-screen like an app -->
 <link rel="manifest" href="/manifest.json"/>
@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black"/>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&display=swap');
 
@@ -30,7 +30,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
 body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);pointer-events:none;z-index:9999}
 
 /* NAV */
-nav{position:sticky;top:0;z-index:200;background:rgba(8,12,16,0.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between}
+nav{position:sticky;top:0;z-index:200;background:rgba(8,12,16,0.96);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between}
 .nav-logo{font-family:var(--cond);font-size:22px;font-weight:700;letter-spacing:4px;color:var(--green);text-shadow:0 0 20px rgba(0,230,118,0.3)}
 .nav-logo span{color:var(--text)}
 .nav-links{display:flex;gap:22px}
@@ -270,7 +270,7 @@ footer span{color:var(--green)}
 
 /* ── PHONES: one clean column, cards instead of wide tables, app-style bottom menu ── */
 @media(max-width:680px){
-  body{font-size:13px;padding-bottom:66px}
+  body{font-size:13px;padding-bottom:calc(66px + env(safe-area-inset-bottom))}
   .panel,#top{scroll-margin-top:56px}
   /* header */
   nav{padding:0 12px;height:50px}
@@ -353,7 +353,7 @@ footer span{color:var(--green)}
   .fi{font-size:16px}
   .toast{left:12px;right:12px;bottom:76px;max-width:none}
   /* bottom menu */
-  .bnav{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:300;height:58px;background:rgba(8,12,16,0.97);backdrop-filter:blur(12px);border-top:1px solid var(--border2)}
+  .bnav{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:300;height:calc(58px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:rgba(8,12,16,0.97);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--border2)}
   .bnav a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--muted);text-decoration:none;font-family:var(--cond);font-size:10px;letter-spacing:1.5px}
   .bnav .ico{font-size:15px;line-height:1}
   .bnav a.active{color:var(--green)}
@@ -616,7 +616,13 @@ const BACKEND=(location.protocol==='file:'||location.port==='5500')?`http://${lo
 let LIVE=false; // true once real prices have loaded
 function fmtVol(v){v=+v||0;if(v>=1e7)return(v/1e7).toFixed(1)+'Cr';if(v>=1e5)return(v/1e5).toFixed(1)+'L';if(v>=1e3)return(v/1e3).toFixed(1)+'K';return String(v)}
 async function api(path,ms=15000){
-  const r=await fetch(BACKEND+path,{signal:AbortSignal.timeout(ms)});
+  // AbortSignal.timeout() only exists on iOS 16+ / newest browsers, so use AbortController (works on older iPhones too)
+  const ctl=typeof AbortController!=='undefined'?new AbortController():null;
+  const timer=ctl?setTimeout(()=>ctl.abort(),ms):null;
+  let r;
+  try{r=await fetch(BACKEND+path,ctl?{signal:ctl.signal}:{})}
+  catch(e){if(e.name==='AbortError'){const t=new Error('timed out');t.name='TimeoutError';throw t}throw e}
+  finally{clearTimeout(timer)}
   const d=await r.json();
   if(!r.ok)throw new Error(d.error||r.status);
   return d;
