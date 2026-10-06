@@ -1096,6 +1096,17 @@ def get_status():
         "version":    "TradePulse v3.2"
     })
 
+_client_errors = []      # last page errors reported by visitors' browsers (see /api/health?debug=1)
+
+@app.route("/api/client-error", methods=["POST"])
+def client_error():
+    d = request.get_json(silent=True) or {}
+    _client_errors.append({"at": datetime.now(IST).strftime("%d %b %H:%M:%S IST"),
+                           "msg": str(d.get("msg", ""))[:300], "page": str(d.get("src", ""))[:60],
+                           "browser": request.headers.get("User-Agent", "")[:180]})
+    del _client_errors[:-30]
+    return "", 204
+
 @app.route("/api/health")
 def health():
     """Which outside data sources work right now — useful when the site runs on Render."""
@@ -1121,6 +1132,7 @@ def health():
                       for f in traceback.extract_stack(frames[t.ident])][-8:] if t.ident in frames else "not running")
             for t in threading.enumerate() if t.name.endswith("worker")}
         out["workers_started"] = _workers_started
+        out["client_errors"] = _client_errors[-15:]
     return jsonify(out)
 
 # Start the background threads inside the process that answers visitors, on its first request.

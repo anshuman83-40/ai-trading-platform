@@ -571,7 +571,20 @@ footer span{color:var(--green)}
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+// Error reporter (runs first): sends any page error to the server so problems on a specific phone can be seen
+// at /api/health?debug=1 — e.g. an iPhone that loads no data
+function reportErr(m){
+  try{
+    var base=(location.protocol==='file:'||location.port==='5500')?'http://'+(location.hostname||'localhost')+':5000':'';
+    fetch(base+'/api/client-error',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({msg:String(m).slice(0,300),src:location.pathname})});
+  }catch(_){}
+}
+window.addEventListener('error',function(e){reportErr((e.message||'error')+' @'+String(e.filename||'').split('/').pop()+':'+(e.lineno||''))});
+window.addEventListener('unhandledrejection',function(e){reportErr('promise: '+((e.reason&&e.reason.message)||e.reason))});
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js" onerror="reportErr('Chart.js failed to load')"></script>
 <script>
 /* ============================================================
    TRADEPULSE v2.0 — ALL LOGIC
@@ -712,12 +725,15 @@ function buildIndices(){
       </div>
       <div class="idx-spark"><canvas id="sp-${i.id}"></canvas></div>
     </div>`).join('');
+  if(typeof Chart==='undefined')return;   // charts are optional — the numbers above still show
   IDX.forEach(i=>{
-    const ctx=document.getElementById('sp-'+i.id).getContext('2d');
-    const col=i.ch>=0?'#00e676':'#ff4b4b';
-    const data=i.spark&&i.spark.length>1?i.spark:genLine(30,i.base,i.ch>=0?0.0003:-0.0003,0.003);
-    if(idxC[i.id])idxC[i.id].destroy();
-    idxC[i.id]=new Chart(ctx,{type:'line',data:{labels:data.map((_,j)=>j),datasets:[{data,borderColor:col,borderWidth:1.5,pointRadius:0,tension:0.4,fill:{target:'origin',above:col+'18'}}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{display:false},y:{display:false}},animation:{duration:0}}});
+    try{
+      const ctx=document.getElementById('sp-'+i.id).getContext('2d');
+      const col=i.ch>=0?'#00e676':'#ff4b4b';
+      const data=i.spark&&i.spark.length>1?i.spark:genLine(30,i.base,i.ch>=0?0.0003:-0.0003,0.003);
+      if(idxC[i.id])idxC[i.id].destroy();
+      idxC[i.id]=new Chart(ctx,{type:'line',data:{labels:data.map((_,j)=>j),datasets:[{data,borderColor:col,borderWidth:1.5,pointRadius:0,tension:0.4,fill:{target:'origin',above:col+'18'}}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{display:false},y:{display:false}},animation:{duration:0}}});
+    }catch(e){reportErr('sparkline: '+e.message)}
   });
 }
 function updateIdxVals(){if(LIVE)return;IDX.forEach(i=>{const e=document.getElementById('iv-'+i.id);if(e)e.textContent=fmt(rnd(i.base,0.04))})}
@@ -749,6 +765,7 @@ async function buildChart(sym){
     labels=chartData.map((_,i)=>{const t=9*60+15+i*ms;return `${Math.floor(t/60)}:${String(t%60).padStart(2,'0')}`});
     document.getElementById('chartLbl').textContent=sym+' · SIMULATED';
   }
+  if(typeof Chart==='undefined'){document.getElementById('chartLbl').textContent=sym+' · CHART UNAVAILABLE';return}
   const ctx=document.getElementById('mainChart').getContext('2d');
   if(mainC)mainC.destroy();
   mainC=new Chart(ctx,{
@@ -1188,8 +1205,9 @@ document.getElementById('symInput').addEventListener('input',e=>{
 });
 
 // INIT
-buildTicker();buildIndices();buildChips();buildMovers();buildWatchlist();renderPF();renderAlerts();buildNews();
-loadLivePrices();loadIndices();loadMovers();
+// Start: every piece runs on its own, so one failure (e.g. charts on an old phone) can't stop live data from loading
+[loadLivePrices,loadIndices,loadMovers,buildTicker,buildIndices,buildChips,buildMovers,buildWatchlist,renderPF,renderAlerts,buildNews]
+  .forEach(f=>{try{const p=f();if(p&&p.catch)p.catch(e=>reportErr(f.name+': '+e.message))}catch(e){reportErr(f.name+': '+e.message)}});
 setInterval(loadMovers,60000);      // market-wide movers every 60s
 loadIPO();
 setInterval(loadIPO,600000);        // IPO data every 10 min
