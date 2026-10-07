@@ -377,14 +377,40 @@ def _download(tickers, threads=True, background=False, **kw):
             with _waiting_lock:
                 _waiting[0] -= 1
 
+def with_today(daily, intra):
+    """Yahoo's daily candle for today is sometimes missing or empty (e.g. TATACHEM on 7 Oct showed the
+    previous day's price). Rebuild today's bar from today's 5-minute bars, which are always up to date."""
+    daily = daily.dropna(subset=["Close"])
+    if intra is None or daily.empty:
+        return daily
+    intra = intra.dropna(subset=["Close"])
+    if intra.empty:
+        return daily
+    day, last_day = intra.index[-1].date(), daily.index[-1].date()
+    if day < last_day:
+        return daily
+    close = float(intra["Close"].iloc[-1])
+    bar = {"Open": float(intra["Open"].iloc[0]), "High": float(intra["High"].max()),
+           "Low": float(intra["Low"].min()), "Close": close, "Volume": float(intra["Volume"].sum())}
+    bar = {c: bar.get(c, close) for c in daily.columns}          # e.g. "Adj Close" → today's close
+    daily = daily.copy()
+    ts = daily.index[-1] if day == last_day else pd.Timestamp(day).tz_localize(daily.index.tz)
+    daily.loc[ts] = pd.Series(bar)
+    return daily
+
 def fetch_all_quotes():
-    """One batched Yahoo call for all watchlist stocks (~2 seconds)."""
+    """Batched Yahoo calls for all watchlist stocks: 1 year of daily bars + today's 5-minute bars."""
     def load():
-        data = _download(list(STOCKS.values()), period="1y", interval="1d")
+        tickers = list(STOCKS.values())
+        data = _download(tickers, period="1y", interval="1d")
+        try:
+            intra = _download(tickers, period="1d", interval="5m")
+        except Exception:
+            intra = None
         out = {}
         for sym, yt in STOCKS.items():
             try:
-                q = build_quote(sym, data[yt])
+                q = build_quote(sym, with_today(data[yt], intra[yt] if intra is not None else None))
                 if q: out[sym] = q
             except Exception as e:
                 print(f"  [!] {sym}: {e}")
@@ -405,8 +431,13 @@ def fetch_quote(symbol):
         if q: return _label(q, symbol, STOCKS[symbol])
     def load():
         for yt in yahoo_candidates(symbol):     # NSE first, then BSE
-            df = yf.Ticker(yt).history(period="1y", interval="1d", auto_adjust=False)
+            tk = yf.Ticker(yt)
+            df = tk.history(period="1y", interval="1d", auto_adjust=False)
             if not df.empty:
+                try:
+                    df = with_today(df, tk.history(period="1d", interval="5m", auto_adjust=False))
+                except Exception:
+                    pass
                 q = build_quote(symbol, df)
                 if q: return _label(q, symbol, yt)
         return None
@@ -466,7 +497,7 @@ def get_indices():
         out = {}
         for key, (name, t) in INDICES.items():
             try:
-                c = daily[t]["Close"].dropna()
+                c = with_today(daily[t], intra[t])["Close"]
                 val, prev = float(c.iloc[-1]), float(c.iloc[-2])
                 spark = intra[t]["Close"].dropna()
                 out[key] = {
