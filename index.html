@@ -1006,11 +1006,13 @@ function checkAlerts(){
     if(hit){
       a.fired=true;saveAl();renderAlerts();
       toast('🔔 ALERT: '+a.sym+' '+(a.type==='above'?'crossed above':'fell below')+' ₹'+fmt(a.price)+'! LTP: ₹'+fmt(LP[a.sym]),'warn');
-      if(Notification.permission==='granted')new Notification('TradePulse — '+a.sym,{body:'Price '+(a.type==='above'?'above':'below')+' ₹'+fmt(a.price)+' | Current: ₹'+fmt(LP[a.sym])});
+      try{if(HAS_NOTIF&&Notification.permission==='granted')new Notification('TradePulse — '+a.sym,{body:'Price '+(a.type==='above'?'above':'below')+' ₹'+fmt(a.price)+' | Current: ₹'+fmt(LP[a.sym])})}catch(e){}
     }
   });
 }
-if(Notification.permission==='default')Notification.requestPermission();
+// Safari on iPhone has no Notification API in a normal tab (only in Home Screen apps) — always check first
+const HAS_NOTIF=typeof Notification!=='undefined';
+try{if(HAS_NOTIF&&Notification.permission==='default')Notification.requestPermission()}catch(e){}
 
 // NEWS
 const NEWS=[
