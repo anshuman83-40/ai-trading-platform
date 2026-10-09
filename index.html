@@ -44,6 +44,11 @@ nav{position:sticky;top:0;z-index:200;background:rgba(8,12,16,0.96);backdrop-fil
 .avatar{width:28px;height:28px;border-radius:50%;background:rgba(0,230,118,0.12);border:1px solid var(--green);display:flex;align-items:center;justify-content:center;font-family:var(--cond);font-size:13px;color:var(--green);font-weight:700}
 .btn-logout{background:none;border:1px solid var(--border);border-radius:3px;padding:5px 11px;color:var(--muted);font-family:var(--cond);font-size:11px;letter-spacing:2px;cursor:pointer;transition:all 0.2s}
 .btn-logout:hover{border-color:var(--red);color:var(--red)}
+.nav-time{cursor:pointer}
+.srv-txt{font-size:10px;letter-spacing:1px;padding:1px 7px;border:1px solid currentColor;border-radius:10px;margin-right:6px;white-space:nowrap}
+.wake-banner{display:none;padding:8px 16px;text-align:center;font-family:var(--mono);font-size:12px;letter-spacing:0.5px;
+  color:var(--amber);background:rgba(255,184,0,0.08);border-bottom:1px solid rgba(255,184,0,0.25)}
+.wake-banner.off{color:var(--red);background:rgba(255,75,75,0.08);border-bottom-color:rgba(255,75,75,0.25)}
 .btn-install{border-color:var(--green);color:var(--green)}
 .btn-install:hover{border-color:var(--green);color:#000;background:var(--green)}
 .btn-install .sm{display:none}
@@ -324,6 +329,8 @@ footer span{color:var(--green)}
   .nav-links,#uname{display:none}
   .nav-right{gap:8px}
   .nav-time{font-size:11px;gap:5px}
+  .nav-time .ist{display:none}
+  .wake-banner{font-size:11px;padding:7px 10px}
   .avatar{width:26px;height:26px;font-size:12px}
   .btn-logout{padding:5px 8px;font-size:10px;letter-spacing:1px}
   .ticker-bar{padding:6px 0}
@@ -433,7 +440,7 @@ footer span{color:var(--green)}
     <a href="#news">News</a>
   </div>
   <div class="nav-right">
-    <div class="nav-time"><div class="live-dot"></div><span id="clk">--:--:--</span>&nbsp;IST</div>
+    <div class="nav-time" onclick="srvInfo()" title="Server status"><div class="live-dot" id="srvDot"></div><span id="srvTxt" class="srv-txt">WAKING…</span><span id="clk">--:--:--</span><span class="ist">&nbsp;IST</span></div>
     <div class="user-wrap"><div class="avatar" id="av">T</div><span id="uname">Trader</span></div>
     <button class="btn-logout btn-install" id="installBtn" onclick="installApp()" style="display:none"><span class="lg">⬇ INSTALL APP</span><span class="sm">⬇ APP</span></button>
     <button class="btn-logout" onclick="logout()">LOGOUT</button>
@@ -441,6 +448,7 @@ footer span{color:var(--green)}
 </nav>
 
 <div class="ticker-bar"><div class="ticker-track" id="ticker"></div></div>
+<div class="wake-banner" id="wakeBanner"></div>
 
 <div class="main" id="top">
 
@@ -757,6 +765,7 @@ async function loadLivePrices(){
     Object.entries(data).forEach(([s,q])=>applyQuote(s,q));
     if(!LIVE){LIVE=true;toast('✓ Connected — showing REAL market prices')}
     setDataLabel(true);
+    if(typeof setSrv==='function')setSrv('live');
     buildTicker();buildMovers();buildWatchlist();renderPF();checkAlerts();
     const s=document.getElementById('sSym').textContent;
     if(s&&s!=='-'&&DB[s])showSignal(s);
@@ -1542,6 +1551,49 @@ async function loadSipDefaults(){
   }catch(e){}
   calcSIP();
 }
+
+// SERVER STATUS — the free Render server sleeps after 15 min without visitors; show whether it's awake
+let srvState='waking', srvSince=Date.now(), srvFails=0;
+const SRV={waking:['var(--amber)'],on:['var(--green)'],live:['var(--green)'],reconnecting:['var(--amber)'],offline:['var(--red)']};
+function setSrv(state){
+  if(state!==srvState&&(state==='waking'||state==='reconnecting'))srvSince=Date.now();
+  srvState=state;
+  const secs=Math.round((Date.now()-srvSince)/1000), col=SRV[state][0];
+  const label={waking:`WAKING ${secs}s`,on:'SERVER ON',live:'LIVE',reconnecting:`RECONNECTING ${secs}s`,offline:'OFFLINE'}[state];
+  const t=document.getElementById('srvTxt'), dot=document.getElementById('srvDot'), b=document.getElementById('wakeBanner');
+  t.textContent=label;t.style.color=col;dot.style.background=col;dot.style.boxShadow='0 0 8px '+col;
+  const waiting=state==='waking'||state==='reconnecting'||state==='offline';
+  b.style.display=waiting?'block':'none';
+  b.classList.toggle('off',state==='offline');
+  b.textContent=state==='offline'?'⚠ The server is not responding. Check your internet, or try again in a few minutes.'
+    :state==='reconnecting'?`⏳ Server restarting — reconnecting… ${secs}s (live data resumes automatically)`
+    :`⏳ Waking up the free server… ${secs}s — usually under a minute. Live prices will appear automatically.`;
+}
+function srvInfo(){
+  toast({waking:'⏳ The free server sleeps when nobody uses it. It is starting up — wait up to ~1 minute.',
+    on:'✓ Server is awake — loading live prices…',live:'✓ Server awake · showing real NSE/BSE data',
+    reconnecting:'⏳ Server is restarting — data will resume automatically.',offline:'⚠ Server not responding right now.'}[srvState],
+    srvState==='offline'?'danger':srvState==='live'||srvState==='on'?'ok':'warn');
+}
+async function pingServer(){
+  try{
+    await api('/status',8000);srvFails=0;
+    if(srvState!=='live'){
+      const wasWaiting=srvState!=='on';
+      setSrv(LIVE?'live':'on');
+      if(wasWaiting){loadLivePrices();loadIndices();loadMovers();loadIPO()}   // server just woke: load everything now
+    }
+  }catch(e){
+    srvFails++;
+    if(srvState==='live'||srvState==='on'){if(srvFails>=2)setSrv('reconnecting')}
+    else if(Date.now()-srvSince>120000)setSrv('offline');
+  }
+}
+(async function srvLoop(){
+  await pingServer();
+  setTimeout(srvLoop,(srvState==='live'||srvState==='on')?30000:3000);   // check often only while waiting
+})();
+setInterval(()=>{if(srvState==='waking'||srvState==='reconnecting')setSrv(srvState)},1000);   // seconds counter
 
 // MODALS
 function openModal(id){document.getElementById(id).classList.add('open')}
