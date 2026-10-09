@@ -1322,8 +1322,9 @@ let sipChart=null, sipRealT=null, NIFTY_CAGR=null;
 const inr=v=>'₹'+fmtI(Math.round(v));
 const inrWords=v=>v>=1e7?(v/1e7).toFixed(2)+' crore':v>=1e5?(v/1e5).toFixed(2)+' lakh':'';
 function sipGrow(P,years,ratePct,stepPct){
-  // invest at the start of each month; monthly rate = yearly rate / 12 (same as most Indian SIP calculators)
-  const i=ratePct/100/12; let value=0,invested=0,p=P; const rows=[];
+  // invest at the start of each month. Monthly rate = the rate that compounds to exactly the yearly rate
+  // ((1+r)^(1/12) − 1, same method as Groww). Dividing by 12 would really be 10.47% a year for "10%".
+  const i=Math.pow(1+ratePct/100,1/12)-1; let value=0,invested=0,p=P; const rows=[];
   for(let y=1;y<=years;y++){
     for(let m=0;m<12;m++){value=(value+p)*(1+i);invested+=p}
     rows.push({year:y,invested,value});
