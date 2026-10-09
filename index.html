@@ -754,15 +754,32 @@ function applyQuote(sym,q){
            name:q.name,exch:q.exchange,listed:q.listed_on};
   LP[sym]=q.price;
 }
+// SAVED SNAPSHOT — the last REAL data is kept on this device, so while the free server wakes up the page
+// shows it (clearly labelled with its time) instead of empty boxes; everything is refetched once it's awake
+function snap(){try{return JSON.parse(localStorage.getItem('tp_snap')||'{}')}catch(e){return {}}}
+function saveSnap(key,data){try{const s=snap();s[key]=data;s.at=Date.now();localStorage.setItem('tp_snap',JSON.stringify(s))}catch(e){}}
+let SHOWING_SAVED=false;
+function snapTime(){const s=snap();return s.at?new Date(s.at).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):''}
+function restoreSnap(){
+  const s=snap(); if(!s.at)return;
+  try{
+    if(s.quotes){Object.entries(s.quotes).forEach(([k,q])=>applyQuote(k,q));buildTicker();buildWatchlist();renderPF()}
+    if(s.indices){IDX.forEach(i=>{const x=s.indices[i.id==='banknft'?'banknifty':i.id];if(x){i.base=x.value;i.ch=x.change;i.pts=x.points;i.spark=x.spark}});buildIndices()}
+    const mv=s['movers_'+moversUni];if(mv)renderMovers(mv,true);
+    if(s.ipo&&!IPO){IPO=s.ipo;IPO_SAVED=true;renderIPO();document.getElementById('ipoSrc').textContent='SAVED · UPDATING…'}
+    SHOWING_SAVED=true;setDataLabel(false);
+  }catch(e){reportErr('restoreSnap: '+e.message)}
+}
 function setDataLabel(live){
   const el=document.getElementById('dataSrc');
-  if(el){el.textContent=live?'REAL NSE · YAHOO FINANCE':'CONNECTING TO LIVE DATA… (RETRYING)';el.style.color=live?'var(--green)':'var(--amber)'}
+  if(el){el.textContent=live?'REAL NSE · YAHOO FINANCE':SHOWING_SAVED?`SAVED DATA FROM ${snapTime()} — UPDATING…`:'CONNECTING TO LIVE DATA… (RETRYING)';el.style.color=live?'var(--green)':'var(--amber)'}
 }
 async function loadLivePrices(){
   try{
     const data=await api('/live/all');
     if(!Object.keys(data).length)throw new Error('empty');
     Object.entries(data).forEach(([s,q])=>applyQuote(s,q));
+    saveSnap('quotes',data);SHOWING_SAVED=false;
     if(!LIVE){LIVE=true;toast('✓ Connected — showing REAL market prices')}
     setDataLabel(true);
     if(typeof setSrv==='function')setSrv('live');
@@ -779,7 +796,7 @@ async function loadIndices(){
   try{
     const d=await api('/indices',30000);
     IDX.forEach(i=>{const x=d[i.id==='banknft'?'banknifty':i.id];if(x){i.base=x.value;i.ch=x.change;i.pts=x.points;i.spark=x.spark}});
-    buildIndices();
+    buildIndices();saveSnap('indices',d);
   }catch(e){setTimeout(loadIndices,5000)} // retry soon (first Yahoo call can be slow)
 }
 
@@ -1032,6 +1049,16 @@ async function loadMovers(){
   try{
     const m=await api('/movers?universe='+moversUni+'&n=25');
     if(m.key!==moversUni)return; // user switched while loading
+    renderMovers(m);
+    if(m.universe!=='WATCHLIST'&&!m.loading)saveSnap('movers_'+moversUni,m);
+    if(m.loading)moversRetry=setTimeout(loadMovers,20000); // server still downloading
+  }catch(e){
+    const s=snap()['movers_'+moversUni]; if(s&&!MKT_MOVERS)renderMovers(s,true);   // saved list while the server wakes
+    if(!MKT_MOVERS)moversRetry=setTimeout(loadMovers,10000);                         // keep trying until fresh data
+  }
+}
+function renderMovers(m,saved){
+  {
     const row=(x,up,i)=>`<div class="mover" onclick="loadSym('${esc(x.symbol)}')"><span class="mover-sym"><span class="mover-rank">${i+1}.</span>${esc(x.symbol)} <span style="color:var(--muted);font-size:10px">₹${fmt(x.price)}${x.exchange==='BSE'?' · BSE':''}</span></span><span class="mover-chg ${up?'up':'dn'}">${up?'▲ +':'▼ '}${x.change_pct}%</span></div>`;
     const empty='<div style="color:var(--muted);font-size:11px;padding:6px">None today</div>';
     const fill=(id,list,up)=>{ // keep the user's scroll position on auto-refresh
@@ -1043,12 +1070,13 @@ async function loadMovers(){
     fill('losers',m.losers,false);
     document.getElementById('gainTitle').textContent=`▲ TOP ${m.gainers.length} GAINERS`;
     document.getElementById('loseTitle').textContent=`▼ TOP ${m.losers.length} LOSERS`;
-    document.getElementById('moversSrc').textContent=`${m.universe==='WATCHLIST'?'WATCHLIST (LOADING MARKET...)':m.count+' STOCKS'}${m.loading&&m.universe!=='WATCHLIST'?' · SCANNING...':''}`;    MKT_MOVERS=m.universe!=='WATCHLIST';
-    if(m.loading)moversRetry=setTimeout(loadMovers,20000); // server still downloading
-  }catch(e){}
+    document.getElementById('moversSrc').textContent=saved?'SAVED · UPDATING…':`${m.universe==='WATCHLIST'?'WATCHLIST (LOADING MARKET...)':m.count+' STOCKS'}${m.loading&&m.universe!=='WATCHLIST'?' · SCANNING...':''}`;
+    if(!saved)MKT_MOVERS=m.universe!=='WATCHLIST';else SAVED_MOVERS=true;
+  }
 }
+let SAVED_MOVERS=false;
 function buildMovers(){
-  if(MKT_MOVERS)return;
+  if(MKT_MOVERS||SAVED_MOVERS)return;   // never replace the market-wide list with the 12-stock one
   const all=Object.entries(DB).map(([s,d])=>({s,ch:d.ch}));
   document.getElementById('gainers').innerHTML=all.filter(x=>x.ch>0).sort((a,b)=>b.ch-a.ch).slice(0,4)
     .map(x=>`<div class="mover" onclick="loadSym('${x.s}')"><span class="mover-sym">${x.s}</span><span class="mover-chg up">▲ +${x.ch}%</span></div>`).join('');
@@ -1359,15 +1387,16 @@ function renderIPO(){
     +'Refund date = T+2 (one working day after allotment) under SEBI\'s T+3 listing timeline. Est. Listing = Price + GMP. Click a listed IPO\'s name to analyse its stock. '
     +`Source: <a href="${esc(IPO.source_url)}" target="_blank" rel="noopener">${esc(IPO.source)}</a> · refreshed every 10 min.`;
 }
-let ipoRetry=null;
+let ipoRetry=null, IPO_SAVED=false;
 async function loadIPO(){
   clearTimeout(ipoRetry);
-  try{IPO=await api('/ipo',30000);renderIPO()}
+  try{IPO=await api('/ipo',30000);IPO_SAVED=false;renderIPO();saveSnap('ipo',IPO)}
   catch(e){
-    const loading=/loading/i.test(e.message||'')||e.name==='TimeoutError';   // server just (re)started
-    document.getElementById('ipoSrc').textContent=loading?'LOADING...':'UNAVAILABLE';
-    if(!IPO)document.getElementById('ipoBody').innerHTML=`<tr><td colspan="12" style="color:var(--muted);text-align:center;padding:22px">${loading?'Loading IPO data...':'IPO data is unavailable right now. Please try again later.'}</td></tr>`;
-    if(loading)ipoRetry=setTimeout(loadIPO,15000);
+    // server waking / restarting / still loading IPO data → keep trying (and keep showing saved IPOs meanwhile)
+    const retry=/loading/i.test(e.message||'')||e.name==='TimeoutError'||e.name==='TypeError';
+    document.getElementById('ipoSrc').textContent=IPO?'SAVED · UPDATING…':retry?'LOADING...':'UNAVAILABLE';
+    if(!IPO)document.getElementById('ipoBody').innerHTML=`<tr><td colspan="12" style="color:var(--muted);text-align:center;padding:22px">${retry?'Loading IPO data...':'IPO data is unavailable right now. Please try again later.'}</td></tr>`;
+    if(retry||IPO_SAVED)ipoRetry=setTimeout(loadIPO,15000);
   }
 }
 
@@ -1567,6 +1596,7 @@ function setSrv(state){
   b.classList.toggle('off',state==='offline');
   b.textContent=state==='offline'?'⚠ The server is not responding. Check your internet, or try again in a few minutes.'
     :state==='reconnecting'?`⏳ Server restarting — reconnecting… ${secs}s (live data resumes automatically)`
+    :SHOWING_SAVED?`⏳ Waking up the free server… ${secs}s — showing your saved data from ${snapTime()} until fresh prices arrive.`
     :`⏳ Waking up the free server… ${secs}s — usually under a minute. Live prices will appear automatically.`;
 }
 function srvInfo(){
@@ -1581,7 +1611,13 @@ async function pingServer(){
     if(srvState!=='live'){
       const wasWaiting=srvState!=='on';
       setSrv(LIVE?'live':'on');
-      if(wasWaiting){loadLivePrices();loadIndices();loadMovers();loadIPO()}   // server just woke: load everything now
+      if(wasWaiting){                       // server just woke: refetch EVERYTHING now
+        loadLivePrices();loadIndices();loadMovers();loadIPO();
+        const s=document.getElementById('sSym').textContent;
+        buildNews(s&&s!=='-'?s:'');
+        if(chartSym)buildChart(chartSym);
+        if(s&&s!=='-')analyse();
+      }
     }
   }catch(e){
     srvFails++;
@@ -1632,7 +1668,8 @@ document.getElementById('symInput').addEventListener('input',e=>{
 
 // INIT
 // Start: every piece runs on its own, so one failure (e.g. charts on an old phone) can't stop live data from loading
-[loadLivePrices,loadIndices,loadMovers,loadSipDefaults,buildTicker,buildIndices,buildChips,buildMovers,buildWatchlist,renderPF,renderAlerts,buildNews]
+[buildTicker,buildIndices,buildChips,buildMovers,buildWatchlist,renderPF,renderAlerts,restoreSnap,   // saved data first…
+ loadLivePrices,loadIndices,loadMovers,loadSipDefaults,buildNews]                                    // …then fresh data
   .forEach(f=>{try{const p=f();if(p&&p.catch)p.catch(e=>reportErr(f.name+': '+e.message))}catch(e){reportErr(f.name+': '+e.message)}});
 setInterval(loadMovers,60000);      // market-wide movers every 60s
 loadIPO();
