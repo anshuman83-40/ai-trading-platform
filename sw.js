@@ -1,11 +1,11 @@
 // TradePulse service worker — makes the website installable as a phone app.
-// Pages and icons: network first (always the newest version); the saved copy is used only when offline.
-// Live market data (/api/...) is never saved, so prices are always fresh.
-const CACHE = 'tradepulse-v2';   // bump to delete old saved copies of the site
-const SHELL = ['/', '/index.html', '/login.html', '/icon-192.png', '/icon-512.png'];
+// Pages and live data ALWAYS come from the server (never from a saved copy), so an old version of the
+// site can never be shown. Only the app icons are kept offline.
+const CACHE = 'tradepulse-v3';   // a new name deletes every older saved copy
+const ICONS = ['/icon-192.png', '/icon-512.png', '/apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ICONS)).catch(() => {}).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', e => {
@@ -16,10 +16,6 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
-  if (e.request.method !== 'GET' || url.origin !== location.origin || url.pathname.startsWith('/api/')) return;
-  e.respondWith(
-    fetch(e.request)
-      .then(res => { const copy = res.clone(); caches.open(CACHE).then(c => c.put(e.request, copy)); return res; })
-      .catch(() => caches.match(e.request))
-  );
+  if (e.request.method !== 'GET' || url.origin !== location.origin || !ICONS.includes(url.pathname)) return;
+  e.respondWith(caches.match(e.request).then(hit => hit || fetch(e.request)));   // icons: saved copy first
 });
