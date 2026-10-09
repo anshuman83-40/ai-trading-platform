@@ -1,7 +1,7 @@
 // TradePulse service worker — makes the website installable as a phone app.
 // Pages and icons: network first (always the newest version); the saved copy is used only when offline.
 // Live market data (/api/...) is never saved, so prices are always fresh.
-const CACHE = 'tradepulse-v1';
+const CACHE = 'tradepulse-v2';   // bump to delete old saved copies of the site
 const SHELL = ['/', '/index.html', '/login.html', '/icon-192.png', '/icon-512.png'];
 
 self.addEventListener('install', e => {
