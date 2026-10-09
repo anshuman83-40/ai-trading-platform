@@ -203,6 +203,28 @@ a.ipo-allot:hover{color:#00ff88;border-bottom-style:solid}
 .ipo-note{padding:10px 14px;font-size:11px;color:var(--muted);line-height:1.7;border-top:1px solid var(--border)}
 .ipo-note a{color:var(--green)}
 
+/* SMART PORTFOLIO BUILDER */
+.pl-intro{padding:12px 14px 0;font-size:13px;color:var(--muted);line-height:1.6}
+.pl-intro b{color:var(--text);font-weight:500}
+.pl-form{display:grid;grid-template-columns:200px 1fr auto;gap:14px;align-items:end;padding:12px 14px 14px;border-bottom:1px solid var(--border)}
+.pl-risk{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.pl-r{background:var(--bg3);border:1px solid var(--border);border-radius:3px;padding:7px 10px;color:var(--muted);cursor:pointer;text-align:left;font-family:var(--sans);font-size:11px;transition:all 0.2s}
+.pl-r b{display:block;font-family:var(--cond);font-size:12px;letter-spacing:2px;color:var(--text);font-weight:700}
+.pl-r.active{border-color:var(--green);background:rgba(0,230,118,0.06)}
+.pl-r.active b{color:var(--green)}
+.pl-go{height:46px;padding:0 20px}
+.pl-sum{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:12px 14px}
+.pl-body{display:grid;grid-template-columns:240px 1fr;gap:14px;padding:0 14px 14px;align-items:start}
+.pl-chart{position:relative;height:220px}
+.pl-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.pl-card{background:var(--bg3);border:1px solid var(--border);border-left:3px solid var(--green);border-radius:4px;padding:11px 12px}
+.pl-buy{font-family:var(--mono);font-size:13px;color:var(--green);margin:7px 0 5px}
+.pl-card ul{margin:0 0 0 16px;font-size:12px;color:var(--muted);line-height:1.65}
+.pl-why{padding:12px 14px;font-size:13px;line-height:1.75;color:var(--text);border-top:1px solid var(--border)}
+.pl-why b{color:var(--green);font-weight:500}
+.pl-why h5{font-family:var(--cond);font-size:11px;letter-spacing:2px;color:var(--muted);margin-bottom:4px;font-weight:600}
+.pl-actions{display:flex;gap:8px;flex-wrap:wrap;padding:0 14px 12px}
+
 /* PORTFOLIO */
 .pf-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;padding:12px 14px;border-bottom:1px solid var(--border)}
 .pf-stat{background:var(--bg3);border:1px solid var(--border);border-radius:3px;padding:9px 12px}
@@ -344,6 +366,12 @@ footer span{color:var(--green)}
   .ipo-tbl td:nth-child(2){order:4}.ipo-tbl td:nth-child(3){order:5}.ipo-tbl td:nth-child(4){order:6}
   .ipo-tbl td:nth-child(n+8){order:7}
   .pf-stats{grid-template-columns:1fr 1fr;padding:10px 12px}
+  .pl-form{grid-template-columns:1fr;padding:12px}
+  .pl-risk{grid-template-columns:1fr}
+  .pl-r{padding:10px 12px}
+  .pl-sum{grid-template-columns:1fr 1fr;padding:10px 12px}
+  .pl-body{grid-template-columns:1fr;padding:0 12px 12px}
+  .pl-chart{height:200px}
   #pfTbl td:last-child{grid-column:1/-1}
   .news-grid{grid-template-columns:1fr}
   .news-card{padding:11px 12px}
@@ -354,7 +382,7 @@ footer span{color:var(--green)}
   .toast{left:12px;right:12px;bottom:76px;max-width:none}
   /* bottom menu */
   .bnav{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:300;height:calc(58px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:rgba(8,12,16,0.97);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--border2)}
-  .bnav a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--muted);text-decoration:none;font-family:var(--cond);font-size:10px;letter-spacing:1.5px}
+  .bnav a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--muted);text-decoration:none;font-family:var(--cond);font-size:9.5px;letter-spacing:0.8px;min-width:0}
   .bnav .ico{font-size:15px;line-height:1}
   .bnav a.active{color:var(--green)}
 }
@@ -368,6 +396,7 @@ footer span{color:var(--green)}
     <a href="#top">Dashboard</a>
     <a href="#portfolio">Portfolio</a>
     <a href="#watchlist">Watchlist</a>
+    <a href="#planner">Invest</a>
     <a href="#ipo">IPO</a>
     <a href="#alerts">Alerts</a>
     <a href="#news">News</a>
@@ -482,6 +511,24 @@ footer span{color:var(--green)}
     </div>
   </div>
 
+  <!-- SMART PORTFOLIO BUILDER -->
+  <div class="panel section" id="planner">
+    <div class="ph"><div><span class="dot">▸</span> SMART PORTFOLIO BUILDER — FOR BEGINNERS</div><span style="color:var(--amber);font-size:10px;letter-spacing:1px">EDUCATIONAL</span></div>
+    <div class="pl-intro">Tell us how much you want to invest and how much risk you're OK with. We analyse 1 year of real prices for India's top 200 companies and show <b>which stocks to buy, how many shares, and why</b>.</div>
+    <div class="pl-form">
+      <div><label class="fl">Amount to invest (₹)</label>
+        <input type="number" class="fi" id="plAmount" value="10000" min="1000" step="500" inputmode="numeric"/></div>
+      <div><label class="fl">Risk you're comfortable with</label>
+        <div class="pl-risk">
+          <button class="pl-r" data-risk="low" onclick="setPlRisk('low')"><b>LOW RISK</b><span>Big, steady companies</span></button>
+          <button class="pl-r active" data-risk="balanced" onclick="setPlRisk('balanced')"><b>BALANCED</b><span>Growth + safety</span></button>
+          <button class="pl-r" data-risk="high" onclick="setPlRisk('high')"><b>HIGH RISK</b><span>Faster growth, bigger swings</span></button>
+        </div></div>
+      <button class="btn-go pl-go" onclick="buildPlan()">BUILD MY PORTFOLIO</button>
+    </div>
+    <div id="plOut"></div>
+  </div>
+
   <!-- IPO CENTER -->
   <div class="panel section" id="ipo">
     <div class="ph">
@@ -563,6 +610,7 @@ footer span{color:var(--green)}
 <div class="bnav">
   <a href="#top" class="active"><span class="ico">◈</span>HOME</a>
   <a href="#moversPanel"><span class="ico">▲▼</span>MOVERS</a>
+  <a href="#planner"><span class="ico">₹</span>INVEST</a>
   <a href="#ipo"><span class="ico">◆</span>IPO</a>
   <a href="#portfolio"><span class="ico">◉</span>PORTFOLIO</a>
   <a href="#news"><span class="ico">≡</span>NEWS</a>
@@ -1170,6 +1218,72 @@ function updateBnav(){
   links.forEach(a=>a.classList.toggle('active',a===cur));
 }
 addEventListener('scroll',updateBnav,{passive:true});
+
+// SMART PORTFOLIO BUILDER — which stocks to buy with an amount, how many shares, and why
+let plRisk='balanced', plChart=null, PLAN=null;
+const PL_COLORS=['#00e676','#00b4ff','#ffb800','#b388ff','#ff7eb6','#4dd0e1','#aed581','#ff8a65'];
+function setPlRisk(r){plRisk=r;document.querySelectorAll('.pl-r').forEach(b=>b.classList.toggle('active',b.dataset.risk===r))}
+async function buildPlan(){
+  const amt=Math.round(+document.getElementById('plAmount').value||0);
+  const out=document.getElementById('plOut');
+  if(amt<1000){toast('⚠ Enter at least ₹1,000','warn');return}
+  out.innerHTML='<div class="loading show"><div class="loading-txt">ANALYSING 1 YEAR OF REAL DATA...</div></div>';
+  try{PLAN=await api(`/plan?amount=${amt}&risk=${plRisk}`,30000);renderPlan()}
+  catch(e){
+    out.innerHTML=`<div class="empty-pf" style="padding:22px">${/loading/i.test(e.message)
+      ?'The server is still analysing stocks (about 1 minute after it starts). Please try again shortly.'
+      :esc(e.message)}</div>`;
+  }
+}
+function plCard(x,i){
+  return `<div class="pl-card" style="border-left-color:${PL_COLORS[i%PL_COLORS.length]}">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+      <span class="ipo-name link" title="Analyse ${esc(x.symbol)}" onclick="loadSym('${esc(x.symbol)}');document.getElementById('top').scrollIntoView({behavior:'smooth'})">${esc(x.symbol)}</span>
+      <span class="ipo-hl" style="color:${PL_COLORS[i%PL_COLORS.length]}">${x.weight}%</span>
+    </div>
+    <div class="ipo-small">${esc(x.name)} · ${esc(x.sector)}</div>
+    <div class="pl-buy">BUY ${x.shares} share${x.shares>1?'s':''} × ₹${fmt(x.price)} = ₹${fmtI(x.amount)}</div>
+    <ul>${x.reasons.map(r=>`<li>${esc(r)}</li>`).join('')}</ul>
+  </div>`;
+}
+function renderPlan(){
+  const p=PLAN, out=document.getElementById('plOut'), m=v=>'₹'+fmtI(v);
+  out.innerHTML=`
+    <div class="pl-sum">
+      <div class="pf-stat"><div class="pf-stat-lbl">You invest</div><div class="pf-stat-val">${m(p.invested)}</div></div>
+      <div class="pf-stat"><div class="pf-stat-lbl">Cash left</div><div class="pf-stat-val">${m(p.cash_left)}</div></div>
+      <div class="pf-stat"><div class="pf-stat-lbl">Spread across</div><div class="pf-stat-val">${p.stocks.length} stocks · ${p.sectors.length} sectors</div></div>
+      <div class="pf-stat"><div class="pf-stat-lbl">Risk · yearly swing</div><div class="pf-stat-val">${esc(p.risk_label)} · ±${p.basket_volatility}%</div></div>
+      <div class="pf-stat"><div class="pf-stat-lbl">Last 1 year (hindsight)</div><div class="pf-stat-val ${p.basket_return_1y>=0?'up':'dn'}">${p.basket_return_1y>=0?'+':''}${p.basket_return_1y}%</div></div>
+    </div>
+    <div class="pl-body">
+      <div class="pl-chart"><canvas id="plCanvas"></canvas></div>
+      <div class="pl-cards">${p.stocks.map(plCard).join('')}</div>
+    </div>
+    <div class="pl-actions">
+      <button class="btn-sm" onclick="addPlanToPF()">+ ADD ALL TO MY PORTFOLIO TRACKER</button>
+    </div>
+    <div class="pl-why"><h5>HOW WE CHOSE AND SPLIT YOUR MONEY</h5>${p.explain.map(t=>`<div>• ${t}</div>`).join('')}</div>
+    <div class="pl-why"><h5>BEGINNER TIPS</h5>${p.tips.map(t=>`<div>• ${esc(t)}</div>`).join('')}</div>
+    <div class="ipo-note">⚠ ${esc(p.disclaimer)} Data: ${esc(p.data_as_of||'')}.</div>`;
+  if(typeof Chart!=='undefined'){
+    try{
+      if(plChart)plChart.destroy();
+      plChart=new Chart(document.getElementById('plCanvas').getContext('2d'),{type:'doughnut',
+        data:{labels:p.stocks.map(x=>x.symbol),datasets:[{data:p.stocks.map(x=>x.amount),backgroundColor:PL_COLORS,borderColor:'#0d1117',borderWidth:2}]},
+        options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
+          plugins:{legend:{position:'bottom',labels:{color:'#e8f0e8',font:{family:'Share Tech Mono',size:10},boxWidth:10}},
+                   tooltip:{callbacks:{label:c=>` ${c.label}: ₹${fmtI(c.raw)}`}}}}});
+    }catch(e){reportErr('plan chart: '+e.message)}
+  }
+}
+function addPlanToPF(){
+  if(!PLAN)return;
+  PLAN.stocks.forEach(x=>portfolio.push({sym:x.symbol,qty:x.shares,bp:x.price}));
+  savePF();renderPF();
+  toast('✓ Added '+PLAN.stocks.length+' stocks to your Portfolio tracker — follow their live P&L there');
+  document.getElementById('portfolio').scrollIntoView({behavior:'smooth'});
+}
 
 // MODALS
 function openModal(id){document.getElementById(id).classList.add('open')}

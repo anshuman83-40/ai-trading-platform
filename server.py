@@ -539,12 +539,23 @@ _moves = {}          # symbol -> {"symbol", "price", "change_pct", "volume", "ex
 ON_RENDER = bool(os.environ.get("RENDER"))   # Render sets this; its free server is small, so start gently
 
 def refresh_index_lists():
+    industry, company = {}, {}
     for key, url in INDEX_LISTS.items():
         try:
-            store(f"members:{key}", [str(s).strip() for s in _nse_csv(url)["Symbol"]])
+            df = _nse_csv(url)
+            syms = [str(s).strip() for s in df["Symbol"]]
+            store(f"members:{key}", syms)
+            if "Industry" in df:                                 # sector of each company (for diversification)
+                industry.update(zip(syms, [str(x).strip() for x in df["Industry"]]))
+            if "Company Name" in df:
+                company.update(zip(syms, [str(x).strip() for x in df["Company Name"]]))
             _mark(f"list_{key.lower()}", True, "ok")
         except Exception as e:
             _mark(f"list_{key.lower()}", False, e)
+    if industry:
+        store("industry", industry)
+    if company:
+        store("company", company)
 
 def index_members(key):
     """Index constituents once loaded by the background thread (never waits on the network)."""
@@ -653,6 +664,232 @@ def get_gainers():
 def get_losers():
     q = sorted(get_movers(request.args.get("universe", "NIFTY500"))[0], key=lambda x: x["change_pct"])
     return jsonify([x for x in q if x["change_pct"] < 0][:5])
+
+# ============================================================
+#  SMART PORTFOLIO BUILDER — for beginners: which stocks to buy with an amount, and how to split it
+#  Educational tool, not investment advice. Uses 1 year of daily prices of NIFTY 200 stocks
+#  (includes all NIFTY 50), recalculated in the background every 6 hours.
+#
+#  1. Measure each stock: 1-year / 6-month / 3-month return, volatility (size of daily ups and
+#     downs), biggest fall from a peak, long-term trend (price vs 200-day average), RSI.
+#  2. Score the stocks for the chosen risk level (z-scores, so every measure counts fairly).
+#  3. Pick the best scores with a sector limit (diversification), skipping shares too costly
+#     for the amount and stocks that just rallied too hard (RSI).
+#  4. Split the money by inverse volatility (steadier stock → bigger share), max 30-35% per stock,
+#     then convert to whole shares and spend the leftover cash sensibly.
+# ============================================================
+RISK_FREE = 0.065        # ~1-year FD / T-bill return in India — what you get with no risk (for the Sharpe ratio)
+PROFILES = {
+    # score weights: + = more is better, − = less is better ("trend" = how far above its 200-day average)
+    "low":      {"label": "Low risk", "universe": "NIFTY50", "per_sector": 1, "max_weight": 0.30,
+                 "score": {"sharpe": 0.25, "vol": -0.35, "fall": -0.20, "trend": 0.20},
+                 "rsi_max": 70, "calm_pct": 70,
+                 "about": "big, steady NIFTY 50 companies with smaller price swings"},
+    "balanced": {"label": "Balanced", "universe": "NIFTY200", "per_sector": 1, "max_weight": 0.30,
+                 "score": {"sharpe": 0.30, "r6": 0.15, "r3": 0.05, "vol": -0.30, "trend": 0.20},
+                 "rsi_max": 75, "calm_pct": 85,
+                 "about": "a mix of growth and stability from the top 200 companies"},
+    "high":     {"label": "High risk", "universe": "NIFTY200", "per_sector": 2, "max_weight": 0.35,
+                 "score": {"r6": 0.35, "r3": 0.30, "sharpe": 0.20, "vol": -0.05, "trend": 0.10},
+                 "rsi_max": 80, "calm_pct": None,
+                 "about": "the strongest recent performers from the top 200 — faster growth, bigger swings"},
+}
+_stats = {}              # symbol -> 1-year measurements
+_stats_meta = {"at": None}
+
+def _measure(close):
+    c = close.dropna()
+    if len(c) < 200:
+        return None
+    rets = c.pct_change().dropna()
+    price = float(c.iloc[-1])
+    vol = float(rets.std() * np.sqrt(252))                       # yearly volatility
+    r1 = float(c.iloc[-1] / c.iloc[0] - 1)
+    fall = float(-((c - c.cummax()) / c.cummax()).min())         # biggest drop from a peak (0.25 = 25%)
+    return {"price": price, "r1": r1, "r6": float(c.iloc[-1] / c.iloc[-126] - 1),
+            "r3": float(c.iloc[-1] / c.iloc[-63] - 1), "vol": vol, "fall": fall,
+            "sharpe": (r1 - RISK_FREE) / vol if vol else 0.0,
+            "trend": price / float(c.iloc[-200:].mean()) - 1,      # above (+) or below (−) its 200-day average
+            "uptrend": price > float(c.iloc[-200:].mean()), "rsi": rsi(c)}
+
+def refresh_stats():
+    syms = index_members("NIFTY200")
+    out = {}
+    for i in range(0, len(syms), 50):
+        chunk = syms[i:i + 50]
+        tickers = [STOCKS.get(s, s + ".NS") for s in chunk]
+        data = _download(tickers, threads=4, background=True, period="1y", interval="1d")
+        for s, t in zip(chunk, tickers):
+            try:
+                m = _measure(data[t]["Close"] if len(tickers) > 1 else data["Close"])
+                if m:
+                    out[s] = m
+            except Exception:
+                pass
+        del data
+        gc.collect()
+    if out:
+        _stats.clear()
+        _stats.update(out)
+        _stats_meta["at"] = datetime.now(IST).strftime("%d %b %Y, %I:%M %p IST")
+
+def _planner_worker():
+    while True:
+        try:
+            if index_members("NIFTY200"):                       # wait for the index lists to load first
+                refresh_stats()
+                _mark("planner", True, f"{len(_stats)} stocks analysed")
+                time.sleep(6 * 3600)
+                continue
+        except Exception as e:
+            _mark("planner", False, e)
+        time.sleep(15)
+
+def _z(values):
+    a = np.array(values, dtype=float)
+    s = a.std()
+    return (a - a.mean()) / s if s else np.zeros_like(a)
+
+def _reasons(x, median_vol):
+    r = [f"{'Up' if x['r1'] >= 0 else 'Down'} {abs(x['r1']) * 100:.0f}% in the last 1 year "
+         f"({'+' if x['r6'] >= 0 else ''}{x['r6'] * 100:.0f}% in 6 months)"]
+    r.append("Steadier than most stocks — smaller daily ups and downs" if x["vol"] < median_vol
+             else "Moves more than most stocks — higher risk, higher growth potential")
+    if x["uptrend"]:
+        r.append("Price is above its 200-day average — a long-term uptrend")
+    else:
+        r.append(f"Price is {abs(x['trend']) * 100:.0f}% below its 200-day average — not in an uptrend yet, "
+                 "so buy slowly in parts")
+    r.append(f"Biggest fall in the past year: {x['fall'] * 100:.0f}% from its peak")
+    if x["rsi"] > 65:
+        r.append(f"Has risen fast recently (RSI {x['rsi']:.0f}) — consider buying in 2-3 parts")
+    else:
+        r.append(f"Not overheated right now (RSI {x['rsi']:.0f})")
+    r.append(f"{x['sector']} sector — spreads your money across industries")
+    return r
+
+def build_plan(amount, risk):
+    p = PROFILES[risk]
+    members = set(index_members(p["universe"]))
+    sectors, names = peek("industry") or {}, peek("company") or {}
+    with _lock:
+        live = dict(_moves)
+    median_vol = float(np.median([m["vol"] for m in _stats.values()]))
+    calm_limit = (float(np.percentile([m["vol"] for s, m in _stats.items() if s in members], p["calm_pct"]))
+                  if p["calm_pct"] else None)
+    pool, too_costly = [], 0
+    for s, m in _stats.items():
+        if s not in members:
+            continue
+        price = (live.get(s) or {}).get("price") or m["price"]   # today's live price when known
+        if price > amount * p["max_weight"]:                      # can't buy even 1 share within its limit
+            too_costly += 1
+            continue
+        if m["rsi"] > p["rsi_max"]:                               # just rallied too hard — wait for a calmer price
+            continue
+        if calm_limit and m["vol"] > calm_limit:                  # skip the most volatile (30% low / 15% balanced)
+            continue
+        pool.append(dict(m, symbol=s, price=price, sector=sectors.get(s, "Other"),
+                         name=names.get(s) or all_stocks().get(s, {}).get("name", s)))
+    if len(pool) < 3:
+        return {"error": "Not enough suitable stocks for this amount — try a bigger amount or another risk level."}
+
+    keys = list(p["score"])
+    zs = {k: _z([x[k] for x in pool]) for k in keys}
+    for i, x in enumerate(pool):
+        x["score"] = sum(p["score"][k] * zs[k][i] for k in keys)
+    pool.sort(key=lambda x: x["score"], reverse=True)
+
+    n = 3 if amount < 5000 else 5 if amount < 50000 else 7 if amount < 200000 else 8
+    picks, per_sector = [], {}
+    for limit in (p["per_sector"], p["per_sector"] + 1):         # best scores, limited per sector
+        for x in pool:                                            # (2nd pass allows one more per sector if short)
+            if len(picks) == n:
+                break
+            if x in picks or per_sector.get(x["sector"], 0) >= limit:
+                continue
+            picks.append(x)
+            per_sector[x["sector"]] = per_sector.get(x["sector"], 0) + 1
+
+    w = np.array([1 / x["vol"] for x in picks])                  # steadier stock → bigger share
+    w = w / w.sum()
+    for _ in range(10):                                          # cap each stock, share the excess
+        over = w > p["max_weight"] + 1e-9
+        if not over.any():
+            break
+        excess = (w[over] - p["max_weight"]).sum()
+        w[over] = p["max_weight"]
+        w[~over] += excess * w[~over] / w[~over].sum()
+
+    for x, wi in zip(picks, w):                                  # whole shares, then use leftover cash
+        x["target"] = amount * wi
+        x["shares"] = int(x["target"] // x["price"])
+    cash = amount - sum(x["shares"] * x["price"] for x in picks)
+    while True:
+        options = [x for x in picks if x["price"] <= cash and           # never above the per-stock limit
+                   (x["shares"] + 1) * x["price"] <= min(x["target"] * 1.35, amount * p["max_weight"]) + 1]
+        if not options:
+            break
+        x = max(options, key=lambda x: x["target"] - x["shares"] * x["price"])
+        x["shares"] += 1
+        cash -= x["price"]
+    picks = [x for x in picks if x["shares"] > 0]
+    invested = sum(x["shares"] * x["price"] for x in picks)
+
+    stocks = [{"symbol": x["symbol"], "name": x["name"], "sector": x["sector"], "price": round(x["price"], 2),
+               "shares": x["shares"], "amount": round(x["shares"] * x["price"], 2),
+               "weight": round(x["shares"] * x["price"] / invested * 100, 1),
+               "return_1y": round(x["r1"] * 100, 1), "volatility": round(x["vol"] * 100, 1),
+               "reasons": _reasons(x, median_vol)} for x in picks]
+    basket_1y = sum(s["amount"] * x["r1"] for s, x in zip(stocks, picks)) / invested * 100
+    basket_vol = sum(s["amount"] * x["vol"] for s, x in zip(stocks, picks)) / invested * 100
+    sector_list = sorted({s["sector"] for s in stocks})
+    return {
+        "amount": amount, "risk": risk, "risk_label": p["label"],
+        "invested": round(invested, 2), "cash_left": round(amount - invested, 2),
+        "stocks": stocks, "sectors": sector_list,
+        "basket_return_1y": round(basket_1y, 1), "basket_volatility": round(basket_vol, 1),
+        "analysed": len(_stats), "data_as_of": _stats_meta["at"],
+        "explain": [
+            f"We checked <b>{len(_stats)} stocks</b> from the NIFTY 200 using the last 1 year of real prices, "
+            f"and chose {p['about']}.",
+            f"Each stock got a score from its returns, how much its price swings, its biggest fall and its trend. "
+            f"The best {len(stocks)} were picked, with a limit on stocks from the same sector so your money is spread "
+            f"across <b>{len(sector_list)} different industries</b>.",
+            "Your money is split so that <b>steadier stocks get a bigger share</b> and no single stock gets more than "
+            f"{int(p['max_weight'] * 100)}% — if one company has a bad time, the others soften the hit.",
+            f"Whole shares only: you invest <b>₹{invested:,.0f}</b> and keep <b>₹{amount - invested:,.0f}</b> as cash"
+            + (f" ({too_costly} stocks were skipped because one share costs more than this budget allows)." if too_costly else "."),
+            f"This basket would have returned <b>{basket_1y:+.1f}%</b> over the last year — but that is hindsight "
+            "(the stocks were chosen using that same past data), so future returns will be different.",
+        ],
+        "tips": [
+            "Only invest money you won't need for at least 1-3 years. Keep an emergency fund first.",
+            "Don't put everything in at once — buying in 2-3 parts over a few weeks (or a monthly SIP) lowers the risk of a bad entry price.",
+            "Prices go down as well as up. A 10-20% fall in a year is normal; don't panic-sell.",
+            "Review the basket every 3-6 months, not every day.",
+            "For a complete beginner, a NIFTY 50 index fund is often the simplest and safest start.",
+        ],
+        "disclaimer": "Educational tool, not investment advice. The suggestions come from past prices and simple rules; "
+                      "past performance does not guarantee future returns. TradePulse is not a SEBI-registered "
+                      "adviser — do your own research or consult a registered adviser before investing real money.",
+    }
+
+@app.route("/api/plan")
+def plan():
+    try:
+        amount = float(request.args.get("amount", 10000))
+    except ValueError:
+        return jsonify({"error": "Enter a valid amount"}), 400
+    if not 1000 <= amount <= 1e8:
+        return jsonify({"error": "Enter an amount between ₹1,000 and ₹10 crore"}), 400
+    risk = request.args.get("risk", "balanced")
+    if risk not in PROFILES:
+        risk = "balanced"
+    if not _stats:
+        return jsonify({"error": "loading"}), 503
+    result = build_plan(amount, risk)
+    return jsonify(result), (400 if "error" in result else 200)
 
 # ============================================================
 #  ROUTE — real news + VADER sentiment (like sentiment_analyzer.py)
@@ -1182,7 +1419,8 @@ def _start_workers_once():
         if _workers_pid == os.getpid():
             return
         _workers_pid = os.getpid()
-        for fn, name in ((_movers_worker, "movers-worker"), (_ipo_worker, "ipo-worker")):
+        for fn, name in ((_movers_worker, "movers-worker"), (_ipo_worker, "ipo-worker"),
+                         (_planner_worker, "planner-worker")):
             threading.Thread(target=fn, name=name, daemon=True).start()
             _workers_started.append(f"{name} (pid {os.getpid()})")
 
