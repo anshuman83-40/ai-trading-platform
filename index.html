@@ -152,7 +152,21 @@ nav{position:sticky;top:0;z-index:200;background:rgba(8,12,16,0.96);backdrop-fil
 .ob-lbls{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px}
 
 /* CHART */
-.chart-wrap{padding:14px;height:278px;position:relative}
+.ch-tf{display:flex;gap:4px;flex-wrap:wrap}
+.ch-tf .chip.on,.ch-inds .chip.on{border-color:var(--green);color:var(--green);background:rgba(0,230,118,0.06)}
+.ch-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 12px;border-bottom:1px solid var(--border)}
+.ch-inds{display:flex;gap:4px;flex-wrap:wrap;flex:1}
+.ch-inds .chip{font-size:10px;padding:3px 7px}
+.ch-btns{display:flex;gap:6px}
+.ch-btns a.btn-sm{text-decoration:none;display:inline-block}
+.ch-legend{padding:6px 12px 0;font-family:var(--mono);font-size:11px;color:var(--muted);min-height:22px;display:flex;gap:10px;flex-wrap:wrap}
+.ch-legend b{color:var(--text);font-weight:400}
+.ch-main{height:380px;position:relative}
+.ch-sub{height:120px;position:relative;border-top:1px solid var(--border);display:none}
+.ch-sub.on{display:block}
+.ch-sub-lbl{position:absolute;left:10px;top:4px;z-index:3;font-family:var(--mono);font-size:10px;color:var(--muted);pointer-events:none}
+#chartPanel.ch-full{position:fixed;inset:0;z-index:1500;border-radius:0;overflow-y:auto;background:var(--bg2)}
+#chartPanel.ch-full .ch-main{height:calc(100vh - 330px);min-height:280px}
 
 /* MOVERS */
 .movers-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px 14px}
@@ -343,7 +357,10 @@ footer span{color:var(--green)}
   .levels{gap:5px}
   .lv{padding:7px 4px}
   .lv-val{font-size:12px}
-  .chart-wrap{height:220px;padding:10px 6px 8px}
+  .ch-main{height:300px}
+  .ch-sub{height:100px}
+  .ch-bar{padding:8px 10px}
+  #chartPanel.ch-full .ch-main{height:calc(100vh - 360px)}
   /* movers: one list at a time */
   .mv-toggle{display:flex;gap:6px;padding:10px 12px 0}
   .mv-toggle button{flex:1;height:36px;background:none;border:1px solid var(--border);border-radius:3px;color:var(--muted);font-family:var(--cond);font-size:12px;letter-spacing:2px;cursor:pointer}
@@ -485,13 +502,28 @@ footer span{color:var(--green)}
     <div class="right-col">
       <div class="panel no-stock" id="chartPanel">
         <div class="ph">
-          <div><span class="dot">▸</span> INTRADAY CHART — <span id="chartLbl" style="color:var(--green)">SELECT STOCK</span></div>
-          <div style="display:flex;gap:5px">
-            <span class="chip" onclick="setMode('1m')">1M</span><span class="chip" onclick="setMode('5m')">5M</span>
-            <span class="chip" onclick="setMode('15m')">15M</span><span class="chip" onclick="setMode('1h')">1H</span>
+          <div><span class="dot">▸</span> CHART — <span id="chartLbl" style="color:var(--green)">SELECT STOCK</span></div>
+          <div class="ch-tf" id="chTf">
+            <span class="chip" data-tf="1m" onclick="setMode('1m')">1m</span><span class="chip" data-tf="5m" onclick="setMode('5m')">5m</span>
+            <span class="chip" data-tf="15m" onclick="setMode('15m')">15m</span><span class="chip" data-tf="1h" onclick="setMode('1h')">1H</span>
+            <span class="chip" data-tf="1d" onclick="setMode('1d')">1D</span><span class="chip" data-tf="1wk" onclick="setMode('1wk')">1W</span>
           </div>
         </div>
-        <div class="chart-wrap"><canvas id="mainChart"></canvas></div>
+        <div class="ch-bar">
+          <select id="chType" class="mv-select" onchange="setChType(this.value)" title="Chart type">
+            <option value="candles">CANDLES</option><option value="heikin">HEIKIN-ASHI</option>
+            <option value="line">LINE</option><option value="area">AREA</option>
+          </select>
+          <div class="ch-inds" id="chInds"></div>
+          <div class="ch-btns">
+            <button class="btn-sm" onclick="toggleChFull()" title="Full screen">⤢ FULL</button>
+            <a class="btn-sm" id="tvLink" href="#" target="_blank" rel="noopener" title="Drawing tools and 100+ indicators">TRADINGVIEW ↗</a>
+          </div>
+        </div>
+        <div class="ch-legend" id="chLegend"></div>
+        <div class="ch-main" id="chMain"></div>
+        <div class="ch-sub" id="chRsi"><span class="ch-sub-lbl">RSI 14</span></div>
+        <div class="ch-sub" id="chMacd"><span class="ch-sub-lbl">MACD 12 26 9</span></div>
       </div>
 
       <div class="panel" id="moversPanel">
@@ -665,6 +697,8 @@ window.addEventListener('error',function(e){reportErr((e.message||'error')+' @'+
 window.addEventListener('unhandledrejection',function(e){reportErr('promise: '+((e.reason&&e.reason.message)||e.reason))});
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js" onerror="reportErr('Chart.js failed to load')"></script>
+<!-- TradingView Lightweight Charts (open source) — the professional candlestick chart -->
+<script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js" onerror="reportErr('Lightweight Charts failed to load')"></script>
 <script>
 /* ============================================================
    TRADEPULSE v2.0 — ALL LOGIC
@@ -824,52 +858,164 @@ function buildChips(){
   document.getElementById('chips').innerHTML=picks.map(s=>`<span class="chip" onclick="loadSym('${s}')">${s}</span>`).join('');
 }
 
-// MAIN CHART
-let mainC=null,chartMode='5m',chartSym='',chartData=[];
+// MAIN CHART — TradingView Lightweight Charts (candles, volume, indicators, RSI + MACD panels)
+let chartMode='5m',chartSym='',CH=null,chType='candles',chFull=false;
+const CH_INDS=[['ema20','EMA 20','#ffb800'],['ema50','EMA 50','#00b4ff'],['sma200','SMA 200','#b388ff'],
+  ['bb','BOLL 20','#4dd0e1'],['vwap','VWAP','#ff7eb6'],['vol','VOLUME',''],['rsi','RSI',''],['macd','MACD','']];
+let chOn={ema20:true,ema50:false,sma200:false,bb:false,vwap:false,vol:true,rsi:true,macd:false};
+try{Object.assign(chOn,JSON.parse(localStorage.getItem('tp_ch_inds')||'{}'));chType=localStorage.getItem('tp_ch_type')||'candles'}catch(e){}
+
+// ── indicator maths (same formulas as TradingView) ──
+const emaA=(a,n)=>{const k=2/(n+1);let p=null;return a.map(v=>p=(p===null?v:v*k+p*(1-k)))};
+const smaA=(a,n)=>{let s=0;return a.map((v,i)=>{s+=v;if(i>=n)s-=a[i-n];return i>=n-1?s/n:null})};
+function rsiA(c,n=14){
+  const out=c.map(()=>null);let g=0,l=0;
+  for(let i=1;i<c.length;i++){
+    const d=c[i]-c[i-1],up=Math.max(d,0),dn=Math.max(-d,0);
+    if(i<=n){g+=up/n;l+=dn/n}else{g=(g*(n-1)+up)/n;l=(l*(n-1)+dn)/n}
+    if(i>=n)out[i]=l===0?100:100-100/(1+g/l);
+  }
+  return out;
+}
+function bollA(c,n=20,k=2){
+  const mid=smaA(c,n);
+  return mid.map((m,i)=>{if(m===null)return null;let s=0;for(let j=i-n+1;j<=i;j++)s+=(c[j]-m)**2;const sd=Math.sqrt(s/n);return [m+k*sd,m,m-k*sd]});
+}
+function vwapA(k){  // resets every trading day (intraday charts only)
+  let day=-1,pv=0,vv=0;
+  return k.t.map((t,i)=>{const d=Math.floor(t/86400);if(d!==day){day=d;pv=0;vv=0}
+    const tp=(k.h[i]+k.l[i]+k.c[i])/3;pv+=tp*k.v[i];vv+=k.v[i];return vv?pv/vv:null});
+}
+function heikinA(k){
+  const o=[],c=[];
+  return k.t.map((t,i)=>{
+    c[i]=(k.o[i]+k.h[i]+k.l[i]+k.c[i])/4;
+    o[i]=i?(o[i-1]+c[i-1])/2:(k.o[i]+k.c[i])/2;
+    return {time:t,open:o[i],high:Math.max(k.h[i],o[i],c[i]),low:Math.min(k.l[i],o[i],c[i]),close:c[i]};
+  });
+}
+
+// ── chart setup ──
+const CH_OPTS={layout:{background:{type:'solid',color:'#0d1117'},textColor:'#7d9688',fontFamily:"'Share Tech Mono',monospace",fontSize:11},
+  grid:{vertLines:{color:'rgba(0,200,120,0.05)'},horzLines:{color:'rgba(0,200,120,0.05)'}},
+  rightPriceScale:{borderColor:'rgba(0,200,120,0.18)'},crosshair:{mode:0},autoSize:true,
+  handleScroll:{vertTouchDrag:false},          // on phones a vertical swipe scrolls the page, not the chart
+  timeScale:{borderColor:'rgba(0,200,120,0.18)',rightOffset:4}};
+function chDestroy(){if(!CH)return;[CH.main,CH.rsi,CH.macd].forEach(c=>c&&c.remove());CH=null}
+function buildIndChips(){
+  document.getElementById('chInds').innerHTML=CH_INDS.map(([k,l,c])=>
+    `<span class="chip${chOn[k]?' on':''}" onclick="toggleInd('${k}')"${c?` style="${chOn[k]?'border-color:'+c+';color:'+c:''}"`:''}>${l}</span>`).join('');
+  document.querySelectorAll('#chTf .chip').forEach(s=>s.classList.toggle('on',s.dataset.tf===chartMode));
+  document.getElementById('chType').value=chType;
+}
+function toggleInd(k){chOn[k]=!chOn[k];try{localStorage.setItem('tp_ch_inds',JSON.stringify(chOn))}catch(e){}buildIndChips();if(CH)drawChart(CH.k)}
+function setChType(t){chType=t;try{localStorage.setItem('tp_ch_type',t)}catch(e){}if(CH)drawChart(CH.k)}
+function toggleChFull(){chFull=!chFull;document.getElementById('chartPanel').classList.toggle('ch-full',chFull)}
+function setMode(m){chartMode=m;buildIndChips();if(chartSym)buildChart(chartSym)}
+
 async function buildChart(sym){
   chartSym=sym;
   document.getElementById('chartPanel').classList.remove('no-stock');
-  const d=DB[sym]||{p:1000,ch:0.3};
-  const col=d.ch>=0?'#00e676':'#ff4b4b';
-  let labels;
+  buildIndChips();
+  const info=DB[sym]||{};
+  document.getElementById('tvLink').href='https://www.tradingview.com/chart/?symbol='+(info.exch==='BSE'?'BSE:':'NSE:')+encodeURIComponent(sym);
+  document.getElementById('chartLbl').textContent=sym+' · LOADING...';
+  if(typeof LightweightCharts==='undefined'){document.getElementById('chartLbl').textContent=sym+' · CHART UNAVAILABLE';return}
   try{
-    const h=await api(`/history/${encodeURIComponent(sym)}?interval=${chartMode}`);
-    if(sym!==chartSym)return; // user switched stock while loading
-    chartData=h.close;labels=h.labels;
-    document.getElementById('chartLbl').textContent=sym+' · REAL';
+    const h=await api(`/history/${encodeURIComponent(sym)}?interval=${chartMode}`,20000);
+    if(sym!==chartSym)return;                     // user switched stock while loading
+    document.getElementById('chartLbl').textContent=sym+' · '+({'1m':'1 MIN','5m':'5 MIN','15m':'15 MIN','1h':'1 HOUR','1d':'DAILY','1wk':'WEEKLY'}[chartMode]);
+    drawChart(h.candles);
   }catch(e){
-    if(LIVE){document.getElementById('chartLbl').textContent=sym+' · NO INTRADAY DATA';if(mainC){mainC.destroy();mainC=null}return}
-    const pts=chartMode==='1m'?60:chartMode==='5m'?48:chartMode==='15m'?30:18;
-    const ms=chartMode==='1m'?1:chartMode==='5m'?5:chartMode==='15m'?15:60;
-    chartData=genLine(pts,d.p*0.996,d.ch>=0?0.00018:-0.00018,0.0018);
-    labels=chartData.map((_,i)=>{const t=9*60+15+i*ms;return `${Math.floor(t/60)}:${String(t%60).padStart(2,'0')}`});
-    document.getElementById('chartLbl').textContent=sym+' · SIMULATED';
+    document.getElementById('chartLbl').textContent=sym+' · NO CHART DATA';chDestroy();
   }
-  if(typeof Chart==='undefined'){document.getElementById('chartLbl').textContent=sym+' · CHART UNAVAILABLE';return}
-  const ctx=document.getElementById('mainChart').getContext('2d');
-  if(mainC)mainC.destroy();
-  mainC=new Chart(ctx,{
-    type:'line',
-    data:{labels,datasets:[{label:sym,data:[...chartData],borderColor:col,borderWidth:1.5,pointRadius:0,pointHoverRadius:4,tension:0.3,fill:{target:'origin',above:col+'14'}}]},
-    options:{responsive:true,maintainAspectRatio:false,animation:{duration:200},
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`₹${fmt(c.raw)}`}}},
-      scales:{x:{ticks:{color:'#5a7060',font:{family:'Share Tech Mono',size:10},maxRotation:0,autoSkip:true,maxTicksLimit:innerWidth<680?5:12},grid:{color:'rgba(0,200,120,0.05)'}},
-              y:{ticks:{color:'#5a7060',font:{family:'Share Tech Mono',size:10},maxTicksLimit:6,callback:v=>'₹'+(v>=1000?fmtI(v):fmt(v))},grid:{color:'rgba(0,200,120,0.05)'}}}}
-  });
 }
-function liveChart(){
-  if(!chartSym||!mainC)return;
-  if(LIVE){
-    // real data: keep the last candle in sync with the latest price
-    if(LP[chartSym])chartData[chartData.length-1]=LP[chartSym];
+
+function drawChart(k){
+  chDestroy();
+  const LW=LightweightCharts, intraday=!['1d','1wk'].includes(chartMode), n=k.t.length;
+  const mainEl=document.getElementById('chMain'), rsiEl=document.getElementById('chRsi'), macdEl=document.getElementById('chMacd');
+  rsiEl.classList.toggle('on',!!chOn.rsi);macdEl.classList.toggle('on',!!chOn.macd);
+  const opts=Object.assign({},CH_OPTS,{timeScale:Object.assign({},CH_OPTS.timeScale,{timeVisible:intraday,secondsVisible:false})});
+  const main=LW.createChart(mainEl,opts);
+  const up='#00e676',dn='#ff4b4b';
+  // price series
+  let price;
+  if(chType==='line'||chType==='area'){
+    price=chType==='line'?main.addLineSeries({color:up,lineWidth:2}):
+      main.addAreaSeries({lineColor:up,topColor:'rgba(0,230,118,0.25)',bottomColor:'rgba(0,230,118,0.02)',lineWidth:2});
+    price.setData(k.t.map((t,i)=>({time:t,value:k.c[i]})));
   }else{
-    chartData.push(LP[chartSym]||chartData[chartData.length-1]);
-    chartData.shift();
+    price=main.addCandlestickSeries({upColor:up,downColor:dn,borderVisible:false,wickUpColor:up,wickDownColor:dn});
+    price.setData(chType==='heikin'?heikinA(k):k.t.map((t,i)=>({time:t,open:k.o[i],high:k.h[i],low:k.l[i],close:k.c[i]})));
   }
-  mainC.data.datasets[0].data=[...chartData];
-  mainC.update('none');
+  // volume at the bottom of the price chart
+  let vol=null;
+  if(chOn.vol){
+    vol=main.addHistogramSeries({priceScaleId:'vol',priceFormat:{type:'volume'},lastValueVisible:false,priceLineVisible:false});
+    main.priceScale('vol').applyOptions({scaleMargins:{top:0.82,bottom:0}});
+    vol.setData(k.t.map((t,i)=>({time:t,value:k.v[i],color:k.c[i]>=k.o[i]?'rgba(0,230,118,0.35)':'rgba(255,75,75,0.35)'})));
+  }
+  // overlays
+  const line=(vals,color,w=1)=>{const s=main.addLineSeries({color,lineWidth:w,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false});
+    s.setData(k.t.map((t,i)=>vals[i]==null?{time:t}:{time:t,value:vals[i]}));return s};
+  const ov={};
+  if(chOn.ema20)ov.ema20=line(emaA(k.c,20),'#ffb800');
+  if(chOn.ema50)ov.ema50=line(emaA(k.c,50),'#00b4ff');
+  if(chOn.sma200)ov.sma200=line(smaA(k.c,200),'#b388ff');
+  if(chOn.bb){const b=bollA(k.c);ov.bbU=line(b.map(x=>x&&x[0]),'#4dd0e1');line(b.map(x=>x&&x[1]),'rgba(77,208,225,0.45)');ov.bbL=line(b.map(x=>x&&x[2]),'#4dd0e1')}
+  if(chOn.vwap&&intraday)ov.vwap=line(vwapA(k),'#ff7eb6',2);
+  // show roughly the last trading day (intraday) or last ~6 months (daily)
+  const show=Math.min(n,{'1m':375,'5m':150,'15m':130,'1h':120,'1d':130,'1wk':160}[chartMode]||150);
+  main.timeScale().setVisibleLogicalRange({from:n-show,to:n+3});
+  // RSI and MACD panels
+  let rsiC=null,macdC=null,rsiS=null,macdS=null;
+  const sub=(el)=>LW.createChart(el,Object.assign({},opts,{timeScale:Object.assign({},opts.timeScale,{visible:false})}));
+  if(chOn.rsi){
+    rsiC=sub(rsiEl);
+    rsiS=rsiC.addLineSeries({color:'#b388ff',lineWidth:1.5,priceLineVisible:false});
+    const r=rsiA(k.c);rsiS.setData(k.t.map((t,i)=>r[i]==null?{time:t}:{time:t,value:r[i]}));
+    [70,30].forEach(v=>rsiS.createPriceLine({price:v,color:'rgba(255,255,255,0.25)',lineWidth:1,lineStyle:2,axisLabelVisible:false}));
+  }
+  if(chOn.macd){
+    macdC=sub(macdEl);
+    const e12=emaA(k.c,12),e26=emaA(k.c,26),m=e12.map((v,i)=>v-e26[i]),sg=emaA(m,9);
+    const hs=macdC.addHistogramSeries({priceLineVisible:false,lastValueVisible:false});
+    hs.setData(k.t.map((t,i)=>({time:t,value:m[i]-sg[i],color:m[i]-sg[i]>=0?'rgba(0,230,118,0.5)':'rgba(255,75,75,0.5)'})));
+    macdS=macdC.addLineSeries({color:'#00b4ff',lineWidth:1.5,priceLineVisible:false});
+    macdS.setData(k.t.map((t,i)=>({time:t,value:m[i]})));
+    macdC.addLineSeries({color:'#ffb800',lineWidth:1,priceLineVisible:false,lastValueVisible:false}).setData(k.t.map((t,i)=>({time:t,value:sg[i]})));
+  }
+  // keep all panels scrolled/zoomed together
+  const all=[main,rsiC,macdC].filter(Boolean);let syncing=false;
+  all.forEach(c=>c.timeScale().subscribeVisibleLogicalRangeChange(r=>{
+    if(syncing||!r)return;syncing=true;all.forEach(o=>o!==c&&o.timeScale().setVisibleLogicalRange(r));syncing=false}));
+  all.forEach(c=>c!==main&&c.timeScale().setVisibleLogicalRange({from:n-show,to:n+3}));
+  // TradingView-style legend: O H L C · change · volume at the cursor (or the last bar)
+  const legend=document.getElementById('chLegend');
+  const showLegend=i=>{
+    if(i==null||i<0||i>=n)i=n-1;
+    const ch=k.c[i]-(i?k.c[i-1]:k.o[i]),pc=(ch/(i?k.c[i-1]:k.o[i])*100)||0,cls=ch>=0?'up':'dn';
+    legend.innerHTML=`<span>O <b>${fmt(k.o[i])}</b></span><span>H <b>${fmt(k.h[i])}</b></span><span>L <b>${fmt(k.l[i])}</b></span>`+
+      `<span>C <b class="${cls}">${fmt(k.c[i])}</b></span><span class="${cls}">${ch>=0?'+':''}${fmt(ch)} (${pc>=0?'+':''}${pc.toFixed(2)}%)</span>`+
+      (chOn.vol?`<span>Vol <b>${fmtVol(k.v[i])}</b></span>`:'');
+  };
+  main.subscribeCrosshairMove(p=>showLegend(p&&p.logical!=null?Math.round(p.logical):null));
+  showLegend(n-1);
+  CH={k,main,rsi:rsiC,macd:macdC,price,vol};
 }
-function setMode(m){chartMode=m;if(chartSym)buildChart(chartSym)}
+
+// live: keep the last candle in step with the latest price
+function liveChart(){
+  if(!CH||!chartSym||!LP[chartSym]||!['1m','5m','15m','1h','1d'].includes(chartMode))return;
+  const k=CH.k,i=k.t.length-1,p=LP[chartSym];
+  if(Math.abs(p-k.c[i])/k.c[i]>0.2)return;      // ignore anything odd
+  k.c[i]=p;k.h[i]=Math.max(k.h[i],p);k.l[i]=Math.min(k.l[i],p);
+  try{
+    if(chType==='line'||chType==='area')CH.price.update({time:k.t[i],value:p});
+    else if(chType==='candles')CH.price.update({time:k.t[i],open:k.o[i],high:k.h[i],low:k.l[i],close:p});
+  }catch(e){}
+}
 
 // MOVERS — NIFTY 50 / 200 / 500 / ALL INDIA from the backend; watchlist-only fallback
 let MKT_MOVERS=false, moversUni='NIFTY500', moversRetry=null;

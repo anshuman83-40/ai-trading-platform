@@ -443,24 +443,30 @@ def fetch_quote(symbol):
         return None
     return cached(f"quote:{symbol}", 20, load)
 
+# chart timeframe → (how much history, Yahoo bar size). Extra history lets indicators like EMA/RSI warm up.
+HIST = {"1m": ("5d", "1m"), "5m": ("1mo", "5m"), "15m": ("1mo", "15m"), "1h": ("6mo", "1h"),
+        "1d": ("2y", "1d"), "1wk": ("10y", "1wk")}
+IST_OFFSET = 19800      # seconds; charts show times in IST
+
 def fetch_history(symbol, interval):
     symbol = resolve_symbol(symbol)
-    period = {"1m": "1d", "5m": "1d", "15m": "5d", "1h": "1mo"}.get(interval, "1d")
+    period, bar = HIST.get(interval, HIST["5m"])
     def load():
         df = pd.DataFrame()
         for yt in yahoo_candidates(symbol):
-            df = yf.Ticker(yt).history(period=period, interval=interval).dropna(subset=["Close"])
+            df = yf.Ticker(yt).history(period=period, interval=bar).dropna(subset=["Close"])
             if not df.empty: break
         if df.empty: return None
-        if interval == "15m": df = df.tail(60)
-        if interval == "1h":  df = df.tail(70)
-        fmt = "%H:%M" if interval in ("1m", "5m") else "%d %b %H:%M"
+        r2 = lambda s: [round(float(x), 2) for x in s]
         return {
             "symbol": symbol.upper(), "interval": interval,
-            "labels": [t.strftime(fmt) for t in df.index],
-            "close":  [round(float(c), 2) for c in df["Close"]],
+            "candles": {                                    # for the candlestick chart (time in IST seconds)
+                "t": [int(t.timestamp()) + IST_OFFSET for t in df.index],
+                "o": r2(df["Open"]), "h": r2(df["High"]), "l": r2(df["Low"]), "c": r2(df["Close"]),
+                "v": [int(v) if v == v else 0 for v in df["Volume"]],
+            },
         }
-    return cached(f"hist:{symbol}:{interval}", 30, load)
+    return cached(f"hist:{symbol}:{interval}", 30 if bar in ("1m", "5m", "15m") else 300, load)
 
 # ============================================================
 #  ROUTES — prices
@@ -481,7 +487,7 @@ def live_price(symbol):
 @app.route("/api/history/<symbol>")
 def history(symbol):
     interval = request.args.get("interval", "5m")
-    if interval not in ("1m", "5m", "15m", "1h"):
+    if interval not in HIST:
         interval = "5m"
     h = fetch_history(symbol, interval)
     if not h:
