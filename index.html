@@ -745,7 +745,11 @@ async function api(path,ms=15000){
   try{r=await fetch(BACKEND+path,ctl?{signal:ctl.signal}:{})}
   catch(e){if(e.name==='AbortError'){const t=new Error('timed out');t.name='TimeoutError';throw t}throw e}
   finally{clearTimeout(timer)}
-  const d=await r.json();
+  let d;
+  try{d=await r.json()}
+  catch(e){   // got a web page instead of data — Render shows one while the server restarts
+    const t=new Error('loading');t.name='TimeoutError';throw t;
+  }
   if(!r.ok)throw new Error(d.error||r.status);
   return d;
 }
@@ -1431,16 +1435,24 @@ addEventListener('scroll',updateBnav,{passive:true});
 let plRisk='balanced', plChart=null, PLAN=null;
 const PL_COLORS=['#00e676','#00b4ff','#ffb800','#b388ff','#ff7eb6','#4dd0e1','#aed581','#ff8a65'];
 function setPlRisk(r){plRisk=r;document.querySelectorAll('.pl-r').forEach(b=>b.classList.toggle('active',b.dataset.risk===r))}
-async function buildPlan(){
+let plRetry=null;
+async function buildPlan(tries=0){
+  clearTimeout(plRetry);
   const amt=Math.round(+document.getElementById('plAmount').value||0);
   const out=document.getElementById('plOut');
   if(amt<1000){toast('⚠ Enter at least ₹1,000','warn');return}
   out.innerHTML='<div class="loading show"><div class="loading-txt">ANALYSING 1 YEAR OF REAL DATA...</div></div>';
   try{PLAN=await api(`/plan?amount=${amt}&risk=${plRisk}`,30000);renderPlan()}
   catch(e){
-    out.innerHTML=`<div class="empty-pf" style="padding:22px">${/loading/i.test(e.message)
-      ?'The server is still analysing stocks (about 1 minute after it starts). Please try again shortly.'
-      :esc(e.message)}</div>`;
+    // server waking / restarting / still analysing stocks → wait and try again by itself (up to ~3 minutes)
+    const busy=/loading/i.test(e.message||'')||e.name==='TimeoutError'||e.name==='TypeError';
+    if(busy&&tries<18){
+      out.innerHTML=`<div class="loading show"><div class="loading-txt">GETTING READY… ANALYSING ~200 STOCKS</div>
+        <div style="margin-top:8px;color:var(--muted);font-size:11px;letter-spacing:1px">The server is waking up or analysing (about a minute). Your plan will appear automatically.</div></div>`;
+      plRetry=setTimeout(()=>buildPlan(tries+1),10000);
+      return;
+    }
+    out.innerHTML=`<div class="empty-pf" style="padding:22px">${busy?'The server is taking too long right now. Please try again in a few minutes.':esc(e.message)}</div>`;
   }
 }
 function plCard(x,i){
