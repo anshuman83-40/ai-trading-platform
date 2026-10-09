@@ -225,6 +225,16 @@ a.ipo-allot:hover{color:#00ff88;border-bottom-style:solid}
 .pl-why h5{font-family:var(--cond);font-size:11px;letter-spacing:2px;color:var(--muted);margin-bottom:4px;font-weight:600}
 .pl-actions{display:flex;gap:8px;flex-wrap:wrap;padding:0 14px 12px}
 
+/* SIP CALCULATOR */
+.sip-form{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:12px 14px 14px;border-bottom:1px solid var(--border);align-items:start}
+.sip-range{width:100%;height:40px;accent-color:var(--green);cursor:pointer}
+.sip-presets{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+.sip-presets .chip{font-size:10px;padding:3px 7px}
+.sip-presets .chip.on{border-color:var(--green);color:var(--green)}
+.sip-chart{position:relative;height:250px;padding:0 14px 12px}
+.sip-real{margin:0 14px 12px;padding:12px 14px;border:1px solid rgba(0,180,255,0.25);border-left:3px solid var(--blue);border-radius:4px;background:rgba(0,180,255,0.04);font-size:13px;line-height:1.7}
+.sip-real b{color:var(--blue);font-weight:500}
+
 /* PORTFOLIO */
 .pf-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;padding:12px 14px;border-bottom:1px solid var(--border)}
 .pf-stat{background:var(--bg3);border:1px solid var(--border);border-radius:3px;padding:9px 12px}
@@ -372,6 +382,9 @@ footer span{color:var(--green)}
   .pl-sum{grid-template-columns:1fr 1fr;padding:10px 12px}
   .pl-body{grid-template-columns:1fr;padding:0 12px 12px}
   .pl-chart{height:200px}
+  .sip-form{grid-template-columns:1fr 1fr;gap:10px 12px;padding:12px}
+  .sip-chart{height:210px;padding:0 6px 10px}
+  .sip-real{margin:0 12px 12px}
   #pfTbl td:last-child{grid-column:1/-1}
   .news-grid{grid-template-columns:1fr}
   .news-card{padding:11px 12px}
@@ -397,6 +410,7 @@ footer span{color:var(--green)}
     <a href="#portfolio">Portfolio</a>
     <a href="#watchlist">Watchlist</a>
     <a href="#planner">Invest</a>
+    <a href="#sip">SIP</a>
     <a href="#ipo">IPO</a>
     <a href="#alerts">Alerts</a>
     <a href="#news">News</a>
@@ -527,6 +541,24 @@ footer span{color:var(--green)}
       <button class="btn-go pl-go" onclick="buildPlan()">BUILD MY PORTFOLIO</button>
     </div>
     <div id="plOut"></div>
+  </div>
+
+  <!-- SIP CALCULATOR -->
+  <div class="panel section" id="sip">
+    <div class="ph"><div><span class="dot">▸</span> SIP CALCULATOR — GROW MONEY EVERY MONTH</div><span style="color:var(--amber);font-size:10px;letter-spacing:1px">EDUCATIONAL</span></div>
+    <div class="pl-intro">A <b>SIP (Systematic Investment Plan)</b> means investing a fixed amount every month, for example in a NIFTY 50 index fund. Small amounts grow big over time because your returns also start earning returns — this is called <b>compounding</b>.</div>
+    <div class="sip-form">
+      <div><label class="fl">Monthly SIP (₹)</label>
+        <input type="number" class="fi" id="sipAmt" value="2000" min="100" step="100" inputmode="numeric" oninput="calcSIP()"/></div>
+      <div><label class="fl">For how many years: <span id="sipYrsLbl" style="color:var(--green)">10</span></label>
+        <input type="range" id="sipYrs" class="sip-range" min="1" max="30" value="10" oninput="calcSIP()"/></div>
+      <div><label class="fl">Expected return per year (%)</label>
+        <input type="number" class="fi" id="sipRate" value="10" min="1" max="30" step="0.5" inputmode="decimal" oninput="calcSIP()"/>
+        <div class="sip-presets" id="sipPresets"></div></div>
+      <div><label class="fl">Increase SIP every year by (%)</label>
+        <input type="number" class="fi" id="sipStep" value="0" min="0" max="50" step="5" inputmode="numeric" oninput="calcSIP()"/></div>
+    </div>
+    <div id="sipOut"></div>
   </div>
 
   <!-- IPO CENTER -->
@@ -1285,6 +1317,93 @@ function addPlanToPF(){
   document.getElementById('portfolio').scrollIntoView({behavior:'smooth'});
 }
 
+// SIP CALCULATOR — monthly investing with compounding (+ a real NIFTY 50 history check from the server)
+let sipChart=null, sipRealT=null, NIFTY_CAGR=null;
+const inr=v=>'₹'+fmtI(Math.round(v));
+const inrWords=v=>v>=1e7?(v/1e7).toFixed(2)+' crore':v>=1e5?(v/1e5).toFixed(2)+' lakh':'';
+function sipGrow(P,years,ratePct,stepPct){
+  // invest at the start of each month; monthly rate = yearly rate / 12 (same as most Indian SIP calculators)
+  const i=ratePct/100/12; let value=0,invested=0,p=P; const rows=[];
+  for(let y=1;y<=years;y++){
+    for(let m=0;m<12;m++){value=(value+p)*(1+i);invested+=p}
+    rows.push({year:y,invested,value});
+    p*=1+stepPct/100;
+  }
+  return rows;
+}
+function sipPresets(){
+  const n=NIFTY_CAGR, rate=+document.getElementById('sipRate').value;
+  const opts=[['FD ~7%',7]].concat(n?[[`NIFTY 10-yr real ${n}%`,n]]:[]).concat([['AGGRESSIVE 15%',15]]);
+  document.getElementById('sipPresets').innerHTML=opts.map(([l,v])=>
+    `<span class="chip${v===rate?' on':''}" onclick="document.getElementById('sipRate').value=${v};calcSIP()">${l}</span>`).join('');
+}
+function calcSIP(){
+  const P=Math.max(0,+document.getElementById('sipAmt').value||0), Y=+document.getElementById('sipYrs').value,
+        R=Math.max(0,+document.getElementById('sipRate').value||0), S=Math.max(0,+document.getElementById('sipStep').value||0);
+  document.getElementById('sipYrsLbl').textContent=Y+(Y>1?' years':' year');
+  sipPresets();
+  const out=document.getElementById('sipOut');
+  if(P<100){out.innerHTML='<div class="empty-pf" style="padding:18px">Enter at least ₹100 per month</div>';return}
+  const rows=sipGrow(P,Y,R,S), last=rows[rows.length-1];
+  const fd=sipGrow(P,Y,7,S)[Y-1].value;
+  const late=Y>5?sipGrow(P,Y-5,R,S)[Y-6]:null;
+  const words=inrWords(last.value);
+  out.innerHTML=`
+    <div class="pl-sum">
+      <div class="pf-stat"><div class="pf-stat-lbl">You invest</div><div class="pf-stat-val">${inr(last.invested)}</div></div>
+      <div class="pf-stat"><div class="pf-stat-lbl">It could become</div><div class="pf-stat-val up">${inr(last.value)}</div>${words?`<div class="ipo-small">${words}</div>`:''}</div>
+      <div class="pf-stat"><div class="pf-stat-lbl">Money earned</div><div class="pf-stat-val up">+${inr(last.value-last.invested)}</div><div class="ipo-small">${(last.value/last.invested).toFixed(2)}× your money</div></div>
+      <div class="pf-stat"><div class="pf-stat-lbl">Same money in FD (7%)</div><div class="pf-stat-val">${inr(fd)}</div><div class="ipo-small">${last.value>=fd?'SIP: +'+inr(last.value-fd)+' more':'FD: '+inr(fd-last.value)+' more'}</div></div>
+      <div class="pf-stat"><div class="pf-stat-lbl">If you start 5 years later</div><div class="pf-stat-val dn">${late?inr(late.value):'—'}</div><div class="ipo-small">${late?'you lose '+inr(last.value-late.value):'pick 6+ years to compare'}</div></div>
+    </div>
+    <div class="sip-chart"><canvas id="sipCanvas"></canvas></div>
+    <div class="sip-real" id="sipReal">Checking real NIFTY 50 history...</div>
+    <div class="pl-why"><h5>KEY LESSONS</h5>
+      <div>• <b>Start early:</b> time matters more than amount — your gains start earning their own gains.</div>
+      <div>• <b>Stay invested:</b> markets fall sometimes (even for 2-3 years); SIPs work best over 7+ years.</div>
+      <div>• <b>Step up:</b> increasing your SIP by 10% a year as your income grows makes a huge difference — try it above.</div>
+      <div>• <b>Keep it simple:</b> a low-cost NIFTY 50 index fund is a common first SIP for beginners.</div>
+    </div>
+    <div class="ipo-note">⚠ The calculator assumes the same return every year — real markets go up and down, so actual results will differ. Educational only, not investment advice.</div>`;
+  if(typeof Chart!=='undefined'){
+    try{
+      if(sipChart)sipChart.destroy();
+      sipChart=new Chart(document.getElementById('sipCanvas').getContext('2d'),{type:'bar',
+        data:{labels:rows.map(r=>'Yr '+r.year),datasets:[
+          {label:'You invest',data:rows.map(r=>Math.round(r.invested)),backgroundColor:'#00b4ff99',stack:'s'},
+          {label:'Money earned',data:rows.map(r=>Math.round(r.value-r.invested)),backgroundColor:'#00e676cc',stack:'s'}]},
+        options:{responsive:true,maintainAspectRatio:false,animation:{duration:250},
+          plugins:{legend:{labels:{color:'#e8f0e8',font:{family:'Share Tech Mono',size:10},boxWidth:10}},
+                   tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${inr(c.raw)}`}}},
+          scales:{x:{stacked:true,ticks:{color:'#5a7060',font:{size:9},maxRotation:0,autoSkip:true,maxTicksLimit:innerWidth<680?6:15},grid:{display:false}},
+                  y:{stacked:true,ticks:{color:'#5a7060',font:{family:'Share Tech Mono',size:9},maxTicksLimit:6,
+                     callback:v=>v>=1e7?(v/1e7).toFixed(1)+'Cr':v>=1e5?(v/1e5).toFixed(1)+'L':v>=1e3?(v/1e3)+'K':v},grid:{color:'rgba(0,200,120,0.05)'}}}}});
+    }catch(e){reportErr('sip chart: '+e.message)}
+  }
+  clearTimeout(sipRealT);sipRealT=setTimeout(()=>sipReal(P,Y),400);
+}
+async function sipReal(P,Y){
+  const box=document.getElementById('sipReal'); if(!box)return;
+  const mon=d=>new Date(d+'T00:00:00').toLocaleDateString('en-IN',{month:'short',year:'numeric'});
+  try{
+    const d=await api(`/sip-history?monthly=${P}&years=${Y}`,20000);
+    let html=`<b>REAL CHECK (NIFTY 50):</b> if you had invested ${inr(P)} every month in the NIFTY 50 from <b>${mon(d.from)}</b> to <b>${mon(d.to)}</b> (${d.years} year${d.years>1?'s':''}), you would have put in <b>${inr(d.invested)}</b> and it would be worth <b>${inr(d.value)}</b> today — `+
+      (d.gain>=0?`a gain of ${inr(d.gain)}, about <b>${d.annual_return}% a year</b>.`:`a <b>loss of ${inr(-d.gain)}</b> (${d.annual_return}% a year) — short periods can lose money.`);
+    if(d.years<Y)html+=` <span style="color:var(--muted)">(Only ${d.max_years} years of NIFTY data are available.)</span>`;
+    html+=` <span style="color:var(--muted)">Uses the price index without dividends, and the same SIP amount every month.</span>`;
+    box.innerHTML=html;
+  }catch(e){box.innerHTML='<span style="color:var(--muted)">Real NIFTY 50 history is not available right now.</span>'}
+}
+async function loadSipDefaults(){
+  try{
+    const d=await api('/sip-history?monthly=2000&years=10',20000);
+    NIFTY_CAGR=d.nifty_cagr['10y'];
+    const rate=document.getElementById('sipRate');
+    if(NIFTY_CAGR&&rate.value==='10')rate.value=NIFTY_CAGR;   // default = NIFTY's real 10-year growth
+  }catch(e){}
+  calcSIP();
+}
+
 // MODALS
 function openModal(id){document.getElementById(id).classList.add('open')}
 function closeModal(id){document.getElementById(id).classList.remove('open')}
@@ -1322,7 +1441,7 @@ document.getElementById('symInput').addEventListener('input',e=>{
 
 // INIT
 // Start: every piece runs on its own, so one failure (e.g. charts on an old phone) can't stop live data from loading
-[loadLivePrices,loadIndices,loadMovers,buildTicker,buildIndices,buildChips,buildMovers,buildWatchlist,renderPF,renderAlerts,buildNews]
+[loadLivePrices,loadIndices,loadMovers,loadSipDefaults,buildTicker,buildIndices,buildChips,buildMovers,buildWatchlist,renderPF,renderAlerts,buildNews]
   .forEach(f=>{try{const p=f();if(p&&p.catch)p.catch(e=>reportErr(f.name+': '+e.message))}catch(e){reportErr(f.name+': '+e.message)}});
 setInterval(loadMovers,60000);      // market-wide movers every 60s
 loadIPO();

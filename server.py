@@ -875,6 +875,57 @@ def build_plan(amount, risk):
                       "adviser — do your own research or consult a registered adviser before investing real money.",
     }
 
+# ============================================================
+#  SIP REALITY CHECK — what a monthly SIP in the NIFTY 50 actually returned, using real index prices
+#  (buy on each month's first available price, value at today's level; price index, so dividends excluded)
+# ============================================================
+def _nifty_monthly():
+    def load():
+        c = yf.Ticker("^NSEI").history(period="max", interval="1mo")["Close"].dropna()
+        return [(str(i.date()), float(v)) for i, v in c.items()] or None
+    return cached("nifty_monthly", 86400, load)              # refresh once a day
+
+def _monthly_irr(flows):
+    """Monthly rate r where the money paid in grows exactly to the final value (bisection)."""
+    npv = lambda r: sum(f / (1 + r) ** k for k, f in enumerate(flows))
+    lo, hi = -0.5, 0.5
+    if npv(lo) * npv(hi) > 0:
+        return None
+    for _ in range(100):
+        mid = (lo + hi) / 2
+        if npv(lo) * npv(mid) <= 0:
+            hi = mid
+        else:
+            lo = mid
+    return (lo + hi) / 2
+
+@app.route("/api/sip-history")
+def sip_history():
+    try:
+        monthly = min(max(float(request.args.get("monthly", 2000)), 100), 1e7)
+        years = int(request.args.get("years", 10))
+    except ValueError:
+        return jsonify({"error": "Enter valid numbers"}), 400
+    series = _nifty_monthly()
+    if not series:
+        return jsonify({"error": "NIFTY history unavailable right now"}), 503
+    max_years = (len(series) - 1) // 12
+    years = min(max(years, 1), max_years)
+    pts = series[-(years * 12 + 1):]                          # one purchase per month, value at the latest price
+    units = sum(monthly / px for _, px in pts[:-1])
+    invested = monthly * years * 12
+    value = units * pts[-1][1]
+    r = _monthly_irr([-monthly] * (years * 12) + [value])
+    cagr = lambda y: round(((series[-1][1] / series[-1 - 12 * y][1]) ** (1 / y) - 1) * 100, 1) \
+        if len(series) > 12 * y else None
+    return jsonify({
+        "monthly": monthly, "years": years, "max_years": max_years,
+        "invested": round(invested), "value": round(value), "gain": round(value - invested),
+        "annual_return": round(((1 + r) ** 12 - 1) * 100, 1) if r is not None else None,
+        "from": pts[0][0], "to": pts[-1][0],
+        "nifty_cagr": {"5y": cagr(5), "10y": cagr(10), "15y": cagr(15)},
+    })
+
 @app.route("/api/plan")
 def plan():
     try:
