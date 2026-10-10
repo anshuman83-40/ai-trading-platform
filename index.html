@@ -208,6 +208,19 @@ button,input,select{font-family:inherit}
 /* MOVERS */
 .mv-select{background:var(--bg3);border:none;border-radius:999px;color:var(--text);font-size:13px;font-weight:600;padding:8px 12px;cursor:pointer;outline:none}
 .mv-select option{background:var(--bg2);color:var(--text)}
+/* our own drop-down menu (the browser's plain list is hidden) */
+.dd{position:relative;display:inline-block}
+.dd select{display:none}
+.dd-btn{display:flex;align-items:center;gap:8px;background:var(--bg3);border:none;border-radius:999px;color:var(--text);font-size:13px;font-weight:600;padding:8px 12px 8px 14px;cursor:pointer;white-space:nowrap}
+.dd-btn svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;transition:transform .15s}
+.dd.open .dd-btn svg{transform:rotate(180deg)}
+.dd-menu{display:none;position:absolute;right:0;top:calc(100% + 6px);z-index:120;min-width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:14px;box-shadow:0 12px 32px rgba(16,24,40,0.16);padding:6px}
+.dd.left .dd-menu{right:auto;left:0}
+.dd.open .dd-menu{display:block}
+.dd-opt{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:9px 12px;border-radius:10px;font-size:13px;font-weight:500;color:var(--text);cursor:pointer;white-space:nowrap}
+.dd-opt:hover{background:var(--bg3)}
+.dd-opt.on{background:var(--pri-soft);color:var(--pri);font-weight:600}
+.dd-opt.on::after{content:'✓';font-size:12px}
 .mv-toggle{display:none}
 .movers-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 8px;padding:4px 0 8px}
 .mover-title{font-size:13px;font-weight:600;padding:8px 18px 4px}
@@ -1692,6 +1705,35 @@ function attachSearch(inputId,boxId){
 }
 attachSearch('homeSearch','homeSugg');
 attachSearch('symInput','symSugg');
+
+// DROP-DOWN MENUS — replace the browser's plain list with one that matches the design.
+// The real <select> stays (hidden) as the source of truth, so the rest of the code is unchanged.
+function enhanceSelect(sel){
+  const wrap=document.createElement('div');wrap.className='dd'+(sel.id==='chType'?' left':'');
+  sel.parentNode.insertBefore(wrap,sel);wrap.appendChild(sel);
+  const btn=document.createElement('button');btn.type='button';btn.className='dd-btn';
+  const menu=document.createElement('div');menu.className='dd-menu';
+  wrap.appendChild(btn);wrap.appendChild(menu);
+  const native=Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype,'value');
+  const sync=()=>{
+    const cur=native.get.call(sel), o=[...sel.options].find(x=>x.value===cur)||sel.options[0];
+    btn.innerHTML=`<span>${esc(o?o.textContent:'')}</span><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>`;
+    menu.innerHTML=[...sel.options].map(x=>`<div class="dd-opt${x.value===cur?' on':''}" data-v="${esc(x.value)}">${esc(x.textContent)}</div>`).join('');
+  };
+  // when the code sets select.value itself, the button text follows
+  Object.defineProperty(sel,'value',{get(){return native.get.call(sel)},set(v){native.set.call(sel,v);sync()}});
+  btn.addEventListener('click',e=>{e.stopPropagation();const was=wrap.classList.contains('open');closeMenus();if(!was)wrap.classList.add('open')});
+  menu.addEventListener('click',e=>{
+    const o=e.target.closest('.dd-opt');if(!o)return;
+    closeMenus();
+    if(o.dataset.v!==sel.value){sel.value=o.dataset.v;sel.dispatchEvent(new Event('change'))}
+  });
+  sync();
+}
+function closeMenus(){document.querySelectorAll('.dd.open').forEach(d=>d.classList.remove('open'))}
+document.addEventListener('click',closeMenus);
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMenus()});
+document.querySelectorAll('select.mv-select').forEach(enhanceSelect);
 
 // LOOK — colours come from the page theme, so charts match light and dark mode
 const tc=n=>getComputedStyle(document.documentElement).getPropertyValue('--'+n).trim();
