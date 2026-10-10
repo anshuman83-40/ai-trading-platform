@@ -236,8 +236,9 @@ button,input,select{font-family:inherit}
 .ipo-kind{display:inline-block;margin-left:6px;padding:2px 7px;border-radius:999px;font-size:11px;font-weight:700;background:var(--pri-soft);color:var(--pri);vertical-align:middle}
 .ipo-kind.sme{background:rgba(255,176,32,0.16);color:var(--amber)}
 .ipo-flag{display:inline-block;margin-top:4px;font-size:11px;font-weight:600;color:var(--muted)}
-.ipo-flag.ok{color:var(--green)}
-a.ipo-allot{text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.ipo-flag.ok{color:var(--muted)}
+a.ipo-flag.ipo-allot{color:var(--pri);text-decoration:none;cursor:pointer}
+a.ipo-flag.ipo-allot:hover{text-decoration:underline;text-underline-offset:3px}
 .ipo-src{color:var(--muted);font-size:11px;text-decoration:none;margin-left:6px}
 .ipo-small{color:var(--muted);font-size:11px;margin-top:2px}
 .ipo-hl{font-weight:700;white-space:nowrap}
@@ -1364,7 +1365,7 @@ function ipoRow(x){
   const listing=x.status==='listed'&&x.listed_price!=null
     ?`<span class="ipo-hl ${x.listing_gain>=0?'up':'dn'}">₹${num(x.listed_price)} (${x.listing_gain>=0?'+':''}${x.listing_gain}%)</span>`
     :x.est_listing!=null?`₹${num(x.est_listing)}<div class="ipo-small">estimated</div>`:dash;
-  const sub=x.sub==null?dash:`<span style="color:${x.sub>=1?'var(--green)':'var(--amber)'}">${x.sub}x</span>`;
+  const sub=x.sub==null?dash:`<span style="font-weight:600">${x.sub}x</span>`;
   const lot=x.lot?`${fmtI(x.lot)}${x.min_invest?`<div class="ipo-small">₹${fmtI(x.min_invest)}</div>`:''}`:dash;
   // data-label = the small title each value gets when this row becomes a card on phones
   return `<tr>
