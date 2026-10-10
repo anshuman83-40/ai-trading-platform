@@ -1394,7 +1394,7 @@ def get_groww_portfolio():
 #  (only the website files are served — never server.py itself)
 # ============================================================
 SITE_DIR = os.path.dirname(os.path.abspath(__file__))
-SITE_FILES = {"index.html", "login.html", "style.css", "script.js", "login.js", "login.css",
+SITE_FILES = {"index.html", "login.html", "classic.html", "style.css", "script.js", "login.js", "login.css",
               # phone-app (PWA) files
               "manifest.json", "sw.js", "icon-192.png", "icon-512.png", "apple-touch-icon.png"}
 MIME = {".js": "text/javascript", ".json": "application/manifest+json", ".png": "image/png"}
@@ -1408,7 +1408,7 @@ def site_file(name):
     if name not in SITE_FILES:
         abort(404)
     resp = send_from_directory(SITE_DIR, name, mimetype=MIME.get(os.path.splitext(name)[1]))
-    if name in ("sw.js", "index.html", "login.html", "manifest.json"):
+    if name in ("sw.js", "index.html", "login.html", "classic.html", "manifest.json"):
         resp.headers["Cache-Control"] = "no-cache"      # phones always pick up new versions
     return resp
 
