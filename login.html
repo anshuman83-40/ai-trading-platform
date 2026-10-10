@@ -6,120 +6,86 @@
 <title>TradePulse — Login</title>
 <!-- phone app (PWA): install from the browser, opens full-screen like an app -->
 <link rel="manifest" href="/manifest.json"/>
-<meta name="theme-color" content="#080c10"/>
+<meta name="theme-color" content="#f4f6fa" id="themeMeta"/>
 <link rel="icon" href="/icon-192.png"/>
 <link rel="apple-touch-icon" href="/apple-touch-icon.png"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-status-bar-style" content="black"/>
-<script>if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('/sw.js').catch(()=>{});
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<script>
+// same light / dark look as the app
+try{document.documentElement.dataset.theme=localStorage.getItem('tp_theme')||'light'}catch(e){document.documentElement.dataset.theme='light'}
+if(document.documentElement.dataset.theme==='dark')document.getElementById('themeMeta').content='#0b0b0d';
+if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('/sw.js').catch(()=>{});
 // start waking the free server while the user logs in (it sleeps after 15 min without visitors)
 if(location.protocol.startsWith('http')&&location.port!=='5500')fetch('/api/status').catch(()=>{});</script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#080c10;--bg2:#0d1117;--bg3:#111820;
-  --border:rgba(0,200,120,0.15);--border2:rgba(0,200,120,0.3);
-  --green:#00e676;--red:#ff4b4b;--amber:#ffb800;
-  --text:#e8f0e8;--muted:#5a7060;
-  --mono:'Share Tech Mono',monospace;
-  --sans:'Barlow',sans-serif;
-  --cond:'Barlow Condensed',sans-serif;
+  --bg:#f4f6fa;--bg2:#ffffff;--bg3:#f4f6fa;--border:#e1e5ec;
+  --pri:#1757f5;--pri-soft:rgba(23,87,245,0.09);--red:#e5372b;
+  --text:#0b1020;--muted:#566074;
+  --grad:linear-gradient(135deg,#a24bff 0%,#1757f5 100%);
+  --dark-btn:#12141c;--dark-btn-t:#ffffff;
 }
-html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--text);overflow-x:hidden}
+:root[data-theme="dark"]{
+  --bg:#0b0b0d;--bg2:#17171a;--bg3:#202024;--border:#26262b;
+  --pri:#2f6bff;--pri-soft:rgba(47,107,255,0.16);--red:#ff5a52;
+  --text:#f7f8fa;--muted:#a3a8b4;
+  --dark-btn:#26262b;--dark-btn-t:#f7f8fa;
+}
+html,body{height:100%}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;overflow-x:hidden;text-rendering:optimizeLegibility}
+button,input,select{font-family:inherit}
 
-/* GRID BG */
-body::before{content:'';position:fixed;inset:0;z-index:0;
-  background-image:linear-gradient(rgba(0,230,118,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,230,118,0.04) 1px,transparent 1px);
-  background-size:44px 44px;animation:gridMove 25s linear infinite;pointer-events:none}
-@keyframes gridMove{from{background-position:0 0}to{background-position:44px 44px}}
+.page{display:grid;grid-template-columns:1fr 1fr;min-height:100vh}
 
-/* SCANLINES */
-body::after{content:'';position:fixed;inset:0;z-index:0;
-  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.04) 2px,rgba(0,0,0,0.04) 4px);
-  pointer-events:none}
+/* LEFT — brand panel */
+.left{background:var(--grad);color:#fff;padding:56px;display:flex;flex-direction:column;justify-content:center;gap:34px}
+.brand{display:flex;align-items:center;gap:12px;font-weight:700;font-size:24px;letter-spacing:-0.3px}
+.brand-mark{width:44px;height:44px;border-radius:13px;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:21px}
+.left h1{font-size:38px;line-height:1.15;font-weight:700;letter-spacing:-0.8px;max-width:440px}
+.left p{font-size:16px;opacity:0.85;max-width:420px;margin-top:12px}
+.features{display:flex;flex-direction:column;gap:14px}
+.feat{display:flex;align-items:center;gap:12px;font-size:15px;font-weight:500}
+.feat i{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.feat svg{width:14px;height:14px;fill:none;stroke:#fff;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.disc{font-size:12px;opacity:0.7}
 
-.page{position:relative;z-index:1;display:grid;grid-template-columns:1fr 1fr;min-height:100vh}
-
-/* LEFT */
-.left{background:linear-gradient(155deg,#091510 0%,#080c10 60%);border-right:1px solid var(--border);
-  padding:56px 48px;display:flex;flex-direction:column;justify-content:center;gap:36px}
-.brand-logo{font-family:var(--cond);font-size:40px;font-weight:700;letter-spacing:6px;
-  color:var(--green);text-shadow:0 0 30px rgba(0,230,118,0.35)}
-.brand-logo span{color:var(--text)}
-.brand-tag{font-family:var(--mono);font-size:11px;letter-spacing:3px;color:var(--muted);margin-top:5px}
-.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.stat{background:rgba(0,230,118,0.04);border:1px solid var(--border);border-radius:4px;padding:14px 16px}
-.stat-val{font-family:var(--mono);font-size:20px;color:var(--text);margin-bottom:3px}
-.stat-val.up{color:var(--green)}
-.stat-lbl{font-family:var(--cond);font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase}
-.features{display:flex;flex-direction:column;gap:9px}
-.feat{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--muted)}
-.feat-icon{color:var(--green);font-size:13px;flex-shrink:0}
-.disc{font-family:var(--mono);font-size:10px;color:var(--muted);opacity:0.4;letter-spacing:1px}
-
-/* RIGHT */
-.right{display:flex;align-items:center;justify-content:center;padding:40px}
-.card{width:100%;max-width:400px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:34px}
-
-/* TABS */
-.tabs{display:flex;margin-bottom:26px;border-bottom:1px solid var(--border)}
-.tab{flex:1;background:none;border:none;padding:10px;cursor:pointer;
-  font-family:var(--cond);font-size:13px;letter-spacing:3px;color:var(--muted);
-  text-transform:uppercase;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.2s}
-.tab.active{color:var(--green);border-bottom-color:var(--green)}
-.tab:hover{color:var(--text)}
-
-/* FORM */
-.fg{margin-bottom:16px}
-.fl{display:block;font-family:var(--cond);font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:5px;text-transform:uppercase}
-.fi{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:3px;
-  height:42px;padding:0 13px;color:var(--text);font-family:var(--sans);font-size:14px;
-  outline:none;transition:border-color 0.2s;-webkit-appearance:none}
-.fi:focus{border-color:var(--green);box-shadow:0 0 10px rgba(0,230,118,0.1)}
+/* RIGHT — form */
+.right{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px}
+.card{width:100%;max-width:400px;background:var(--bg2);border:1px solid var(--border);border-radius:22px;padding:30px;box-shadow:0 1px 2px rgba(16,24,40,0.06)}
+.card h2{font-size:22px;font-weight:700;letter-spacing:-0.3px}
+.card .sub{font-size:14px;color:var(--muted);margin:2px 0 20px}
+.tabs{display:flex;gap:4px;padding:4px;border-radius:999px;background:var(--bg3);margin-bottom:22px}
+.tab{flex:1;background:none;border:none;padding:10px;border-radius:999px;cursor:pointer;font-size:14px;font-weight:500;color:var(--muted)}
+.tab.active{background:var(--pri);color:#fff;font-weight:600}
+.fg{margin-bottom:14px}
+.fl{display:block;font-size:13px;font-weight:500;color:var(--muted);margin-bottom:6px}
+.fi{width:100%;background:var(--bg3);border:1.5px solid transparent;border-radius:14px;height:48px;padding:0 15px;color:var(--text);font-size:16px;outline:none;transition:border-color .15s;-webkit-appearance:none;appearance:none}
+.fi::placeholder{color:var(--muted);opacity:0.7}
+.fi:focus{border-color:var(--pri)}
 .fi option{background:var(--bg2)}
 select.fi{cursor:pointer}
-
-.rem-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;font-size:12px}
-.ck-lbl{display:flex;align-items:center;gap:6px;color:var(--muted);cursor:pointer}
-.ck-lbl input{accent-color:var(--green)}
-.fgt{color:var(--muted);text-decoration:none;font-size:12px;transition:color 0.2s}
-.fgt:hover{color:var(--green)}
-
-.btn-login{width:100%;height:46px;background:var(--green);color:#000;border:none;border-radius:3px;
-  cursor:pointer;font-family:var(--cond);font-size:14px;font-weight:700;letter-spacing:3px;
-  text-transform:uppercase;transition:all 0.2s;margin-bottom:14px}
-.btn-login:hover{background:#00ff88;box-shadow:0 0 20px rgba(0,230,118,0.3)}
-
-.divider{text-align:center;position:relative;margin:0 0 14px;font-size:11px;color:var(--muted)}
-.divider::before,.divider::after{content:'';position:absolute;top:50%;width:42%;height:0.5px;background:var(--border)}
+.btn-login{width:100%;height:50px;background:var(--pri);color:#fff;border:none;border-radius:999px;cursor:pointer;font-size:15px;font-weight:600;margin-top:6px;transition:filter .15s}
+.btn-login:hover{filter:brightness(1.08)}
+.divider{text-align:center;position:relative;margin:16px 0;font-size:12px;color:var(--muted)}
+.divider::before,.divider::after{content:'';position:absolute;top:50%;width:42%;height:1px;background:var(--border)}
 .divider::before{left:0}.divider::after{right:0}
-
-.demo-btn{display:flex;align-items:center;gap:14px;padding:13px;border:1px dashed var(--border);
-  border-radius:3px;cursor:pointer;transition:border-color 0.2s;width:100%;background:none}
-.demo-btn:hover{border-color:var(--green)}
-.demo-icon{color:var(--green);font-size:20px;line-height:1}
-.demo-title{font-family:var(--cond);font-size:13px;letter-spacing:2px;color:var(--text);display:block}
-.demo-sub{font-size:11px;color:var(--muted);margin-top:2px;display:block}
-
-.err{margin-top:12px;font-size:12px;color:var(--red);font-family:var(--mono);letter-spacing:1px;
-  min-height:18px;text-align:center}
-
-/* BLINK */
-@keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
-.live-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);
-  box-shadow:0 0 8px var(--green);animation:blink 1.4s infinite;vertical-align:middle;margin-right:4px}
+.demo-btn{width:100%;height:50px;background:var(--dark-btn);color:var(--dark-btn-t);border:none;border-radius:999px;cursor:pointer;font-size:15px;font-weight:600}
+.demo-sub{text-align:center;font-size:12px;color:var(--muted);margin-top:8px}
+.err{margin-top:12px;font-size:13px;font-weight:500;color:var(--red);min-height:20px;text-align:center}
+.note{max-width:400px;text-align:center;font-size:12px;color:var(--muted);margin-top:16px}
 
 .m-brand{display:none}
-@media(max-width:768px){
+@media(max-width:820px){
   .page{grid-template-columns:1fr}.left{display:none}
-  .right{flex-direction:column;justify-content:center;padding:28px 16px}
-  .m-brand{display:block;text-align:center;margin-bottom:22px}
-  .m-brand .brand-logo{font-size:30px;letter-spacing:5px}
-  .card{padding:26px 20px}
-  .fi{font-size:16px}   /* 16px = no auto-zoom on iPhone */
+  .right{padding:28px 16px}
+  .m-brand{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:22px;font-weight:700;font-size:22px;letter-spacing:-0.3px}
+  .m-brand .brand-mark{width:56px;height:56px;border-radius:17px;background:var(--grad);color:#fff;font-size:26px}
+  .card{padding:24px 20px}
 }
 </style>
 </head>
@@ -128,58 +94,48 @@ select.fi{cursor:pointer}
 
   <!-- LEFT BRANDING -->
   <div class="left">
+    <div class="brand"><span class="brand-mark">T</span>TradePulse</div>
     <div>
-      <div class="brand-logo">TRADE<span>PULSE</span></div>
-      <div class="brand-tag">INTRADAY INTELLIGENCE PLATFORM</div>
-    </div>
-    <div class="stats-grid">
-      <div class="stat"><div class="stat-val" id="lNifty">22,608</div><div class="stat-lbl">NIFTY 50</div></div>
-      <div class="stat"><div class="stat-val" id="lSensex">74,520</div><div class="stat-lbl">SENSEX</div></div>
-      <div class="stat"><div class="stat-val up">+0.42%</div><div class="stat-lbl">TODAY</div></div>
-      <div class="stat"><div class="stat-val"><span class="live-dot"></span>LIVE</div><div class="stat-lbl">MARKET</div></div>
+      <h1>Understand Indian stocks, simply.</h1>
+      <p>Real NSE and BSE prices, clear signals and beginner tools in one place.</p>
     </div>
     <div class="features">
-      <div class="feat"><span class="feat-icon">◈</span> Real-time Buy / Sell signals</div>
-      <div class="feat"><span class="feat-icon">◈</span> Live candlestick price charts</div>
-      <div class="feat"><span class="feat-icon">◈</span> Portfolio P&amp;L tracker</div>
-      <div class="feat"><span class="feat-icon">◈</span> Price alerts &amp; notifications</div>
-      <div class="feat"><span class="feat-icon">◈</span> Market depth &amp; order book</div>
+      <div class="feat"><i><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i>Real prices for 5,000+ NSE and BSE stocks</div>
+      <div class="feat"><i><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i>Buy / Sell signals with full charts</div>
+      <div class="feat"><i><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i>Top movers and IPOs with live GMP</div>
+      <div class="feat"><i><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i>Portfolio builder and SIP calculator</div>
     </div>
     <div class="disc">For educational purposes only. Not financial advice.</div>
   </div>
 
   <!-- RIGHT FORM -->
   <div class="right">
-    <div class="m-brand"><div class="brand-logo">TRADE<span>PULSE</span></div><div class="brand-tag">INTRADAY INTELLIGENCE PLATFORM</div></div>
+    <div class="m-brand"><span class="brand-mark">T</span>TradePulse</div>
     <div class="card">
+      <h2>Welcome</h2>
+      <div class="sub">Log in or create an account to continue.</div>
       <div class="tabs">
-        <button class="tab active" id="tabLogin" onclick="switchTab('login')">LOGIN</button>
-        <button class="tab" id="tabSignup" onclick="switchTab('signup')">SIGN UP</button>
+        <button class="tab active" id="tabLogin" onclick="switchTab('login')">Log in</button>
+        <button class="tab" id="tabSignup" onclick="switchTab('signup')">Sign up</button>
       </div>
 
       <!-- LOGIN -->
       <div id="loginForm">
-        <div class="fg"><label class="fl">Email Address</label><input type="email" class="fi" id="loginEmail" placeholder="trader@example.com"/></div>
-        <div class="fg"><label class="fl">Password</label><input type="password" class="fi" id="loginPass" placeholder="••••••••"/></div>
-        <div class="rem-row">
-          <label class="ck-lbl"><input type="checkbox"/> Remember me</label>
-          <a href="#" class="fgt">Forgot password?</a>
-        </div>
-        <button class="btn-login" onclick="handleLogin()" id="loginBtn">LOGIN TO DASHBOARD</button>
-        <div class="divider">OR</div>
-        <button class="demo-btn" onclick="demoLogin()">
-          <span class="demo-icon">▶</span>
-          <span><span class="demo-title">DEMO ACCESS</span><span class="demo-sub">Enter without registration</span></span>
-        </button>
+        <div class="fg"><label class="fl">Email</label><input type="email" class="fi" id="loginEmail" placeholder="you@example.com" autocomplete="email"/></div>
+        <div class="fg"><label class="fl">Password</label><input type="password" class="fi" id="loginPass" placeholder="Your password" autocomplete="current-password"/></div>
+        <button class="btn-login" onclick="handleLogin()" id="loginBtn">Log in</button>
+        <div class="divider">or</div>
+        <button class="demo-btn" onclick="demoLogin()">Try the demo</button>
+        <div class="demo-sub">Enter without registration</div>
       </div>
 
       <!-- SIGNUP -->
       <div id="signupForm" style="display:none">
-        <div class="fg"><label class="fl">Full Name</label><input type="text" class="fi" id="signupName" placeholder="Your Full Name"/></div>
-        <div class="fg"><label class="fl">Email Address</label><input type="email" class="fi" id="signupEmail" placeholder="trader@example.com"/></div>
-        <div class="fg"><label class="fl">Password</label><input type="password" class="fi" id="signupPass" placeholder="Minimum 6 characters"/></div>
+        <div class="fg"><label class="fl">Full name</label><input type="text" class="fi" id="signupName" placeholder="Your full name" autocomplete="name"/></div>
+        <div class="fg"><label class="fl">Email</label><input type="email" class="fi" id="signupEmail" placeholder="you@example.com" autocomplete="email"/></div>
+        <div class="fg"><label class="fl">Password</label><input type="password" class="fi" id="signupPass" placeholder="Minimum 6 characters" autocomplete="new-password"/></div>
         <div class="fg">
-          <label class="fl">Trading Experience</label>
+          <label class="fl">Trading experience</label>
           <select class="fi" id="signupExp">
             <option value="">Select level...</option>
             <option>Beginner (0–1 year)</option>
@@ -187,22 +143,16 @@ select.fi{cursor:pointer}
             <option>Expert (3+ years)</option>
           </select>
         </div>
-        <button class="btn-login" onclick="handleSignup()">CREATE ACCOUNT</button>
+        <button class="btn-login" onclick="handleSignup()">Create account</button>
       </div>
 
       <div class="err" id="errMsg"></div>
     </div>
+    <div class="note">Your account is saved only on this device.</div>
   </div>
 </div>
 
 <script>
-// Animate live stats
-setInterval(()=>{
-  const n=document.getElementById('lNifty'), s=document.getElementById('lSensex');
-  if(n) n.textContent=(22600+Math.random()*40).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,',');
-  if(s) s.textContent=(74500+Math.random()*80).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,',');
-},2000);
-
 function switchTab(t){
   document.getElementById('loginForm').style.display  = t==='login'  ?'block':'none';
   document.getElementById('signupForm').style.display = t==='signup' ?'block':'none';
@@ -220,7 +170,7 @@ function handleLogin(){
   const user =users.find(u=>u.email===email&&u.pass===pass);
   if(!user){showErr('⚠ Invalid email or password');return}
   localStorage.setItem('tp_loggedin',JSON.stringify({name:user.name,email:user.email}));
-  document.getElementById('loginBtn').textContent='LOADING...';
+  document.getElementById('loginBtn').textContent='Loading…';
   setTimeout(()=>{window.location.href='index.html'},500);
 }
 function handleSignup(){
