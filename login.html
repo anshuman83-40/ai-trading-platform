@@ -6,7 +6,7 @@
 <title>TradePulse — Login</title>
 <!-- phone app (PWA): install from the browser, opens full-screen like an app -->
 <link rel="manifest" href="/manifest.json"/>
-<meta name="theme-color" content="#f4f6fa" id="themeMeta"/>
+<meta name="theme-color" content="#f6f7fe" id="themeMeta"/>
 <link rel="icon" href="/icon-192.png"/>
 <link rel="apple-touch-icon" href="/apple-touch-icon.png"/>
 <meta name="mobile-web-app-capable" content="yes"/>
@@ -17,158 +17,248 @@
 try{document.documentElement.dataset.theme=localStorage.getItem('tp_theme')||'light'}catch(e){document.documentElement.dataset.theme='light'}
 if(document.documentElement.dataset.theme==='dark')document.getElementById('themeMeta').content='#0b0b0d';
 if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('/sw.js').catch(()=>{});
-// start waking the free server while the user logs in (it sleeps after 15 min without visitors)
-if(location.protocol.startsWith('http')&&location.port!=='5500')fetch('/api/status').catch(()=>{});</script>
+</script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#f4f6fa;--bg2:#ffffff;--bg3:#f4f6fa;--border:#e1e5ec;
-  --pri:#1757f5;--pri-soft:rgba(23,87,245,0.09);--red:#e5372b;
-  --text:#0b1020;--muted:#566074;
-  --grad:linear-gradient(135deg,#a24bff 0%,#1757f5 100%);
-  --dark-btn:#12141c;--dark-btn-t:#ffffff;
+  --bg:#f6f7fe;--bg-b:#eceffb;--card:#ffffff;--field:#ffffff;--border:#dfe3ee;
+  --pri:#1757f5;--pri-soft:rgba(23,87,245,0.09);--violet:#8b3dff;
+  --green:#0e9f5b;--red:#e5372b;
+  --text:#0b1020;--muted:#5b6478;
+  --grad:linear-gradient(90deg,#1757f5 0%,#8b3dff 100%);
+  --shadow:0 20px 60px rgba(40,56,120,0.12);
+  --chip-shadow:0 8px 24px rgba(40,56,120,0.10);
+  --orb:radial-gradient(circle at 32% 28%,#ffffff 0%,#d9dcff 38%,#b6a6ff 100%);
 }
 :root[data-theme="dark"]{
-  --bg:#0b0b0d;--bg2:#17171a;--bg3:#202024;--border:#26262b;
-  --pri:#2f6bff;--pri-soft:rgba(47,107,255,0.16);--red:#ff5a52;
+  --bg:#0b0b0d;--bg-b:#101018;--card:#17171a;--field:#202024;--border:#2c2c33;
+  --pri:#3d74ff;--pri-soft:rgba(61,116,255,0.16);--violet:#a06bff;
+  --green:#22c55e;--red:#ff5a52;
   --text:#f7f8fa;--muted:#a3a8b4;
-  --dark-btn:#26262b;--dark-btn-t:#f7f8fa;
+  --shadow:0 20px 60px rgba(0,0,0,0.5);
+  --chip-shadow:0 8px 24px rgba(0,0,0,0.4);
+  --orb:radial-gradient(circle at 32% 28%,#5b5f9a 0%,#35357a 45%,#241c52 100%);
 }
-html,body{height:100%}
-body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;overflow-x:hidden;text-rendering:optimizeLegibility}
+html,body{min-height:100%}
+body{font-family:'Inter',system-ui,sans-serif;background:linear-gradient(180deg,var(--bg) 0%,var(--bg-b) 100%) fixed;color:var(--text);font-size:14px;line-height:1.5;overflow-x:hidden;text-rendering:optimizeLegibility;font-variant-numeric:tabular-nums}
 button,input,select{font-family:inherit}
+.up{color:var(--green)}.dn{color:var(--red)}
 
-.page{display:grid;grid-template-columns:1fr 1fr;min-height:100vh}
+/* TOP BAR */
+.bar{max-width:1320px;margin:0 auto;padding:22px 40px;display:flex;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:11px;font-weight:800;font-size:22px;letter-spacing:-0.4px}
+.brand-mark{width:38px;height:38px;border-radius:11px;background:var(--grad);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700}
+.bar-r{display:flex;align-items:center;gap:14px;font-size:14px;color:var(--muted)}
+.btn-line{height:44px;padding:0 22px;border-radius:999px;border:1.5px solid var(--pri);background:none;color:var(--pri);font-size:14px;font-weight:600;cursor:pointer;transition:all .15s}
+.btn-line:hover{background:var(--pri-soft)}
 
-/* LEFT — brand panel */
-.left{background:var(--grad);color:#fff;padding:56px;display:flex;flex-direction:column;justify-content:center;gap:34px}
-.brand{display:flex;align-items:center;gap:12px;font-weight:700;font-size:24px;letter-spacing:-0.3px}
-.brand-mark{width:44px;height:44px;border-radius:13px;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:21px}
-.left h1{font-size:38px;line-height:1.15;font-weight:700;letter-spacing:-0.8px;max-width:440px}
-.left p{font-size:16px;opacity:0.85;max-width:420px;margin-top:12px}
-.features{display:flex;flex-direction:column;gap:14px}
-.feat{display:flex;align-items:center;gap:12px;font-size:15px;font-weight:500}
-.feat i{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.feat svg{width:14px;height:14px;fill:none;stroke:#fff;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
-.disc{font-size:12px;opacity:0.7}
+.page{max-width:1320px;margin:0 auto;padding:10px 40px 40px;display:grid;grid-template-columns:1.15fr 0.85fr;gap:56px;align-items:center;min-height:calc(100vh - 90px)}
 
-/* RIGHT — form */
-.right{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px}
-.card{width:100%;max-width:400px;background:var(--bg2);border:1px solid var(--border);border-radius:22px;padding:30px;box-shadow:0 1px 2px rgba(16,24,40,0.06)}
-.card h2{font-size:22px;font-weight:700;letter-spacing:-0.3px}
-.card .sub{font-size:14px;color:var(--muted);margin:2px 0 20px}
-.tabs{display:flex;gap:4px;padding:4px;border-radius:999px;background:var(--bg3);margin-bottom:22px}
-.tab{flex:1;background:none;border:none;padding:10px;border-radius:999px;cursor:pointer;font-size:14px;font-weight:500;color:var(--muted)}
-.tab.active{background:var(--pri);color:#fff;font-weight:600}
-.fg{margin-bottom:14px}
-.fl{display:block;font-size:13px;font-weight:500;color:var(--muted);margin-bottom:6px}
-.fi{width:100%;background:var(--bg3);border:1.5px solid transparent;border-radius:14px;height:48px;padding:0 15px;color:var(--text);font-size:16px;outline:none;transition:border-color .15s;-webkit-appearance:none;appearance:none}
-.fi::placeholder{color:var(--muted);opacity:0.7}
-.fi:focus{border-color:var(--pri)}
-.fi option{background:var(--bg2)}
+/* LEFT */
+.left{min-width:0}
+.left h1{font-size:64px;line-height:1.05;font-weight:800;letter-spacing:-2.2px}
+.left h1 span{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.tagline{font-size:22px;color:var(--muted);margin-top:12px;letter-spacing:-0.2px}
+.feats{display:flex;gap:26px;flex-wrap:wrap;margin-top:30px}
+.feat{display:flex;align-items:center;gap:12px}
+.feat i{width:44px;height:44px;border-radius:13px;background:var(--pri-soft);color:var(--pri);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.feat svg{width:20px;height:20px;fill:currentColor}
+.feat b{display:block;font-size:14px;font-weight:600;line-height:1.3}
+.feat small{font-size:13px;color:var(--muted)}
+
+/* live market picture (real data) */
+.viz{position:relative;height:330px;margin-top:26px}
+.orb{position:absolute;border-radius:50%;background:var(--orb);opacity:0.85}
+.orb.a{width:150px;height:150px;left:-10px;top:24px}
+.orb.b{width:30px;height:30px;left:132px;top:168px;opacity:0.7}
+.orb.c{width:110px;height:110px;right:10px;bottom:-14px}
+.line{position:absolute;left:8%;right:2%;top:14px;bottom:46px;opacity:0;transition:opacity .5s}
+.viz.on .line{opacity:1}
+.line svg{width:100%;height:100%;overflow:visible}
+.dot{position:absolute;width:14px;height:14px;border-radius:50%;background:var(--card);border:3.5px solid var(--violet);transform:translate(-50%,-50%)}
+.fcard{position:absolute;display:flex;align-items:center;gap:11px;background:var(--card);border-radius:14px;padding:10px 16px 10px 12px;box-shadow:var(--chip-shadow);opacity:0;transform:translateY(6px);transition:opacity .5s,transform .5s}
+.viz.on .fcard{opacity:1;transform:none}
+.fcard .ava{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0}
+.fcard b{display:block;font-size:12px;font-weight:600;color:var(--muted);line-height:1.2}
+.fcard .p{font-size:15px;font-weight:700;line-height:1.3}
+.fcard .c{font-size:12px;font-weight:600;line-height:1.2}
+.fcard.f1{left:27%;top:30%}
+.fcard.f2{left:57%;top:2%}
+.fcard.f3{left:50%;top:60%}
+.icard{position:absolute;left:0;bottom:0;display:flex;align-items:flex-end;gap:18px;background:var(--card);border-radius:18px;padding:16px 20px;box-shadow:var(--chip-shadow);opacity:0;transition:opacity .5s}
+.viz.on .icard{opacity:1}
+.icard small{display:block;font-size:12px;color:var(--muted);font-weight:500}
+.icard .v{font-size:23px;font-weight:700;letter-spacing:-0.5px;line-height:1.25}
+.icard .c{font-size:13px;font-weight:600}
+.icard svg{width:130px;height:46px;overflow:visible}
+.viz-note{position:absolute;right:136px;bottom:2px;font-size:11px;color:var(--muted);opacity:0;transition:opacity .5s}
+.viz.on .viz-note{opacity:1}
+
+/* RIGHT — form card */
+.card{width:100%;max-width:520px;margin-left:auto;background:var(--card);border-radius:28px;padding:48px 44px 40px;box-shadow:var(--shadow)}
+.card h2{font-size:34px;font-weight:800;letter-spacing:-1px;text-align:center;line-height:1.15}
+.card .sub{font-size:16px;color:var(--muted);text-align:center;margin:8px 0 28px}
+.fg{margin-bottom:18px}
+.fl{display:block;font-size:14px;font-weight:500;margin-bottom:8px}
+.field{position:relative}
+.field>svg{position:absolute;left:16px;top:50%;transform:translateY(-50%);width:20px;height:20px;fill:none;stroke:var(--muted);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+.fi{width:100%;background:var(--field);border:1.5px solid var(--border);border-radius:12px;height:54px;padding:0 16px 0 48px;color:var(--text);font-size:16px;outline:none;transition:border-color .15s,box-shadow .15s;-webkit-appearance:none;appearance:none}
+.fi::placeholder{color:var(--muted);opacity:0.65}
+.fi:focus{border-color:var(--pri);box-shadow:0 0 0 4px var(--pri-soft)}
+.fi option{background:var(--card)}
 select.fi{cursor:pointer}
-.btn-login{width:100%;height:50px;background:var(--pri);color:#fff;border:none;border-radius:999px;cursor:pointer;font-size:15px;font-weight:600;margin-top:6px;transition:filter .15s}
-.btn-login:hover{filter:brightness(1.08)}
-.divider{text-align:center;position:relative;margin:16px 0;font-size:12px;color:var(--muted)}
-.divider::before,.divider::after{content:'';position:absolute;top:50%;width:42%;height:1px;background:var(--border)}
+.eye{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:40px;height:40px;border:none;background:none;cursor:pointer;color:var(--muted);display:flex;align-items:center;justify-content:center}
+.eye svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.btn-main{width:100%;height:58px;background:var(--grad);color:#fff;border:none;border-radius:12px;cursor:pointer;font-size:16px;font-weight:600;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:10px;transition:filter .15s,transform .1s}
+.btn-main:hover{filter:brightness(1.07)}
+.btn-main:active{transform:scale(0.99)}
+.btn-main svg{width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.divider{text-align:center;position:relative;margin:22px 0;font-size:14px;color:var(--muted)}
+.divider::before,.divider::after{content:'';position:absolute;top:50%;width:calc(50% - 70px);height:1px;background:var(--border)}
 .divider::before{left:0}.divider::after{right:0}
-.demo-btn{width:100%;height:50px;background:var(--dark-btn);color:var(--dark-btn-t);border:none;border-radius:999px;cursor:pointer;font-size:15px;font-weight:600}
-.demo-sub{text-align:center;font-size:12px;color:var(--muted);margin-top:8px}
-.err{margin-top:12px;font-size:13px;font-weight:500;color:var(--red);min-height:20px;text-align:center}
-.note{max-width:400px;text-align:center;font-size:12px;color:var(--muted);margin-top:16px}
+.btn-alt{width:100%;height:56px;background:var(--field);color:var(--text);border:1.5px solid var(--border);border-radius:12px;cursor:pointer;font-size:16px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:10px;transition:border-color .15s}
+.btn-alt:hover{border-color:var(--pri)}
+.btn-alt svg{width:18px;height:18px;fill:var(--pri)}
+.err{margin-top:14px;font-size:14px;font-weight:500;color:var(--red);min-height:21px;text-align:center}
+.swap{text-align:center;font-size:15px;color:var(--muted);margin-top:14px}
+.swap a{color:var(--pri);font-weight:600;cursor:pointer}
+.legal{max-width:520px;margin:18px 0 0 auto;text-align:center;font-size:12px;color:var(--muted)}
 
-.m-brand{display:none}
-@media(max-width:820px){
-  .page{grid-template-columns:1fr}.left{display:none}
-  .right{padding:28px 16px}
-  .m-brand{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:22px;font-weight:700;font-size:22px;letter-spacing:-0.3px}
-  .m-brand .brand-mark{width:56px;height:56px;border-radius:17px;background:var(--grad);color:#fff;font-size:26px}
-  .card{padding:24px 20px}
+@media(max-width:1180px){.left h1{font-size:52px}.page{gap:36px}.feat small{display:none}}
+@media(max-width:940px){
+  .bar{padding:16px 18px}
+  .bar-r span{display:none}
+  .page{grid-template-columns:1fr;padding:6px 16px 32px;min-height:0;gap:22px}
+  .left h1{font-size:38px;letter-spacing:-1.2px;text-align:center}
+  .tagline{font-size:16px;text-align:center;margin-top:8px}
+  .feats,.viz{display:none}
+  .card{margin:0 auto;padding:30px 22px 26px;border-radius:24px}
+  .card h2{font-size:26px}
+  .card .sub{font-size:15px;margin-bottom:22px}
+  .legal{margin:16px auto 0}
 }
 </style>
 </head>
 <body>
+
+<div class="bar">
+  <div class="brand"><span class="brand-mark">T</span>TradePulse</div>
+  <div class="bar-r"><span id="barTxt">Not a member yet?</span><button class="btn-line" id="barBtn" onclick="switchTab(MODE==='login'?'signup':'login')">Get started</button></div>
+</div>
+
 <div class="page">
 
-  <!-- LEFT BRANDING -->
+  <!-- LEFT -->
   <div class="left">
-    <div class="brand"><span class="brand-mark">T</span>TradePulse</div>
-    <div>
-      <h1>Understand Indian stocks, simply.</h1>
-      <p>Real NSE and BSE prices, clear signals and beginner tools in one place.</p>
+    <h1>Invest with <span>clarity.</span></h1>
+    <div class="tagline">Indian markets. Clear signals. All in one place.</div>
+    <div class="feats">
+      <div class="feat"><i><svg viewBox="0 0 24 24"><rect x="4" y="12" width="4" height="8" rx="1"/><rect x="10" y="8" width="4" height="12" rx="1"/><rect x="16" y="4" width="4" height="16" rx="1"/></svg></i><div><b>Real market data</b><small>5,000+ NSE &amp; BSE stocks</small></div></div>
+      <div class="feat"><i><svg viewBox="0 0 24 24"><path d="M13 2L4.5 13.5H11L10 22l8.5-11.5H12z"/></svg></i><div><b>Clear signals</b><small>Buy / Sell with charts</small></div></div>
+      <div class="feat"><i><svg viewBox="0 0 24 24"><path d="M11 3a9 9 0 1 0 10 10h-10z"/><path d="M13 2v9h9a9 9 0 0 0-9-9z" opacity=".55"/></svg></i><div><b>Beginner tools</b><small>Portfolio builder &amp; SIP</small></div></div>
     </div>
-    <div class="features">
-      <div class="feat"><i><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i>Real prices for 5,000+ NSE and BSE stocks</div>
-      <div class="feat"><i><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i>Buy / Sell signals with full charts</div>
-      <div class="feat"><i><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i>Top movers and IPOs with live GMP</div>
-      <div class="feat"><i><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i>Portfolio builder and SIP calculator</div>
+
+    <!-- real NIFTY 50 line and real prices; hidden until the data arrives -->
+    <div class="viz" id="viz">
+      <div class="orb a"></div><div class="orb b"></div><div class="orb c"></div>
+      <div class="line">
+        <svg viewBox="0 0 700 260" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="gLine" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#1757f5"/><stop offset="1" stop-color="#8b3dff"/></linearGradient>
+            <linearGradient id="gArea" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#6b5bff" stop-opacity="0.22"/><stop offset="1" stop-color="#6b5bff" stop-opacity="0"/></linearGradient>
+          </defs>
+          <polygon id="bigArea" fill="url(#gArea)" points=""/>
+          <polyline id="bigLine" fill="none" stroke="url(#gLine)" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke" points=""/>
+        </svg>
+        <div class="dot" id="bigDot"></div>
+      </div>
+      <div class="fcard f1" id="f1"></div>
+      <div class="fcard f2" id="f2"></div>
+      <div class="fcard f3" id="f3"></div>
+      <div class="icard" id="icard"></div>
+      <div class="viz-note" id="vizNote"></div>
     </div>
-    <div class="disc">For educational purposes only. Not financial advice.</div>
   </div>
 
-  <!-- RIGHT FORM -->
-  <div class="right">
-    <div class="m-brand"><span class="brand-mark">T</span>TradePulse</div>
+  <!-- RIGHT -->
+  <div>
     <div class="card">
-      <h2>Welcome</h2>
-      <div class="sub">Log in or create an account to continue.</div>
-      <div class="tabs">
-        <button class="tab active" id="tabLogin" onclick="switchTab('login')">Log in</button>
-        <button class="tab" id="tabSignup" onclick="switchTab('signup')">Sign up</button>
-      </div>
+      <h2 id="cTitle">Welcome back</h2>
+      <div class="sub" id="cSub">Log in to continue to your portfolio</div>
 
       <!-- LOGIN -->
       <div id="loginForm">
-        <div class="fg"><label class="fl">Email</label><input type="email" class="fi" id="loginEmail" placeholder="you@example.com" autocomplete="email"/></div>
-        <div class="fg"><label class="fl">Password</label><input type="password" class="fi" id="loginPass" placeholder="Your password" autocomplete="current-password"/></div>
-        <button class="btn-login" onclick="handleLogin()" id="loginBtn">Log in</button>
-        <div class="divider">or</div>
-        <button class="demo-btn" onclick="demoLogin()">Try the demo</button>
-        <div class="demo-sub">Enter without registration</div>
+        <div class="fg"><label class="fl" for="loginEmail">Email address</label>
+          <div class="field"><svg viewBox="0 0 24 24"><rect x="3.5" y="5.5" width="17" height="13" rx="2.5"/><path d="M4 7.5l8 6 8-6"/></svg>
+            <input type="email" class="fi" id="loginEmail" placeholder="you@example.com" autocomplete="email"/></div></div>
+        <div class="fg"><label class="fl" for="loginPass">Password</label>
+          <div class="field"><svg viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="9.5" rx="2.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5M12 14.5v2"/></svg>
+            <input type="password" class="fi" id="loginPass" placeholder="Your password" autocomplete="current-password"/>
+            <button type="button" class="eye" onclick="togglePass('loginPass')" title="Show / hide password"><svg viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.8"/></svg></button></div></div>
+        <button class="btn-main" onclick="handleLogin()" id="loginBtn">Log in <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+        <div class="divider">or continue with</div>
+        <button class="btn-alt" onclick="demoLogin()"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg>Try the demo — no sign-up</button>
       </div>
 
       <!-- SIGNUP -->
       <div id="signupForm" style="display:none">
-        <div class="fg"><label class="fl">Full name</label><input type="text" class="fi" id="signupName" placeholder="Your full name" autocomplete="name"/></div>
-        <div class="fg"><label class="fl">Email</label><input type="email" class="fi" id="signupEmail" placeholder="you@example.com" autocomplete="email"/></div>
-        <div class="fg"><label class="fl">Password</label><input type="password" class="fi" id="signupPass" placeholder="Minimum 6 characters" autocomplete="new-password"/></div>
-        <div class="fg">
-          <label class="fl">Trading experience</label>
-          <select class="fi" id="signupExp">
-            <option value="">Select level...</option>
-            <option>Beginner (0–1 year)</option>
-            <option>Intermediate (1–3 years)</option>
-            <option>Expert (3+ years)</option>
-          </select>
-        </div>
-        <button class="btn-login" onclick="handleSignup()">Create account</button>
+        <div class="fg"><label class="fl" for="signupName">Full name</label>
+          <div class="field"><svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20c.8-3.6 3.8-5.5 7.5-5.5s6.7 1.9 7.5 5.5"/></svg>
+            <input type="text" class="fi" id="signupName" placeholder="Your full name" autocomplete="name"/></div></div>
+        <div class="fg"><label class="fl" for="signupEmail">Email address</label>
+          <div class="field"><svg viewBox="0 0 24 24"><rect x="3.5" y="5.5" width="17" height="13" rx="2.5"/><path d="M4 7.5l8 6 8-6"/></svg>
+            <input type="email" class="fi" id="signupEmail" placeholder="you@example.com" autocomplete="email"/></div></div>
+        <div class="fg"><label class="fl" for="signupPass">Password</label>
+          <div class="field"><svg viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="9.5" rx="2.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5M12 14.5v2"/></svg>
+            <input type="password" class="fi" id="signupPass" placeholder="Minimum 6 characters" autocomplete="new-password"/>
+            <button type="button" class="eye" onclick="togglePass('signupPass')" title="Show / hide password"><svg viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.8"/></svg></button></div></div>
+        <div class="fg"><label class="fl" for="signupExp">Trading experience</label>
+          <div class="field"><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M8 15l3-4 3 2 5-7"/></svg>
+            <select class="fi" id="signupExp">
+              <option value="">Select level...</option>
+              <option>Beginner (0–1 year)</option>
+              <option>Intermediate (1–3 years)</option>
+              <option>Expert (3+ years)</option>
+            </select></div></div>
+        <button class="btn-main" onclick="handleSignup()">Create account <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
       </div>
 
       <div class="err" id="errMsg"></div>
+      <div class="swap" id="swap">New to TradePulse? <a onclick="switchTab('signup')">Create an account</a></div>
     </div>
-    <div class="note">Your account is saved only on this device.</div>
+    <div class="legal">For educational use only — not investment advice. Your account is saved only on this device.</div>
   </div>
 </div>
 
 <script>
+// ── LOG IN / SIGN UP (accounts are kept on this device) ──
+let MODE='login';
 function switchTab(t){
-  document.getElementById('loginForm').style.display  = t==='login'  ?'block':'none';
-  document.getElementById('signupForm').style.display = t==='signup' ?'block':'none';
-  document.getElementById('tabLogin').classList.toggle('active',  t==='login');
-  document.getElementById('tabSignup').classList.toggle('active', t==='signup');
+  MODE=t;
+  const login=t==='login';
+  document.getElementById('loginForm').style.display=login?'block':'none';
+  document.getElementById('signupForm').style.display=login?'none':'block';
+  document.getElementById('cTitle').textContent=login?'Welcome back':'Create your account';
+  document.getElementById('cSub').textContent=login?'Log in to continue to your portfolio':'It takes less than a minute';
+  document.getElementById('barTxt').textContent=login?'Not a member yet?':'Already a member?';
+  document.getElementById('barBtn').textContent=login?'Get started':'Log in';
+  document.getElementById('swap').innerHTML=login
+    ?'New to TradePulse? <a onclick="switchTab(\'signup\')">Create an account</a>'
+    :'Already have an account? <a onclick="switchTab(\'login\')">Log in</a>';
   document.getElementById('errMsg').textContent='';
 }
 function showErr(m){document.getElementById('errMsg').textContent=m}
+function togglePass(id){const i=document.getElementById(id);i.type=i.type==='password'?'text':'password'}
 
 function handleLogin(){
   const email=document.getElementById('loginEmail').value.trim();
   const pass =document.getElementById('loginPass').value;
-  if(!email||!pass){showErr('⚠ Please fill all fields');return}
+  if(!email||!pass){showErr('Please fill in both fields');return}
   const users=JSON.parse(localStorage.getItem('tp_users')||'[]');
   const user =users.find(u=>u.email===email&&u.pass===pass);
-  if(!user){showErr('⚠ Invalid email or password');return}
+  if(!user){showErr('Wrong email or password');return}
   localStorage.setItem('tp_loggedin',JSON.stringify({name:user.name,email:user.email}));
   document.getElementById('loginBtn').textContent='Loading…';
   setTimeout(()=>{window.location.href='index.html'},500);
@@ -177,10 +267,10 @@ function handleSignup(){
   const name =document.getElementById('signupName').value.trim();
   const email=document.getElementById('signupEmail').value.trim();
   const pass =document.getElementById('signupPass').value;
-  if(!name||!email||!pass){showErr('⚠ Please fill all fields');return}
-  if(pass.length<6){showErr('⚠ Password must be 6+ characters');return}
+  if(!name||!email||!pass){showErr('Please fill in all fields');return}
+  if(pass.length<6){showErr('Password must be at least 6 characters');return}
   const users=JSON.parse(localStorage.getItem('tp_users')||'[]');
-  if(users.find(u=>u.email===email)){showErr('⚠ Email already registered');return}
+  if(users.find(u=>u.email===email)){showErr('This email is already registered');return}
   users.push({name,email,pass});
   localStorage.setItem('tp_users',JSON.stringify(users));
   localStorage.setItem('tp_loggedin',JSON.stringify({name,email}));
@@ -192,9 +282,67 @@ function demoLogin(){
 }
 document.addEventListener('keydown',e=>{
   if(e.key!=='Enter')return;
-  const isLogin=document.getElementById('loginForm').style.display!=='none';
-  isLogin?handleLogin():handleSignup();
+  MODE==='login'?handleLogin():handleSignup();
 });
+
+// ── LIVE MARKET PICTURE — real NIFTY 50 line and real prices from the server (never made-up numbers).
+// Shows the last saved real data at once if this device has it, then the fresh data when the server answers.
+const BACKEND=(location.protocol==='file:'||location.port==='5500')?`http://${location.hostname||'localhost'}:5000/api`:'/api';
+const fmt=n=>Number(n).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const AVA=['#1757f5','#8b5cf6','#ec4899','#f59e0b','#12b76a','#06b6d4'];
+function pts(d,w,h,pad){
+  const mn=Math.min(...d),mx=Math.max(...d),r=(mx-mn)||1;
+  return d.map((v,i)=>[i/(d.length-1)*w,pad+(1-(v-mn)/r)*(h-2*pad)]);
+}
+function showMarket(ind,quotes,note){
+  const n=ind&&ind.nifty;
+  if(!n||!n.spark||n.spark.length<2)return false;
+  // big line = today's NIFTY 50
+  const P=pts(n.spark,700,260,14), str=P.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
+  document.getElementById('bigLine').setAttribute('points',str);
+  document.getElementById('bigArea').setAttribute('points',`0,260 ${str} 700,260`);
+  const last=P[P.length-1], dot=document.getElementById('bigDot');
+  dot.style.left=(last[0]/700*100)+'%';dot.style.top=(last[1]/260*100)+'%';
+  // index card with its own small line
+  const up=n.change>=0, col=getComputedStyle(document.documentElement).getPropertyValue(up?'--green':'--red').trim();
+  const S=pts(n.spark,130,46,4).map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
+  document.getElementById('icard').innerHTML=`<div><small>NIFTY 50</small><div class="v">${fmt(n.value)}</div>
+    <div class="c ${up?'up':'dn'}">${up?'+':''}${n.change}% ${up?'▲':'▼'}</div></div>
+    <svg viewBox="0 0 130 46" preserveAspectRatio="none"><polyline fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke" points="${S}"/></svg>`;
+  // three real stock prices
+  const picks=['RELIANCE','TCS','HDFCBANK','INFY','SBIN','ITC'].filter(s=>quotes&&quotes[s]).slice(0,3);
+  ['f1','f2','f3'].forEach((id,i)=>{
+    const el=document.getElementById(id), s=picks[i];
+    if(!s){el.style.display='none';return}
+    const q=quotes[s], u=q.change>=0, c=AVA[i%AVA.length];
+    el.style.display='';
+    el.innerHTML=`<span class="ava" style="background:${c}22;color:${c}">${esc(s.charAt(0))}</span>
+      <div><b>${esc(s)}</b><div class="p">₹${fmt(q.price)}</div><div class="c ${u?'up':'dn'}">${u?'+':''}${q.change}% ${u?'▲':'▼'}</div></div>`;
+  });
+  document.getElementById('vizNote').textContent=note;
+  document.getElementById('viz').classList.add('on');
+  return true;
+}
+// 1) saved real data from the last visit, labelled with its time
+try{
+  const s=JSON.parse(localStorage.getItem('tp_snap')||'{}');
+  if(s.at&&s.indices)showMarket(s.indices,s.quotes,'Saved data · '+new Date(s.at).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}));
+}catch(e){}
+// 2) fresh data — this also wakes the free server while the user logs in (it sleeps after 15 min without visitors)
+async function getJSON(path){
+  const ctl=typeof AbortController!=='undefined'?new AbortController():null;
+  const timer=ctl?setTimeout(()=>ctl.abort(),20000):null;
+  try{const r=await fetch(BACKEND+path,ctl?{signal:ctl.signal}:{});if(!r.ok)throw new Error(r.status);return await r.json()}
+  finally{clearTimeout(timer)}
+}
+(async function loadMarket(tries){
+  try{
+    const [ind,quotes]=await Promise.all([getJSON('/indices'),getJSON('/live/all')]);
+    if(showMarket(ind,quotes,'Live · real NSE data'))return;
+    throw new Error('not ready');
+  }catch(e){if(tries<24)setTimeout(()=>loadMarket(tries+1),5000)}
+})(0);
 </script>
 </body>
 </html>
