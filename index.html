@@ -98,8 +98,18 @@ button,input,select{font-family:inherit}
 .hello-s{font-size:13px;color:var(--muted)}
 .hello-n{font-size:22px;font-weight:700;letter-spacing:-0.3px}
 .pill-st{border:1px solid var(--border);font-size:11px;font-weight:600;padding:5px 11px;border-radius:999px;background:var(--bg2);box-shadow:var(--shadow);white-space:nowrap}
-.searchbar{width:100%;height:50px;border-radius:16px;background:var(--bg2);box-shadow:var(--shadow);color:var(--muted);font-size:14px;text-align:left;padding:0 18px;cursor:pointer;display:flex;align-items:center;gap:10px}
-.searchbar{border:1px solid var(--border)}
+.searchbox{position:relative}
+#analyserPanel{overflow:visible}
+.searchbox.flat{flex:1;min-width:0}
+.searchbox.flat .sym-input{width:100%}
+.s-ico{position:absolute;left:16px;top:15px;width:20px;height:20px;fill:none;stroke:var(--muted);stroke-width:2;stroke-linecap:round;pointer-events:none}
+#homeSearch{width:100%;height:50px;border:1.5px solid var(--border);border-radius:16px;background:var(--bg2);box-shadow:var(--shadow);color:var(--text);font-size:16px;font-weight:500;padding:0 16px 0 46px;outline:none;transition:border-color .15s}
+#homeSearch::placeholder{color:var(--muted);font-weight:400;font-size:14px}
+#homeSearch:focus{border-color:var(--pri)}
+.sugg{display:none;position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:150;background:var(--bg2);border:1px solid var(--border);border-radius:16px;box-shadow:0 12px 32px rgba(16,24,40,0.16);overflow:hidden;max-height:340px;overflow-y:auto}
+.sugg.on{display:block}
+.sugg .srow.act{background:var(--bg3)}
+.sugg-x{font-size:11px;font-weight:600;color:var(--muted);background:var(--bg3);padding:3px 8px;border-radius:999px;flex-shrink:0}
 .idx-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
 .idx-card{background:var(--bg2);border-radius:18px;box-shadow:var(--shadow);padding:16px 18px 12px;min-width:0}
 .idx-card{border:1px solid var(--border)}
@@ -442,7 +452,10 @@ select.fi{cursor:pointer}
       <div><div class="hello-s" id="greet">Have a good day</div><div class="hello-n" id="uname">Trader</div></div>
       <span class="pill-st" id="mktSt">● MARKET OPEN</span>
     </div>
-    <button class="searchbar" onclick="openSearch()"><span>🔍</span> Find stock — name, symbol or BSE code</button>
+    <div class="searchbox"><svg class="s-ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.3-4.3"/></svg>
+      <input id="homeSearch" placeholder="Search any stock — name, symbol or BSE code" maxlength="40" autocomplete="off" autocapitalize="characters" enterkeyhint="search"/>
+      <div class="sugg" id="homeSugg"></div>
+    </div>
 
     <div class="sec-h">Indices <span id="dataSrcHome"></span></div>
     <div class="idx-row" id="idxRow"></div>
@@ -528,8 +541,8 @@ select.fi{cursor:pointer}
       <div class="panel" id="analyserPanel">
         <div class="search-wrap">
           <div class="search-row">
-            <input class="sym-input" id="symInput" placeholder="Symbol, name or BSE code" maxlength="40" list="symList" autocomplete="off"/>
-            <datalist id="symList"></datalist>
+            <div class="searchbox flat"><input class="sym-input" id="symInput" placeholder="Symbol, name or BSE code" maxlength="40" autocomplete="off" enterkeyhint="search"/>
+              <div class="sugg" id="symSugg"></div></div>
             <button class="btn-go" onclick="analyse()">Analyse</button>
           </div>
         </div>
@@ -1645,21 +1658,39 @@ function masterTick(){
   updateIdxVals();liveChart();updateWL();updateSigPrice();updatePFPrices();
 }
 
-// KEYBOARD
-document.getElementById('symInput').addEventListener('keydown',e=>{if(e.key==='Enter')analyse()});
-// AUTOCOMPLETE — search all ~5,300 NSE + BSE companies as you type
-let searchT=null;
-document.getElementById('symInput').addEventListener('input',e=>{
-  clearTimeout(searchT);
-  const q=e.target.value.trim();
-  if(q.length<2)return;
-  searchT=setTimeout(async()=>{
-    try{
-      const res=await api('/search?q='+encodeURIComponent(q),8000);
-      document.getElementById('symList').innerHTML=res.map(r=>`<option value="${esc(r.symbol)}">${esc(r.name)} · ${esc(r.exchange)}</option>`).join('');
-    }catch(err){}
-  },250);
-});
+// SEARCH — type in the Home or Analyse box: matching companies from all ~5,300 NSE + BSE stocks appear below it
+function attachSearch(inputId,boxId){
+  const inp=document.getElementById(inputId), box=document.getElementById(boxId);
+  let t=null, res=[], act=-1, seq=0;
+  const close=()=>{box.classList.remove('on');act=-1};
+  const pick=sym=>{close();inp.blur();if(inputId!=='symInput')inp.value='';loadSym(sym)};
+  const draw=()=>{
+    box.innerHTML=res.length?res.map((r,i)=>`<div class="srow${i===act?' act':''}" data-sym="${esc(r.symbol)}">${ava(r.symbol)}
+        <div class="srow-m"><div class="srow-n">${esc(r.symbol)}</div><div class="srow-s">${esc(r.name)}</div></div><span class="sugg-x">${esc(r.exchange)}</span></div>`).join('')
+      :'<div class="list-empty">No company found — check the spelling</div>';
+    box.classList.add('on');
+  };
+  inp.addEventListener('input',()=>{
+    clearTimeout(t);
+    const q=inp.value.trim();
+    if(q.length<2){close();return}
+    t=setTimeout(async()=>{
+      const my=++seq;
+      try{const r=await api('/search?q='+encodeURIComponent(q),8000);if(my!==seq)return;res=r.slice(0,8);act=-1;draw()}catch(e){}
+    },220);
+  });
+  inp.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){const q=inp.value.trim();if(act>=0&&res[act])pick(res[act].symbol);else if(q){seq++;clearTimeout(t);pick(q.toUpperCase())}}
+    else if(e.key==='ArrowDown'||e.key==='ArrowUp'){if(!res.length)return;e.preventDefault();act=(act+(e.key==='ArrowDown'?1:-1)+res.length)%res.length;draw()}
+    else if(e.key==='Escape')close();
+  });
+  // mousedown/touch fires before the box loses focus, so the tap is never lost
+  box.addEventListener('pointerdown',e=>{const r=e.target.closest('[data-sym]');if(r){e.preventDefault();pick(r.dataset.sym)}});
+  inp.addEventListener('blur',()=>setTimeout(close,150));
+  inp.addEventListener('focus',()=>{if(res.length&&inp.value.trim().length>=2)draw()});
+}
+attachSearch('homeSearch','homeSugg');
+attachSearch('symInput','symSugg');
 
 // LOOK — colours come from the page theme, so charts match light and dark mode
 const tc=n=>getComputedStyle(document.documentElement).getPropertyValue('--'+n).trim();
@@ -1719,7 +1750,6 @@ document.addEventListener('click',e=>{
   const b=e.target.closest('.seg button');
   if(b)go(b.parentElement.dataset.seg,b.dataset.pane);
 });
-function openSearch(){go('stock');setTimeout(()=>document.getElementById('symInput').focus(),60)}
 route();
 
 // INIT
