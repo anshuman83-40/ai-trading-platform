@@ -280,7 +280,10 @@ a.ipo-flag.ipo-allot:hover{text-decoration:underline;text-underline-offset:3px}
 .pl-why h5{font-size:12px;color:var(--muted);margin-bottom:4px;font-weight:600}
 .pl-actions{display:flex;gap:8px;flex-wrap:wrap;padding:0 18px 14px}
 .sip-form{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:14px 18px 16px;align-items:start}
-.sip-range{width:100%;height:46px;accent-color:var(--pri);cursor:pointer}
+.sip-range{-webkit-appearance:none;appearance:none;width:100%;height:6px;margin:20px 0;border-radius:999px;cursor:pointer;outline:none;
+  background:linear-gradient(to right,var(--pri) var(--fill,31%),var(--border2) var(--fill,31%))}
+.sip-range::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:#fff;border:6px solid var(--pri);box-shadow:0 2px 6px rgba(16,24,40,0.25)}
+.sip-range::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:#fff;border:6px solid var(--pri);box-shadow:0 2px 6px rgba(16,24,40,0.25)}
 .sip-presets{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
 .sip-presets .chip{font-size:11px;padding:4px 10px}
 .sip-chart{position:relative;height:260px;padding:0 18px 12px}
@@ -446,7 +449,7 @@ select.fi{cursor:pointer}
   .toast{left:14px;right:14px;bottom:calc(84px + env(safe-area-inset-bottom));max-width:none}
   /* bottom menu */
   .bnav{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:300;height:calc(64px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:var(--bg2);border-top:1px solid var(--border)}
-  .bnav a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--muted);font-size:11px;font-weight:500;min-width:0;cursor:pointer}
+  .bnav a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--muted);font-size:11px;letter-spacing:-0.2px;font-weight:500;min-width:0;cursor:pointer}
   .bnav svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
   .bnav a.on{color:var(--pri);font-weight:600}
 }
@@ -463,6 +466,7 @@ select.fi{cursor:pointer}
       <a data-go="stock">Analyse</a>
       <a data-go="invest">Invest</a>
       <a data-go="portfolio">Portfolio</a>
+      <a data-go="news">News</a>
     </nav>
     <div class="top-r">
       <div class="srv" onclick="srvInfo()" title="Server status"><span class="live-dot" id="srvDot"></span><span id="srvTxt" class="srv-txt">WAKING…</span></div>
@@ -506,7 +510,6 @@ select.fi{cursor:pointer}
     <div class="seg" data-seg="markets">
       <button data-pane="movers" class="on">Top Movers</button>
       <button data-pane="ipo">IPO</button>
-      <button data-pane="news">News</button>
     </div>
 
     <div class="pane on" data-of="markets" data-pane="movers">
@@ -552,13 +555,6 @@ select.fi{cursor:pointer}
           </table>
         </div>
         <details class="more"><summary>What is GMP? How are the dates worked out?</summary><div class="ipo-note" id="ipoNote"></div></details>
-      </div>
-    </div>
-
-    <div class="pane" data-of="markets" data-pane="news">
-      <div class="panel" id="news">
-        <div class="ph"><div class="news-hdr-title">Market News</div><span class="tag">AUTO REFRESH</span></div>
-        <div class="news-grid" id="newsFeed"></div>
       </div>
     </div>
   </section>
@@ -628,6 +624,16 @@ select.fi{cursor:pointer}
         <div class="ch-sub" id="chRsi"><span class="ch-sub-lbl">RSI 14</span></div>
         <div class="ch-sub" id="chMacd"><span class="ch-sub-lbl">MACD 12 26 9</span></div>
       </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ NEWS ═══════════ -->
+  <section class="view" id="v-news">
+    <div class="page-h"><h1>News</h1></div>
+    <div class="panel" id="news">
+      <div class="ph"><div class="news-hdr-title">Market News</div>
+        <button class="btn-sm" id="newsAll" onclick="buildNews('')" style="display:none">Show all market news</button></div>
+      <div class="news-grid" id="newsFeed"></div>
     </div>
   </section>
 
@@ -758,6 +764,7 @@ select.fi{cursor:pointer}
   <a data-go="stock"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.3-4.3"/></svg>Analyse</a>
   <a data-go="invest"><svg viewBox="0 0 24 24"><path d="M7 6h10M7 10h10M7 6c5 0 5 8 0 8l6 6"/></svg>Invest</a>
   <a data-go="portfolio"><svg viewBox="0 0 24 24"><rect x="3.5" y="6.5" width="17" height="12" rx="2.5"/><path d="M16 12.5h1.5M3.5 10h17"/></svg>Portfolio</a>
+  <a data-go="news"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="2.5"/><path d="M8 9.5h8M8 13h8M8 16.5h5"/></svg>News</a>
 </div>
 
 <!-- TOAST -->
@@ -1328,7 +1335,8 @@ const NEWS=[
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 async function buildNews(stock){
   const hdr=document.querySelector('.news-hdr-title');
-  if(hdr)hdr.textContent=stock?stock+' News · Sentiment':'Market News · Sentiment';
+  if(hdr)hdr.textContent=stock?stock+' News':'Market News';
+  const na=document.getElementById('newsAll');if(na)na.style.display=stock?'':'none';
   try{
     const data=await api('/news'+(stock?'?stock='+encodeURIComponent(stock):''));
     if(!data.length)throw new Error('no news');
@@ -1560,6 +1568,7 @@ function calcSIP(){
   const P=Math.max(0,+document.getElementById('sipAmt').value||0), Y=+document.getElementById('sipYrs').value,
         R=Math.max(0,+document.getElementById('sipRate').value||0), S=Math.max(0,+document.getElementById('sipStep').value||0);
   document.getElementById('sipYrsLbl').textContent=Y+(Y>1?' years':' year');
+  document.getElementById('sipYrs').style.setProperty('--fill',((Y-1)/29*100)+'%');
   sipPresets();
   const out=document.getElementById('sipOut');
   if(P<100){out.innerHTML='<div class="empty-pf" style="padding:18px">Enter at least ₹100 per month</div>';return}
@@ -1789,7 +1798,7 @@ function toggleTheme(){
 setTheme(document.documentElement.dataset.theme||'light');
 
 // TABS — each page is its own tab; the address (#markets/ipo) remembers it, so the phone's Back button works
-const VIEWS=['home','markets','stock','invest','portfolio','profile'];
+const VIEWS=['home','markets','stock','invest','portfolio','news','profile'];
 function setPane(group,name){
   const panes=[...document.querySelectorAll(`.pane[data-of="${group}"]`)];
   if(!panes.some(p=>p.dataset.pane===name))return;
@@ -1804,7 +1813,8 @@ function showView(view,pane){
   setTimeout(()=>dispatchEvent(new Event('resize')),30);   // charts measure themselves once their tab is visible
 }
 function route(){
-  const [v,p]=location.hash.replace(/^#\/?/,'').split('/');
+  let [v,p]=location.hash.replace(/^#\/?/,'').split('/');
+  if(v==='markets'&&p==='news'){v='news';p=''}   // old address
   showView(VIEWS.includes(v)?v:'home',p);
 }
 function go(view,pane){
