@@ -8,3 +8,7 @@ venv/
 !icon-*.png
 !apple-touch-icon.png
 *.csv
+
+# ML training: downloaded data and caches are never committed
+training/data/
+.pytest_cache/

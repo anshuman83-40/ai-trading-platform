@@ -35,18 +35,12 @@ app = Flask(__name__)
 CORS(app)  # Allow your website to call this server
 
 # ============================================================
-#  GROWW API (only used for placing real orders)
+#  NO REAL-MONEY TRADING
+#  This app never talks to a broker: there is no broker token and no code that can place a real order.
+#  /api/order only returns simulated (paper) orders. Real trading, if it is ever added, must be a
+#  separate, login-protected service with its secrets in environment variables — never in this file.
 # ============================================================
-GROWW_ACCESS_TOKEN = "YOUR_GROWW_ACCESS_TOKEN_HERE"
-GROWW_BASE_URL = "https://api.groww.in/v1"
-HEADERS = {
-    "Authorization": f"Bearer {GROWW_ACCESS_TOKEN}",
-    "Content-Type": "application/json",
-    "Accept": "application/json"
-}
-
-def is_groww_configured():
-    return GROWW_ACCESS_TOKEN != "YOUR_GROWW_ACCESS_TOKEN_HERE" and len(GROWW_ACCESS_TOKEN) > 10
+LIVE_TRADING = False     # informational only: no code path reads this to send orders
 
 # Optional: NewsAPI key (newsapi.org). If empty, Google News RSS is used (free, no key).
 NEWS_API_KEY = os.environ.get("NEWS_API_KEY", "")
@@ -1345,63 +1339,32 @@ def ipo_allotment():
     return redirect(target, code=302)
 
 # ============================================================
-#  ROUTE — POST /api/order  (simulated unless Groww token set)
+#  ROUTE — POST /api/order  (ALWAYS simulated — see "NO REAL-MONEY TRADING" above)
 # ============================================================
 @app.route("/api/order", methods=["POST"])
 def place_order():
-    body = request.get_json()
-    symbol     = body.get("symbol", "").upper()
-    order_type = body.get("type", "BUY")
-    quantity   = body.get("quantity", 1)
-    price      = body.get("price", 0)
-
-    if not symbol or not quantity:
-        return jsonify({"success": False, "message": "Symbol and quantity required"}), 400
-
-    if not is_groww_configured():
-        return jsonify({
-            "success":  True,
-            "order_id": f"SIM{int(time.time())}",
-            "symbol":   symbol, "type": order_type,
-            "quantity": quantity, "price": price,
-            "status":   "SIMULATED",
-            "message":  f"Simulated {order_type} order for {quantity} shares of {symbol} at ₹{price}. Add Groww API key for real orders."
-        })
-
+    body = request.get_json(silent=True) or {}
+    symbol     = str(body.get("symbol", "")).upper().strip()
+    order_type = str(body.get("type", "BUY")).upper()
     try:
-        order_payload = {
-            "trading_symbol":   symbol,
-            "exchange":         "NSE",
-            "segment":          "CASH",
-            "transaction_type": order_type,
-            "order_type":       "MARKET",
-            "quantity":         quantity,
-            "product":          "INTRADAY",
-        }
-        res = requests.post(f"{GROWW_BASE_URL}/orders/place", headers=HEADERS, json=order_payload, timeout=10)
-        data = res.json()
-        if res.status_code == 200 and data.get("status") == "SUCCESS":
-            return jsonify({
-                "success":  True,
-                "order_id": data.get("payload", {}).get("order_id", ""),
-                "symbol":   symbol, "type": order_type, "quantity": quantity,
-                "status":   "PLACED",
-                "message":  f"✅ {order_type} order placed for {quantity} shares of {symbol}"
-            })
-        return jsonify({"success": False, "message": data.get("message", "Order failed")}), 400
-    except Exception as e:
-        return jsonify({"success": False, "message": str(e)}), 500
+        quantity = int(body.get("quantity", 1))
+        price    = float(body.get("price", 0) or 0)
+    except (TypeError, ValueError):
+        return jsonify({"success": False, "message": "Quantity and price must be numbers"}), 400
+    if not symbol or quantity <= 0 or order_type not in ("BUY", "SELL"):
+        return jsonify({"success": False, "message": "Symbol, a BUY/SELL type and a positive quantity are required"}), 400
+    return jsonify({
+        "success":  True,
+        "order_id": f"SIM{int(time.time())}",
+        "symbol":   symbol, "type": order_type,
+        "quantity": quantity, "price": price,
+        "status":   "SIMULATED",
+        "message":  f"Simulated {order_type} order for {quantity} shares of {symbol} at ₹{price}. No real order is ever placed."
+    })
 
 @app.route("/api/portfolio/groww")
 def get_groww_portfolio():
-    if not is_groww_configured():
-        return jsonify({"message": "Add Groww API key to see real portfolio", "holdings": []})
-    try:
-        res = requests.get(f"{GROWW_BASE_URL}/portfolio/holdings", headers=HEADERS, timeout=10)
-        holdings = res.json().get("payload", {}).get("holdings", [])
-        return jsonify({"holdings": holdings, "source": "groww"})
-    except Exception as e:
-        return jsonify({"error": str(e), "holdings": []}), 500
+    return jsonify({"message": "Broker connection is disabled in this app.", "holdings": []})
 
 # ============================================================
 #  WEBSITE — open http://<this-pc-ip>:5000 on any device on your Wi-Fi
@@ -1431,7 +1394,7 @@ def get_status():
     return jsonify({
         "backend":    "running",
         "data":       "yahoo_finance (real NSE prices, ~15 min delay possible)",
-        "groww_api":  "connected" if is_groww_configured() else "not configured — orders simulated",
+        "groww_api":  "disabled — all orders are simulated",
         "version":    "TradePulse v3.2"
     })
 

@@ -1,0 +1,8 @@
+# Packages for the ML training pipeline (training/ and tests/) — install on your own PC or the college machine.
+# NOT used by the website: Render installs only requirements.txt, so the live server stays small.
+#   pip install -r requirements-train.txt
+yfinance
+pandas
+numpy
+requests
+pytest
