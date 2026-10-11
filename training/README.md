@@ -4,7 +4,7 @@ Goal: a reproducible swing-trading model (hold about 5 trading days) for NIFTY 2
 on past data with all trading costs subtracted. This folder is separate from the website: nothing here runs
 on the live server, and the server never retrains a model.
 
-**Status: steps 1 (data) and 2 (features + label) are done. No model exists yet.**
+**Status: steps 1–3 are done. Model `xgb_v1` is trained and saved; it has NOT been evaluated on the test period or backtested yet.**
 
 ## Setup (once)
 
@@ -77,6 +77,34 @@ crosses the cut. Large moves that were real (for example Yes Bank in March 2020)
 **Split by time, never shuffled:** train to 2020, validation 2021–2022, test 2023 onwards, with a 6-day gap
 between periods because a label looks 6 days ahead.
 
+## Step 3 — train and save the model
+
+```bash
+python training/train_model.py
+```
+
+Writes `models/xgb_v1/`: `model.json` (the model), `feature_schema.json` (the 39 features, in order) and
+`metadata.json` (target, periods, settings, library versions, input checksums, validation metrics).
+Training takes a few seconds on a CPU; `--device cuda` works but is not needed at this data size.
+
+- Learns from the train period only. The validation period only decides when to stop adding trees.
+- The test period is not read by this script.
+- Settings are fixed defaults, not the winner of a large search (which would overfit the validation data).
+- Same data + same code = the same `model.json` (checked by training twice and comparing checksums).
+
+**Validation result of xgb_v1 (2021–2022), before any costs:**
+
+| Ranking by | Winners among its top 10% picks | Rank correlation with the 5-day return |
+|---|---|---|
+| Nothing (base rate) | 30.3% | 0 |
+| xgb_v1 score | 37.5% | 0.028 |
+| Volatility alone (`atr_14`) | 36.0% | 0.003 |
+| 5-day reversal alone (`-ret_5`) | 32.5% | 0.031 |
+
+The model is better than chance, but only slightly better than two one-line rules. Much of its hit rate comes
+from choosing volatile stocks, which are more often in the top 30% and also more often in the bottom.
+Whether anything is left after trading costs is the question for steps 4 and 5.
+
 ## Tests
 
 ```bash
@@ -85,6 +113,5 @@ python -m pytest tests -q
 
 ## Next steps (not built yet)
 
-3. XGBoost v1, saved to `models/` with its metadata
-4. Evaluation against the existing rule signal and simple baselines
+4. Evaluation on the untouched test period, against the existing rule signal and simple baselines
 5. Backtest with brokerage, taxes and slippage

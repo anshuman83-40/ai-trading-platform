@@ -1,0 +1,145 @@
+{
+ "model_version": "xgb_v1",
+ "created": "2026-10-11 23:38:27",
+ "algorithm": "XGBoost gradient-boosted trees (binary classifier)",
+ "target": "1 if the 5-trading-day return (next day's open to the open 5 trading days later, dividends included) is in the top 30% of eligible NIFTY 200 stocks that day, else 0",
+ "horizon_trading_days": 5,
+ "top_fraction": 0.3,
+ "output_meaning": "score between 0 and 1: higher = more likely to be in the top 30% over the next 5 trading days. NOT a calibrated probability and NOT a promise of profit.",
+ "universe": "NIFTY 200 members as of the data download (survivorship bias: past members are missing)",
+ "data_source": "Yahoo Finance daily prices via yfinance (free, not exchange-licensed)",
+ "feature_version": "f1",
+ "n_features": 39,
+ "periods": {
+  "gap": {
+   "first": "2020-12-23",
+   "last": "2022-12-30",
+   "rows": 2106
+  },
+  "test": {
+   "first": "2023-01-02",
+   "last": "2026-09-30",
+   "rows": 169916
+  },
+  "train": {
+   "first": "2013-01-10",
+   "last": "2020-12-22",
+   "rows": 287950
+  },
+  "valid": {
+   "first": "2021-01-01",
+   "last": "2022-12-22",
+   "rows": 85860
+  }
+ },
+ "test_period_used_in_training": false,
+ "params": {
+  "objective": "binary:logistic",
+  "eval_metric": "logloss",
+  "tree_method": "hist",
+  "learning_rate": 0.03,
+  "max_depth": 4,
+  "min_child_weight": 200,
+  "subsample": 0.8,
+  "colsample_bytree": 0.8,
+  "reg_lambda": 5.0,
+  "n_estimators": 2000,
+  "early_stopping_rounds": 100,
+  "random_state": 42
+ },
+ "seed": 42,
+ "device": "cpu",
+ "trees_used": 92,
+ "training_seconds": 3.1,
+ "metrics": {
+  "train": {
+   "rows": 287950,
+   "base_rate": 0.3029,
+   "auc": 0.5676,
+   "logloss": 0.60857,
+   "logloss_if_always_base_rate": 0.61332,
+   "days": 1947,
+   "hit_rate_top10pct": 0.4041,
+   "mean_5d_return_top10pct": 0.01254,
+   "mean_5d_return_all_stocks": 0.00397,
+   "rank_ic": 0.0659,
+   "rank_ic_positive_days": 0.6713
+  },
+  "valid": {
+   "rows": 85860,
+   "base_rate": 0.3026,
+   "auc": 0.5449,
+   "logloss": 0.61044,
+   "logloss_if_always_base_rate": 0.61303,
+   "days": 490,
+   "hit_rate_top10pct": 0.375,
+   "mean_5d_return_top10pct": 0.01167,
+   "mean_5d_return_all_stocks": 0.00593,
+   "rank_ic": 0.0281,
+   "rank_ic_positive_days": 0.5735
+  }
+ },
+ "top_features_by_gain": [
+  {
+   "feature": "atr_14",
+   "share": 0.066
+  },
+  {
+   "feature": "dist_low_252",
+   "share": 0.0438
+  },
+  {
+   "feature": "ret_126",
+   "share": 0.0411
+  },
+  {
+   "feature": "ret_252",
+   "share": 0.0329
+  },
+  {
+   "feature": "ret_5",
+   "share": 0.03
+  },
+  {
+   "feature": "mkt_dist_sma200",
+   "share": 0.029
+  },
+  {
+   "feature": "vix",
+   "share": 0.0283
+  },
+  {
+   "feature": "turnover_20_log",
+   "share": 0.028
+  },
+  {
+   "feature": "mkt_vol_21",
+   "share": 0.0279
+  },
+  {
+   "feature": "rel_ret_21",
+   "share": 0.0277
+  }
+ ],
+ "inputs": {
+  "dataset_v1.csv.gz": "0b14b81bb4fdc72e7c6582df90d6168624a0096ada5b24cd9ce061a39cdc3c8d",
+  "prices_daily.csv.gz": "d34d2fefaf0905cac460dfb2c819ff923840b9a514c3aaba983d5752c99c28fb",
+  "market_daily.csv.gz": "fb1a07c8b609ed1fb641822950e831046a47f0b2760ff457ca5e0ed336bf60b9"
+ },
+ "files": {
+  "model.json": "ca4283d2188bbdd2cff48bc351b236a66fd4106e22b3d8e016ac7ed0123c4d2a"
+ },
+ "libraries": {
+  "xgboost": "3.4.1",
+  "scikit-learn": "1.9.1",
+  "pandas": "2.3.3",
+  "numpy": "2.2.6",
+  "python": "3.13.5"
+ },
+ "git_commit": "2240d62",
+ "reproduce": [
+  "python training/data_collection.py --end 2026-09-30",
+  "python training/build_dataset.py",
+  "python training/train_model.py"
+ ]
+}
