@@ -4,7 +4,7 @@ Goal: a reproducible swing-trading model (hold about 5 trading days) for NIFTY 2
 on past data with all trading costs subtracted. This folder is separate from the website: nothing here runs
 on the live server, and the server never retrains a model.
 
-**Status: step 1 of the pipeline (data collection) is done. No model exists yet.**
+**Status: steps 1 (data) and 2 (features + label) are done. No model exists yet.**
 
 ## Setup (once)
 
@@ -45,6 +45,38 @@ unadjusted split or bad data) but not removed.
   adjusted prices, so compare the checksums in `manifest.json` between runs.
 - **Daily only.** Free intraday history is too short to train on (5-minute bars: 60 days).
 
+## Step 2 — features and label
+
+```bash
+python training/build_dataset.py
+```
+
+Writes `training/data/dataset_v1.csv.gz` (one row per company per day) and `dataset_manifest.json`.
+
+**What the model will be asked** (all settings are in `training/config.py`):
+
+- Decision after the close of day *t*, using data up to day *t* only.
+- Trade being judged: buy at the open of day *t+1*, sell at the open 5 trading days later (dividends included).
+- `label = 1` if that return is in the top 30% of eligible stocks that day, else 0.
+- Eligible = at least 252 days of history, at least Rs 1 crore traded per day (20-day average), traded that day.
+
+**Features** (`ml/features.py`, 39 numbers): past returns over 1 to 252 days, RSI, MACD, distance from
+EMA 20 / EMA 50 / SMA 200, ATR, volatility, volume and turnover, distance from the 52-week high and low,
+NIFTY 50 returns and trend, India VIX, stock-minus-market returns, and the stock's rank among all stocks that day.
+The same file will be used by the live server later, so training and live numbers are calculated identically.
+
+**No future information in the features** — this is tested, not assumed (`tests/test_features.py`):
+features for a day are identical when all later days are deleted from the data, and do not change when
+future prices are changed. The tests were also checked the other way round: four deliberate look-ahead
+mistakes were put into the code and the tests failed each time.
+
+**Unadjusted corporate actions.** Four price series are cut in two at a date listed in `config.PRICE_BREAKS`
+(Tata Motors and Vedanta demergers, a Motilal Oswal bonus issue, Patanjali's relisting). No feature or label
+crosses the cut. Large moves that were real (for example Yes Bank in March 2020) are kept.
+
+**Split by time, never shuffled:** train to 2020, validation 2021–2022, test 2023 onwards, with a 6-day gap
+between periods because a label looks 6 days ahead.
+
 ## Tests
 
 ```bash
@@ -53,7 +85,6 @@ python -m pytest tests -q
 
 ## Next steps (not built yet)
 
-2. Features without future information + the label (5-day return, top 30% of the universe)
 3. XGBoost v1, saved to `models/` with its metadata
 4. Evaluation against the existing rule signal and simple baselines
 5. Backtest with brokerage, taxes and slippage
