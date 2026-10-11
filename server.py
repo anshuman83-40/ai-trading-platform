@@ -718,26 +718,40 @@ def _measure(close):
             "trend": price / float(c.iloc[-200:].mean()) - 1,      # above (+) or below (−) its 200-day average
             "uptrend": price > float(c.iloc[-200:].mean()), "rsi": rsi(c)}
 
+def _spark_closes(pairs):
+    """pairs: [(our symbol, yahoo ticker)] (max 20) -> {symbol: 1 year of daily closing prices}.
+    Small JSON from Yahoo's spark endpoint - far lighter on memory than downloading full price tables."""
+    r = _get(SPARK_URL, total=30, session=_spark,
+             params={"symbols": ",".join(t for _, t in pairs), "range": "1y", "interval": "1d"})
+    if r.status_code == 429:
+        raise RuntimeError("Yahoo rate limit (HTTP 429)")
+    r.raise_for_status()
+    data, out = r.json(), {}
+    for sym, t in pairs:
+        closes = [c for c in ((data.get(t) or {}).get("close") or []) if c is not None]
+        if closes:
+            out[sym] = pd.Series(closes, dtype="float64")
+    return out
+
 def refresh_stats():
     syms = index_members("NIFTY200")
-    out = {}
-    for i in range(0, len(syms), 50):
-        chunk = syms[i:i + 50]
-        tickers = [STOCKS.get(s, s + ".NS") for s in chunk]
-        data = _download(tickers, threads=4, background=True, period="1y", interval="1d")
-        for s, t in zip(chunk, tickers):
-            try:
-                m = _measure(data[t]["Close"] if len(tickers) > 1 else data["Close"])
+    pairs = [(s, STOCKS.get(s, s + ".NS")) for s in syms]
+    out, errors = {}, []
+    for i in range(0, len(pairs), 20):                           # 20 stocks per small request, one at a time
+        try:
+            for s, close in _spark_closes(pairs[i:i + 20]).items():
+                m = _measure(close)
                 if m:
                     out[s] = m
-            except Exception:
-                pass
-        del data
-        gc.collect()
-    if out:
+        except Exception as e:
+            errors.append(str(e))
+        time.sleep(0.3)
+    if len(out) >= len(syms) // 2:                               # keep the old numbers if most requests failed
         _stats.clear()
         _stats.update(out)
         _stats_meta["at"] = datetime.now(IST).strftime("%d %b %Y, %I:%M %p IST")
+    elif errors:
+        raise RuntimeError(f"{len(errors)} price requests failed: {errors[0]}")
 
 def _planner_worker():
     while True:
