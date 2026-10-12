@@ -32,26 +32,9 @@ sys.path.insert(0, HERE)
 import config as cfg                                   # noqa: E402
 from ml import features as ft                          # noqa: E402
 import train_model as tm                               # noqa: E402
+from ml.inference import load_model, model_scores      # noqa: E402,F401  (one way of scoring, shared)
 
 TOP = 0.10      # "the picks" = the 10% of stocks with the highest score each day
-
-
-def load_model(model_dir):
-    import xgboost as xgb
-    with open(os.path.join(model_dir, "metadata.json"), encoding="utf-8") as f:
-        meta = json.load(f)
-    with open(os.path.join(model_dir, "feature_schema.json"), encoding="utf-8") as f:
-        schema = json.load(f)
-    booster = xgb.Booster()
-    booster.load_model(os.path.join(model_dir, "model.json"))
-    return booster, meta, schema
-
-
-def model_scores(booster, meta, schema, frame):
-    import xgboost as xgb
-    feats = schema["features"]
-    dm = xgb.DMatrix(frame[feats], feature_names=feats)
-    return booster.predict(dm, iteration_range=(0, meta["trees_used"]))
 
 
 def per_day(frame, col):
@@ -114,6 +97,18 @@ def calibration(frame, bins=10):
     g = frame.groupby(q).agg(mean_score=("model", "mean"), actual_rate=("label", "mean"), rows=("label", "size"))
     return [{"bin": int(i) + 1, "mean_score": round(float(r.mean_score), 4), "actual_rate": round(float(r.actual_rate), 4),
              "rows": int(r.rows)} for i, r in g.iterrows()]
+
+
+def rank_groups(frame, col="model", groups=10):
+    """Each day, sort the stocks by score and cut them into 10 equal groups (10 = best scores).
+    For every group: how often its stocks really were winners, and their 5-day return versus all stocks.
+    This is what can honestly be said about a stock that is in group N today."""
+    f = frame[["date", col, "label", "fwd_ret"]].copy()
+    f["g"] = np.ceil(f.groupby("date")[col].rank(pct=True, method="first") * groups).clip(1, groups).astype(int)
+    f["excess"] = f["fwd_ret"] - f.groupby("date")["fwd_ret"].transform("mean")
+    out = f.groupby("g").agg(winner_rate=("label", "mean"), excess_5d=("excess", "mean"), rows=("label", "size"))
+    return [{"group": int(g), "winner_rate": round(float(r.winner_rate), 4), "excess_5d": round(float(r.excess_5d), 5),
+             "rows": int(r.rows)} for g, r in out.iterrows()]
 
 
 def walk_forward(data, years):
@@ -181,6 +176,7 @@ def main(argv=None):
         result["test_by_year"][str(y)] = {s: summarise(per_day(f, s)) for s in ("model", "volatility", "reversal")}
         result["test_by_year"][str(y)]["model_auc"] = round(float(roc_auc_score(f["label"], f["model"])), 4)
     result["calibration_test"] = calibration(test)
+    result["rank_groups_test"] = rank_groups(test)
 
     years = sorted(test["date"].dt.year.unique())
     wf, wf_info = walk_forward(data, years)
@@ -212,6 +208,8 @@ def main(argv=None):
     print(f"WALK-FORWARD (retrained each year): vs all {w['all_years']['excess_5d'] * 100:+.2f}% (t {w['all_years']['excess_t_stat']}), "
           f"IC {w['all_years']['rank_ic']:+.4f} (t {w['all_years']['rank_ic_t_stat']}), AUC {w['auc']}   "
           f"| fixed model on the same rows: vs all {w['fixed_model_same_rows']['excess_5d'] * 100:+.2f}%, IC {w['fixed_model_same_rows']['rank_ic']:+.4f}")
+    print("RANK GROUPS on test (1 = lowest scores of the day, 10 = highest): winner rate")
+    print("  " + "  ".join(f"{g['group']}:{g['winner_rate'] * 100:.0f}%" for g in result["rank_groups_test"]))
     print("CALIBRATION on test (average score -> how often it really was a winner):")
     print("  " + "  ".join(f"{c['mean_score']:.2f}->{c['actual_rate']:.2f}" for c in result["calibration_test"]))
     print(f"\nSaved {os.path.join(args.model, 'evaluation.json')}")

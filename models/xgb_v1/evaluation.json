@@ -1,6 +1,6 @@
 {
  "model_version": "xgb_v1",
- "evaluated": "2026-10-12 11:32:25",
+ "evaluated": "2026-10-12 16:09:22",
  "note": "All returns are BEFORE trading costs. 'excess' = the picks' 5-day return minus the average of all eligible stocks.",
  "top_fraction_picked": 0.1,
  "periods": {
@@ -387,6 +387,68 @@
    "mean_score": 0.3468,
    "actual_rate": 0.3743,
    "rows": 16992
+  }
+ ],
+ "rank_groups_test": [
+  {
+   "group": 1,
+   "winner_rate": 0.2351,
+   "excess_5d": -0.00303,
+   "rows": 16612
+  },
+  {
+   "group": 2,
+   "winner_rate": 0.2651,
+   "excess_5d": -0.00165,
+   "rows": 17059
+  },
+  {
+   "group": 3,
+   "winner_rate": 0.2708,
+   "excess_5d": -0.00191,
+   "rows": 16697
+  },
+  {
+   "group": 4,
+   "winner_rate": 0.2799,
+   "excess_5d": -0.00097,
+   "rows": 17257
+  },
+  {
+   "group": 5,
+   "winner_rate": 0.2895,
+   "excess_5d": -0.00109,
+   "rows": 17114
+  },
+  {
+   "group": 6,
+   "winner_rate": 0.3017,
+   "excess_5d": 9e-05,
+   "rows": 16767
+  },
+  {
+   "group": 7,
+   "winner_rate": 0.3251,
+   "excess_5d": 0.00066,
+   "rows": 17119
+  },
+  {
+   "group": 8,
+   "winner_rate": 0.3263,
+   "excess_5d": 0.00065,
+   "rows": 16835
+  },
+  {
+   "group": 9,
+   "winner_rate": 0.3453,
+   "excess_5d": 0.00213,
+   "rows": 16921
+  },
+  {
+   "group": 10,
+   "winner_rate": 0.3761,
+   "excess_5d": 0.0049,
+   "rows": 17535
   }
  ],
  "walk_forward": {

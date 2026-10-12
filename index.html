@@ -350,6 +350,24 @@ a.ipo-flag.ipo-allot:hover{text-decoration:underline;text-underline-offset:3px}
 .switch::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .2s}
 :root[data-theme="dark"] .switch{background:var(--pri)}
 :root[data-theme="dark"] .switch::after{transform:translateX(18px)}
+/* AI research score */
+.ai-box{background:var(--bg3);border-radius:14px;padding:12px 14px;margin-bottom:14px;font-size:13px;line-height:1.55}
+.ai-h{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:600;font-size:13px;margin-bottom:6px}
+.ai-tag{font-size:11px;font-weight:600;color:var(--amber);background:rgba(255,176,32,0.16);padding:2px 8px;border-radius:999px;white-space:nowrap}
+.ai-rank{font-size:18px;font-weight:700;letter-spacing:-0.3px}
+.ai-rank small{font-size:12px;font-weight:500;color:var(--muted)}
+.ai-bar{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;margin:8px 0 8px}
+.ai-bar i{height:8px;border-radius:3px;background:var(--border2)}
+.ai-bar i.on{background:var(--pri)}
+.ai-box p{color:var(--muted)}
+.ai-box p b{color:var(--text);font-weight:600}
+.ai-box a{color:var(--pri);font-weight:600;cursor:pointer}
+.ai-facts{padding:4px 18px 6px;font-size:13px;line-height:1.7}
+.ai-facts div{padding:5px 0;border-bottom:1px solid var(--border)}
+.ai-facts div:last-child{border-bottom:none}
+.ai-facts b{font-weight:600}
+.ai-warn{margin:0 18px 14px;padding:11px 14px;border-left:4px solid var(--amber);border-radius:14px;background:rgba(255,176,32,0.12);font-size:13px;line-height:1.6}
+.ai-g{font-size:11px;font-weight:600;color:var(--muted);background:var(--bg3);padding:3px 8px;border-radius:999px;flex-shrink:0}
 .more{border-top:1px solid var(--border)}
 .more summary{list-style:none;cursor:pointer;padding:14px 18px;font-size:13px;font-weight:600;color:var(--pri);display:flex;justify-content:space-between;align-items:center;user-select:none}
 .more summary::-webkit-details-marker{display:none}
@@ -446,6 +464,8 @@ select.fi{cursor:pointer}
   .pl-sum,.pl-sum.three,.pl-sum.two{grid-template-columns:1fr 1fr;padding:6px 14px 12px}
   .pl-sum.three>:nth-child(2){grid-column:1/-1;grid-row:1}
   .more summary{padding:14px}
+  .ai-facts{padding:4px 14px 6px}
+  .ai-warn{margin:0 14px 12px}
   .mini-note{padding:0 14px 12px}
   .pl-body{grid-template-columns:1fr;padding:0 14px 12px}
   .pl-intro,.pl-why{padding-left:14px;padding-right:14px}
@@ -522,6 +542,7 @@ select.fi{cursor:pointer}
     <div class="seg" data-seg="markets">
       <button data-pane="movers" class="on">Top Movers</button>
       <button data-pane="ipo">IPO</button>
+      <button data-pane="ai">AI Research</button>
     </div>
 
     <div class="pane on" data-of="markets" data-pane="movers">
@@ -542,6 +563,17 @@ select.fi{cursor:pointer}
           <div><div class="mover-title up" id="gainTitle">▲ Top Gainers</div><div class="mover-list" id="gainers"></div></div>
           <div><div class="mover-title dn" id="loseTitle">▼ Top Losers</div><div class="mover-list" id="losers"></div></div>
         </div>
+      </div>
+    </div>
+
+    <div class="pane" data-of="markets" data-pane="ai">
+      <div class="panel" id="aiPanel">
+        <div class="ph"><div>AI Research Score <span class="tag" id="aiSrc">LOADING...</span></div><span class="tag-edu">EXPERIMENT</span></div>
+        <div class="pl-intro">A machine-learning model ranks about 185 large Indian stocks every evening by how likely each is to be among the best performers over the next 5 trading days.</div>
+        <div class="ai-warn" id="aiWarn">It is a research experiment. Do not use it to trade real money.</div>
+        <div class="list" id="aiTop"><div class="list-empty">Loading…</div></div>
+        <details class="more"><summary>How well did it do in tests?</summary><div class="ai-facts" id="aiFacts"></div></details>
+        <details class="more"><summary>How it works · what the tests leave out</summary><div class="ipo-note" id="aiHow"></div></details>
       </div>
     </div>
 
@@ -607,6 +639,7 @@ select.fi{cursor:pointer}
             <div class="ind"><div class="ind-lbl">Volume</div><div class="ind-val" id="sVol">-</div></div>
             <div class="ind"><div class="ind-lbl">Momentum</div><div class="ind-val" id="sMom">-</div><div class="ind-bar"><div class="ind-fill" id="sMomf"></div></div></div>
           </div>
+          <div class="ai-box" id="aiBox" style="display:none"></div>
           <button class="btn-alert" onclick="openModal('alertModal')">+ Set price alert</button>
         </div>
       </div>
@@ -1206,7 +1239,7 @@ async function analyse(){
   }
   document.getElementById('loading').classList.remove('show');
   showSignal(sym);
-  buildChart(sym);buildNews(sym);
+  buildChart(sym);buildNews(sym);loadAI(sym);
 }
 function showSignal(sym){
     const d=DB[sym];
@@ -1782,6 +1815,64 @@ document.addEventListener('click',closeMenus);
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMenus()});
 document.querySelectorAll('select.mv-select').forEach(enhanceSelect);
 
+// AI RESEARCH SCORE — read-only numbers from the saved model (server: /api/ml/...). Shown next to the rule signal
+// so the two can be compared. It is a weak ranking, never a promise: the text always says what the tests found.
+const pct=v=>(v*100).toFixed(0)+'%', pct1=v=>(v>=0?'+':'')+(v*100).toFixed(1)+'%';
+const niceDay=d=>new Date(d+'T00:00:00').toLocaleDateString('en-IN',{day:'2-digit',month:'short'});
+let aiSym='';
+async function loadAI(sym){
+  const box=document.getElementById('aiBox');
+  aiSym=sym;box.style.display='none';
+  let r;
+  try{r=await api('/ml/predict/'+encodeURIComponent(sym),12000)}catch(e){return}   // no score is better than a wrong one
+  if(sym!==aiSym)return;                                                              // user moved to another stock
+  const head=`<div class="ai-h"><span>AI research score</span><span class="ai-tag">EXPERIMENT</span></div>`;
+  const more=` <a onclick="go('markets','ai')">How it was tested →</a>`;
+  if(r.status==='not_covered'){box.innerHTML=head+`<p>The model only covers about 185 large NIFTY 200 companies. This stock is not one of them.</p>`}
+  else if(!r.prediction){box.innerHTML=head+`<p>No fresh score for this stock right now.${r.as_of?' Last update: '+niceDay(r.as_of)+'.':''}</p>`}
+  else{
+    const p=r.prediction, base=r.base_rate||0.3;
+    box.innerHTML=head+
+      `<div class="ai-rank">Rank ${p.rank} <small>of ${p.of} stocks · group ${p.group} of 10</small></div>
+       <div class="ai-bar">${Array.from({length:10},(_,i)=>`<i class="${i<p.group?'on':''}"></i>`).join('')}</div>
+       <p>${p.historical_winner_rate!=null?`In tests, stocks in group ${p.group} were among the best 30% over the next ${r.horizon_trading_days} trading days <b>${pct(p.historical_winner_rate)}</b> of the time (${pct(base)} by chance). `:''}
+       The website's rule signal for the same day: <b>${esc(p.rule_signal)}</b>.</p>
+       <p style="margin-top:4px">From prices up to ${niceDay(r.as_of)} · ${esc(r.model_version)} · not advice.${more}</p>`;
+  }
+  box.style.display='';
+}
+async function loadAIPanel(){
+  const src=document.getElementById('aiSrc'), top=document.getElementById('aiTop');
+  let info,t;
+  try{[info,t]=await Promise.all([api('/ml/info',15000),api('/ml/top?n=10',15000)])}
+  catch(e){src.textContent='UNAVAILABLE';top.innerHTML='<div class="list-empty">The AI research data is not available right now.</div>';return}
+  src.textContent=t.status==='fresh'?'PRICES TO '+niceDay(t.as_of).toUpperCase():t.status==='stale'?'OUT OF DATE':'NOT READY';
+  top.innerHTML=t.stocks.length?t.stocks.map(x=>`<div class="srow" onclick="loadSym('${esc(x.symbol)}')">${ava(x.symbol)}
+      <div class="srow-m"><div class="srow-n">${x.rank}. ${esc(x.symbol)}</div>
+        <div class="srow-s">Rule signal: <span class="badge ${esc(x.rule_signal.toLowerCase())}">${esc(x.rule_signal)}</span></div></div>
+      <div class="srow-r"><div class="srow-p">₹${fmt(x.close)}</div><div class="chg" style="color:var(--muted)">score ${x.score.toFixed(3)}</div></div></div>`).join('')
+    :`<div class="list-empty">${t.status==='stale'?'The last ranking is from '+niceDay(t.as_of)+' — too old to show. It is updated after market days.':'No ranking has been published yet.'}</div>`;
+  // what the tests found — numbers come from the saved test reports, nothing is typed in by hand
+  const g=(info.tests&&info.tests.rank_groups)||[], res=(info.backtest&&info.backtest.results)||{}, facts=[];
+  const m=res['AI model (xgb_v1)'], avg=res['Average eligible stock (no costs)'], small=Object.values((info.backtest&&info.backtest.small_capital)||{})
+    .filter(x=>x&&x.start_capital<50000)[0];
+  const rule=info.tests&&info.tests.website_rule_signal&&info.tests.website_rule_signal.BUY;
+  if(g.length)facts.push(`Its highest-ranked group were top performers <b>${pct(g[g.length-1].winner_rate)}</b> of the time, its lowest group <b>${pct(g[0].winner_rate)}</b> (30% would be pure chance).`);
+  if(m&&avg)facts.push(`Pretend-trading with ₹${fmtI(m.start_capital)} and all Groww charges: <b>${pct1(m.yearly_return)} a year</b>. Just holding the average stock, with no trading: <b>${pct1(avg.yearly_return)}</b>. So it did not beat doing nothing clever.`);
+  if(small)facts.push(`Starting with ₹${fmtI(small.start_capital)} it <b class="dn">lost ${pct(Math.abs(small.yearly_return))} a year</b>: with small amounts the fixed charges are larger than the edge.`);
+  if(m&&m.profit!=null&&m.profit_without_10_best_trades!=null)facts.push(`Most of the profit (₹${fmtI(m.profit-m.profit_without_10_best_trades)} of ₹${fmtI(m.profit)}) came from its 10 best trades — a result that depends on luck.`);
+  if(rule)facts.push(`The website's own BUY signal did <b>${(rule.excess_5d>=0?'+':'')+(rule.excess_5d*100).toFixed(2)}%</b> versus the average stock per 5 days: no skill.`);
+  const per=info.tests&&info.tests.period;
+  if(per&&per[0])facts.push(`Test period: ${per[0].slice(0,4)} to ${per[1].slice(0,4)}, years the model never saw while learning.`);
+  document.getElementById('aiFacts').innerHTML=facts.map(x=>`<div>${x}</div>`).join('')||'<div>Test reports are not available.</div>';
+  const mo=info.model||{}, nm=(info.backtest&&info.backtest.not_modelled)||[];
+  document.getElementById('aiHow').innerHTML=
+    `<b>What it is:</b> ${esc(mo.algorithm||'A machine-learning model')} trained on daily prices${mo.trained_on?` from ${mo.trained_on.first.slice(0,4)} to ${mo.trained_on.last.slice(0,4)}`:''}, using ${mo.features||''} numbers per stock such as past returns, RSI, MACD, trend, volatility, volume and how the whole market is doing. It is trained once on a computer and saved; the website only shows its saved results.<br>
+     <b>What the score means:</b> a ranking of stocks against each other for the next ${info.horizon_trading_days||5} trading days. It is not a price target and not a probability you can rely on.<br>
+     ${nm.length?`<b>The tests leave out:</b> ${nm.map(esc).join('; ')}.<br>`:''}
+     ${esc(info.disclaimer||'')}`;
+}
+
 // LOOK — colours come from the page theme, so charts match light and dark mode
 const tc=n=>getComputedStyle(document.documentElement).getPropertyValue('--'+n).trim();
 const AVA=['#1757f5','#8b5cf6','#ec4899','#f59e0b','#12b76a','#06b6d4','#e5372b','#6366f1'];
@@ -1881,6 +1972,8 @@ route();
   .forEach(f=>{try{const p=f();if(p&&p.catch)p.catch(e=>reportErr(f.name+': '+e.message))}catch(e){reportErr(f.name+': '+e.message)}});
 setInterval(loadMovers,60000);      // market-wide movers every 60s
 loadIPO();
+loadAIPanel().catch(e=>reportErr('loadAIPanel: '+e.message));
+setInterval(()=>loadAIPanel().catch(()=>{}),900000);   // AI research data every 15 min
 setInterval(loadIPO,600000);        // IPO data every 10 min
 setInterval(masterTick,2000);
 setInterval(loadLivePrices,15000);  // real prices every 15s

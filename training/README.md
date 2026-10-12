@@ -4,7 +4,7 @@ Goal: a reproducible swing-trading model (hold about 5 trading days) for NIFTY 2
 on past data with all trading costs subtracted. This folder is separate from the website: nothing here runs
 on the live server, and the server never retrains a model.
 
-**Status: steps 1–5 are done. The backtest does NOT show a strategy that can be relied on to make money: after costs the model did about as well as simply holding the average stock in the data, the result depends on a few trades, and the data is biased upwards. See step 5.**
+**Status: steps 1–6 are done. The model's ranking is shown in TradePulse as a research experiment. The backtest does NOT show a strategy that can be relied on to make money (see step 5).**
 
 ## Setup (once)
 
@@ -206,6 +206,51 @@ percentage of the starting capital. Model by year: 2023 +32.9%, 2024 +31.2%, 202
 What does hold up: the model's picks beat random picks with the same costs in all 20 random runs, and the
 website's existing rule signal lost money. So the ranking has some information; it is not yet a strategy.
 
+## Step 6 — predictions in TradePulse
+
+```bash
+python training/predict.py
+```
+
+Run it after the market closes (3:30 pm IST). It downloads recent prices for the 187 companies in
+`models/xgb_v1/universe.json`, builds the features with the same code as training, scores them with the saved
+model and writes `models/xgb_v1/predictions.json` plus a dated copy in `models/xgb_v1/history/`.
+Then publish the new file:
+
+```bash
+git add models/xgb_v1/predictions.json models/xgb_v1/history
+```
+
+```bash
+git commit -m "AI predictions update"
+```
+
+```bash
+git push
+```
+
+**How the website uses it**
+
+- The server never loads the model, builds features or trains. `ml/api.py` only reads the small JSON files,
+  so the free server stays light (no xgboost is installed there).
+- `GET /api/ml/predict/<symbol>` — rank, group (1–10), score, the website's rule signal for the same day,
+  model version, horizon and the historical winner rate of that group.
+- `GET /api/ml/top?n=10` — the highest-ranked stocks. `GET /api/ml/info` — model details and test results.
+- If the file is more than 5 days old, missing or unreadable, the answer is `stale` / `missing` with **no score**.
+- In the app: Analyse tab → "AI research score" card; Markets tab → "AI Research".
+
+**Checks before a file is written:** today's unfinished candle is never used; prices must be at most 4 days
+old; at least 80% of the companies need a price for the day; at least 100 stocks must be scorable.
+
+**Same numbers live and in training.** For 9 Oct 2026 the live-style run (1,100 days of history) and the
+training table (history from 2012) gave the same 185 stocks, the same top 10 and scores within 0.00005.
+
+**What a stock's group means** (test period, winner = top 30% over the next 5 trading days):
+
+| Group (10 = highest scores of the day) | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Were winners | 24% | 27% | 27% | 28% | 29% | 30% | 33% | 33% | 35% | 38% |
+
 ## Tests
 
 ```bash
@@ -214,5 +259,4 @@ python -m pytest tests -q
 
 ## Next steps (not built yet)
 
-6. Show the model's score in TradePulse next to the existing signal (as research information, not advice)
 7. Paper trading with virtual money — the only fair test left, because it uses data that does not exist yet

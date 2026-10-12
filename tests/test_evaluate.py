@@ -112,3 +112,15 @@ def test_walk_forward_only_learns_from_the_past(monkeypatch):
         assert len(gap) - 2 >= cfg.EMBARGO_DAYS - 1                  # the gap between learning and testing is kept
     assert set(wf["date"].dt.year) == {2022, 2023} and wf["wf"].between(0, 1).all()
     assert not wf.duplicated(["date", "symbol"]).any()
+
+
+def test_rank_groups_split_each_day_into_ten_and_best_group_wins_most():
+    f = day_frame(days=30, stocks=50)
+    f["model"] = f["perfect"]
+    g = ev.rank_groups(f)
+    assert [x["group"] for x in g] == list(range(1, 11)) and all(x["rows"] == 30 * 5 for x in g)
+    assert g[-1]["winner_rate"] == 1.0 and g[0]["winner_rate"] == 0.0        # a perfect score: group 10 always wins
+    assert g[-1]["excess_5d"] > 0 > g[0]["excess_5d"]
+    f["model"] = f["noise"]
+    flat = ev.rank_groups(f)
+    assert all(0.15 < x["winner_rate"] < 0.45 for x in flat)                 # a useless score: every group near 30%

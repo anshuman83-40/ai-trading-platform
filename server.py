@@ -34,6 +34,14 @@ except ImportError:
 app = Flask(__name__)
 CORS(app)  # Allow your website to call this server
 
+# AI research scores — read-only endpoints (/api/ml/...) that serve the small JSON files written by
+# training/predict.py. The model itself is never loaded or trained here. See ml/api.py.
+try:
+    from ml.api import bp as ml_bp
+    app.register_blueprint(ml_bp)
+except Exception as e:                      # the rest of the site must work even if this part is missing
+    print(f"  [!] AI endpoints not loaded: {e}")
+
 # ============================================================
 #  NO REAL-MONEY TRADING
 #  This app never talks to a broker: there is no broker token and no code that can place a real order.
