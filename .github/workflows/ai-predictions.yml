@@ -1,0 +1,57 @@
+# Makes the AI ranking for TradePulse by itself after every market day.
+#
+# What it does: on GitHub's free computers it runs training/predict.py (downloads recent prices, scores the
+# stocks with the SAVED model — no training), and if there is a new trading day it commits the small
+# predictions file. That commit makes Render publish the site again (about a minute of restart).
+#
+# It never trades and has no passwords or keys. To stop it: GitHub → Actions → "AI predictions (daily)" →
+# "…" → Disable workflow.  To run it by hand: same page → "Run workflow".
+name: AI predictions (daily)
+
+on:
+  schedule:
+    - cron: "30 11 * * 1-5"   # 5:00 pm IST, Monday to Friday (the market closes at 3:30 pm IST)
+    - cron: "30 14 * * 1-5"   # 8:00 pm IST, second try in case the price data was not ready yet
+  workflow_dispatch:
+
+permissions:
+  contents: write             # only to commit the predictions file
+
+concurrency:
+  group: ai-predictions
+  cancel-in-progress: false
+
+jobs:
+  predict:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-predict.txt
+
+      - name: Install packages
+        run: pip install -r requirements-predict.txt
+
+      - name: Make predictions with the saved model
+        run: python training/predict.py
+
+      - name: Publish only if there is a new trading day
+        run: |
+          new=$(python -c "import json; print(json.load(open('models/xgb_v1/predictions.json'))['as_of'])")
+          old=$(git show HEAD:models/xgb_v1/predictions.json | python -c "import json, sys; print(json.load(sys.stdin)['as_of'])" || echo none)
+          echo "published: $old   new: $new"
+          if [ "$new" = "$old" ]; then
+            echo "No new trading day - nothing to publish."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add models/xgb_v1/predictions.json models/xgb_v1/history
+          git commit -m "AI predictions for $new"
+          git pull --rebase origin main
+          git push origin HEAD:main

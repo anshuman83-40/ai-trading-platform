@@ -1,0 +1,8 @@
+# Packages for the daily prediction job (.github/workflows/ai-predictions.yml → training/predict.py).
+# Versions are fixed to the ones the model was trained and tested with, so the scores stay the same.
+# xgboost-cpu is the same xgboost without the large GPU files. NOT used by the website (see requirements.txt).
+pandas==2.3.3
+numpy==2.2.6
+yfinance==0.2.66
+requests
+xgboost-cpu==3.4.1
