@@ -4,7 +4,7 @@ Goal: a reproducible swing-trading model (hold about 5 trading days) for NIFTY 2
 on past data with all trading costs subtracted. This folder is separate from the website: nothing here runs
 on the live server, and the server never retrains a model.
 
-**Status: steps 1–4 are done. Model `xgb_v1` has been evaluated on the test period (before costs). It has NOT been backtested with costs yet, so nothing here shows it can make money.**
+**Status: steps 1–5 are done. The backtest does NOT show a strategy that can be relied on to make money: after costs the model did about as well as simply holding the average stock in the data, the result depends on a few trades, and the data is biased upwards. See step 5.**
 
 ## Setup (once)
 
@@ -144,6 +144,68 @@ on 12 Oct 2026, after the model and its settings were fixed. Nothing was tuned a
 - "All eligible stocks" earned 0.47% per 5 days, which is unusually high: these were strong years, and the
   data only contains companies that are in the NIFTY 200 today (survivorship bias).
 
+## Step 5 — backtest with real costs
+
+```bash
+python training/backtest.py
+```
+
+Writes `models/xgb_v1/backtest.json`. Costs are in `training/costs.py` (Groww delivery charges and all taxes,
+copied from https://groww.in/pricing on 12 Oct 2026).
+
+**The strategy tested** (fixed before looking at results): every 5 trading days hold the 10 best-scored
+eligible stocks (at most 3 per industry); trade at the next day's open with 0.05% slippage each side; equal
+position sizes, whole shares, no borrowing; 10% stop-loss per position; if the portfolio falls 20% from its
+high, sell everything and pause 20 trading days; dividends received; everything sold at the end.
+
+**Test period 2 Jan 2023 – 9 Oct 2026, starting with Rs 1,00,000, AFTER costs:**
+
+| Strategy | Per year | Worst fall | Sharpe | Winning trades | Profit factor | Costs per year | End value |
+|---|---|---|---|---|---|---|---|
+| AI model (xgb_v1) | +20.1% | −25.6% | 0.63 | 53% | 1.24 | 23.0% | Rs 1,96,680 |
+| AI model, retrained each year | +38.7% | −25.8% | 1.20 | 51% | 1.45 | 25.9% | Rs 3,34,606 |
+| Most volatile stocks | +15.5% | −33.0% | 0.44 | 46% | 1.22 | 14.1% | Rs 1,70,321 |
+| Best 6-month return | +6.2% | −43.6% | 0.10 | 37% | 1.11 | 8.9% | Rs 1,24,703 |
+| Website rule score | −12.2% | −45.6% | −1.14 | 38% | 0.82 | 18.6% | Rs 61,858 |
+| Random stocks (average of 20 runs) | −15.9% | −54.1% | −1.44 | 43% | 0.80 | 25.7% | Rs 53,458 |
+| Average eligible stock, **no costs** | +22.8% | −22.3% | 0.97 | — | — | 0 | Rs 2,13,675 |
+| NIFTY 50 buy and hold, **no costs** | +5.9% | −15.8% | 0.01 | — | — | 0 | Rs 1,23,756 |
+
+Sharpe = daily portfolio returns minus 6.5%/252, mean ÷ standard deviation × √252. "Costs per year" is a
+percentage of the starting capital. Model by year: 2023 +32.9%, 2024 +31.2%, 2025 +14.3%, 2026 −1.3%.
+
+**The same model with one thing changed:**
+
+| Change | Per year | Worst fall |
+|---|---|---|
+| Start with Rs 25,000 | −15.4% | −56.4% |
+| Start with Rs 5,00,000 | +29.9% | −27.4% |
+| No stop-loss and no maximum-loss rule | +31.9% | −29.8% |
+| Slippage 0.10% each side | +18.3% | −26.3% |
+| Hold 20 stocks instead of 10 | +11.2% | −25.0% |
+| No costs at all (not achievable) | +48.2% | −23.3% |
+| Only stocks already trading Rs 50 crore a day | +14.9% | −27.3% |
+
+**Why this is NOT proof that the model makes money**
+
+1. **It did not beat doing nothing clever.** The average stock in the data rose 22.8% a year with no trading.
+   The model made 20.1% after costs. Its picks were better before costs (+48%), but trading every 5 days cost
+   about 23% of the capital per year and used the advantage up.
+2. **The data is biased upwards (survivorship).** It contains only today's NIFTY 200 members. Several were
+   small companies in 2023 and are in the index now *because* their price multiplied. One of them (GVT&D)
+   produced Rs 40,312 of the Rs 96,680 profit; the 10 best trades produced Rs 77,046. Nobody using the NIFTY 200
+   list in 2023 could have chosen those stocks. The Rs 50-crore check removes only part of this bias.
+3. **The result swings widely with details that should not matter**: from −15% to +39% a year across the rows
+   above. A real edge would be steadier.
+4. **Small capital loses.** A Rs 2,500 position costs 1.64% per round trip (Rs 10,000: 0.69%; Rs 50,000: 0.36%).
+   With Rs 25,000 the same strategy lost 15% a year.
+5. **One period, mostly a rising market**, and looked at only once. 2026 was slightly negative.
+6. **Not included:** income tax on short-term gains (20%), circuit-limit days, the real price of market orders
+   at the open, stop-losses hit inside the day. Today's charges are applied to all past years.
+
+What does hold up: the model's picks beat random picks with the same costs in all 20 random runs, and the
+website's existing rule signal lost money. So the ranking has some information; it is not yet a strategy.
+
 ## Tests
 
 ```bash
@@ -152,4 +214,5 @@ python -m pytest tests -q
 
 ## Next steps (not built yet)
 
-5. Backtest with brokerage, taxes, slippage, position sizes and drawdowns
+6. Show the model's score in TradePulse next to the existing signal (as research information, not advice)
+7. Paper trading with virtual money — the only fair test left, because it uses data that does not exist yet
