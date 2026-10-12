@@ -229,6 +229,12 @@ git commit -m "AI predictions update"
 git push
 ```
 
+**Automatic daily update.** `.github/workflows/ai-predictions.yml` runs `predict.py` on GitHub Actions at
+5:00 pm IST on market days (second try at 8:00 pm) and commits the new file only when there is a new trading
+day; Render then republishes the site. Packages for that job are pinned in `requirements-predict.txt`.
+So the commands above are only needed to update by hand. To stop the automation: GitHub → Actions →
+"AI predictions (daily)" → Disable workflow.
+
 **How the website uses it**
 
 - The server never loads the model, builds features or trains. `ml/api.py` only reads the small JSON files,
