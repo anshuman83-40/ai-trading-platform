@@ -117,3 +117,38 @@ def test_dividend_adjustment_is_repeatable():
     a = dc.dividend_adjusted_close(df["close"], df["dividends"])
     b = dc.dividend_adjusted_close(df["close"], df["dividends"])
     assert (a == b).all() and a[0] < df["close"].iloc[0]
+
+
+def test_incomplete_finds_empty_and_stale_tables():
+    full, stale = make(n=600), make(n=599)
+    tables = {"A": full, "B": stale, "C": pd.DataFrame(columns=dc.COLUMNS)}
+    assert dc.incomplete(tables, ["A", "B", "C", "D"]) == ["B", "C", "D"]
+    assert dc.incomplete({"A": full}, ["A"]) == []
+    assert dc.incomplete({}, ["A", "B"]) == ["A", "B"]
+
+
+def test_download_complete_asks_again_only_for_the_missing_companies():
+    full = make(n=600)
+    calls = []
+
+    def flaky(pairs, start, end, chunk=25, pause=1.0):
+        calls.append([s for s, _ in pairs])
+        if len(calls) == 1:                                   # first request: B comes back empty, C a day behind
+            return {"A": full, "B": pd.DataFrame(columns=dc.COLUMNS), "C": full.iloc[:-1]}
+        return {s: full for s, _ in pairs}
+
+    out = dc.download_complete([("A", "A.NS"), ("B", "B.NS"), ("C", "C.NS")], "2020-01-01", "2022-12-31", fetch=flaky, pause=0)
+    assert calls == [["A", "B", "C"], ["B", "C"]]
+    assert all(len(out[s]) == 600 for s in "ABC")
+
+
+def test_download_complete_gives_up_after_a_few_rounds_and_keeps_what_it_has():
+    full = make(n=600)
+    calls = []
+
+    def broken(pairs, start, end, chunk=25, pause=1.0):
+        calls.append(len(pairs))
+        return {s: (full if s == "A" else pd.DataFrame(columns=dc.COLUMNS)) for s, _ in pairs}
+
+    out = dc.download_complete([("A", "A.NS"), ("B", "B.NS")], "2020-01-01", "2022-12-31", rounds=2, fetch=broken, pause=0)
+    assert calls == [2, 1, 1] and len(out["A"]) == 600 and len(out["B"]) == 0

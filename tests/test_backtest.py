@@ -220,3 +220,50 @@ def test_stats_report_how_concentrated_the_profit_is():
     res = bt.run(const_scores(days, {"A": 1.0}), prices, bt.Settings(capital=1000, top_k=1, **FREE))
     st = bt.stats(res)
     assert st["best_stock"] == {"symbol": "A", "profit": 500.0} and st["profit_without_10_best_trades"] == 0.0
+
+
+# ───────────── paper-trading mode (positions stay open, day by day) ─────────────
+def test_paper_mode_keeps_positions_open_and_reports_tomorrows_orders():
+    prices, days = make_prices({"A": [100, 100, 110], "B": [50, 50, 50]})
+    res = bt.run(const_scores(days, {"A": 2.0, "B": 1.0}), prices, bt.Settings(capital=1000, top_k=1, **FREE), liquidate_at_end=False)
+    assert res["trades"] == [] and [p["symbol"] for p in res["open_positions"]] == ["A"]
+    p = res["open_positions"][0]
+    assert p["shares"] == 10 and p["last_price"] == 110.0 and p["pnl"] == pytest.approx(100.0)
+    assert res["equity"]["equity"].iloc[-1] == pytest.approx(1100.0) and res["cash"] == pytest.approx(0.0)
+    one = bt.run(const_scores(days[:1], {"A": 2.0, "B": 1.0}), prices[prices["date"] == days[0]],
+                 bt.Settings(capital=1000, top_k=1, **FREE), liquidate_at_end=False)
+    assert one["pending"]["buy"] == ["A"] and one["open_positions"] == []      # first day: only a plan for tomorrow
+
+
+def test_paper_mode_replay_gives_the_same_past_when_a_new_day_is_added():
+    """Paper trading is re-calculated from the start every evening. Adding a day must never change earlier days."""
+    rng = np.random.default_rng(11)
+    table = {s: list(100 * np.exp(np.cumsum(rng.normal(0, 0.02, 45)))) for s in "ABCDEFGH"}
+    prices, days = make_prices(table)
+    sc = pd.DataFrame([{"date": d, "symbol": s, "score": rng.random()} for d in days for s in table])
+    s = bt.Settings(capital=80_000, top_k=3, max_per_industry=None, max_daily_loss=0.06)
+    longer = bt.run(sc, prices, s, liquidate_at_end=False)
+    for n in (1, 2, 7, 20, 44):
+        shorter = bt.run(sc[sc["date"] <= days[n - 1]], prices[prices["date"] <= days[n - 1]], s, liquidate_at_end=False)
+        pd.testing.assert_series_equal(shorter["equity"]["equity"], longer["equity"]["equity"].iloc[:n])
+        done = [t for t in longer["trades"] if t["sell_date"] <= str(days[n - 1].date())]
+        assert shorter["trades"] == done
+
+
+def test_one_day_loss_rule_sells_everything_and_pauses():
+    table = {"A": [100, 100, 100, 90, 90, 90, 90, 90, 90, 90, 90, 90], "B": [100, 100, 100, 90, 90, 90, 90, 90, 90, 90, 90, 90]}
+    prices, days = make_prices(table)
+    s = bt.Settings(capital=10_000, top_k=2, plan=cs.NO_COSTS, slippage=0.0, stop_loss=None, max_drawdown_halt=None,
+                    max_per_industry=None, max_daily_loss=0.06, daily_loss_pause=3)
+    res = bt.run(const_scores(days, {"A": 2.0, "B": 1.0}), prices, s, liquidate_at_end=False)
+    out = [t for t in res["trades"] if t["reason"] == "daily_loss_rule"]
+    assert len(out) == 2 and all(t["sell_date"] == str(days[4].date()) for t in out)      # -10% on day 3, sold day 4
+    assert res["events"][0] == {"date": str(days[3].date()), "event": "daily_loss_rule", "pause_days": 3}
+    assert (res["equity"]["holdings"].iloc[4:7] == 0).all()
+
+
+def test_backtest_results_are_unchanged_by_the_new_options():
+    prices, days = make_prices({"A": [100, 100, 110, 121, 121, 121]})
+    res = bt.run(const_scores(days, {"A": 1.0}), prices, bt.Settings(capital=1000, top_k=1, **FREE))
+    assert res["open_positions"] == [] and res["trades"][-1]["reason"] == "end_of_test"
+    assert bt.Settings().max_daily_loss is None

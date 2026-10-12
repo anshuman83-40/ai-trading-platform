@@ -22,6 +22,7 @@
    "close": 1047.0,
    "rule_signal": "HOLD",
    "rule_score": -1.0,
+   "turnover_cr": 995.7,
    "historical_winner_rate": 0.3761
   },
   {
@@ -33,6 +34,7 @@
    "close": 18100.0,
    "rule_signal": "HOLD",
    "rule_score": 0.5,
+   "turnover_cr": 237.8,
    "historical_winner_rate": 0.3761
   },
   {
@@ -44,6 +46,7 @@
    "close": 310.8,
    "rule_signal": "HOLD",
    "rule_score": -1.0,
+   "turnover_cr": 165.8,
    "historical_winner_rate": 0.3761
   },
   {
@@ -55,6 +58,7 @@
    "close": 2214.0,
    "rule_signal": "HOLD",
    "rule_score": -1.0,
+   "turnover_cr": 89.6,
    "historical_winner_rate": 0.3761
   },
   {
@@ -66,6 +70,7 @@
    "close": 1069.7,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 223.6,
    "historical_winner_rate": 0.3761
   },
   {
@@ -77,6 +82,7 @@
    "close": 328.2,
    "rule_signal": "HOLD",
    "rule_score": 0.0,
+   "turnover_cr": 214.3,
    "historical_winner_rate": 0.3761
   },
   {
@@ -88,6 +94,7 @@
    "close": 865.95,
    "rule_signal": "HOLD",
    "rule_score": -1.0,
+   "turnover_cr": 285.1,
    "historical_winner_rate": 0.3761
   },
   {
@@ -99,6 +106,7 @@
    "close": 416.05,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 68.1,
    "historical_winner_rate": 0.3761
   },
   {
@@ -110,6 +118,7 @@
    "close": 4254.0,
    "rule_signal": "SELL",
    "rule_score": -2.0,
+   "turnover_cr": 245.4,
    "historical_winner_rate": 0.3761
   },
   {
@@ -121,6 +130,7 @@
    "close": 12.67,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 504.8,
    "historical_winner_rate": 0.3761
   },
   {
@@ -132,6 +142,7 @@
    "close": 10360.0,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 255.8,
    "historical_winner_rate": 0.3761
   },
   {
@@ -143,6 +154,7 @@
    "close": 31290.0,
    "rule_signal": "HOLD",
    "rule_score": 0.0,
+   "turnover_cr": 312.7,
    "historical_winner_rate": 0.3761
   },
   {
@@ -154,6 +166,7 @@
    "close": 2630.0,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 450.5,
    "historical_winner_rate": 0.3761
   },
   {
@@ -165,6 +178,7 @@
    "close": 853.0,
    "rule_signal": "HOLD",
    "rule_score": -1.0,
+   "turnover_cr": 237.8,
    "historical_winner_rate": 0.3761
   },
   {
@@ -176,6 +190,7 @@
    "close": 4555.0,
    "rule_signal": "BUY",
    "rule_score": 2.5,
+   "turnover_cr": 137.1,
    "historical_winner_rate": 0.3761
   },
   {
@@ -187,6 +202,7 @@
    "close": 3364.9,
    "rule_signal": "HOLD",
    "rule_score": -1.0,
+   "turnover_cr": 276.7,
    "historical_winner_rate": 0.3761
   },
   {
@@ -198,6 +214,7 @@
    "close": 469.95,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 281.8,
    "historical_winner_rate": 0.3761
   },
   {
@@ -209,6 +226,7 @@
    "close": 1846.6,
    "rule_signal": "BUY",
    "rule_score": 2.0,
+   "turnover_cr": 386.7,
    "historical_winner_rate": 0.3761
   },
   {
@@ -220,6 +238,7 @@
    "close": 1280.0,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 240.1,
    "historical_winner_rate": 0.3761
   },
   {
@@ -231,6 +250,7 @@
    "close": 9426.0,
    "rule_signal": "HOLD",
    "rule_score": 0.5,
+   "turnover_cr": 463.2,
    "historical_winner_rate": 0.3453
   },
   {
@@ -242,6 +262,7 @@
    "close": 1706.9,
    "rule_signal": "HOLD",
    "rule_score": 0.5,
+   "turnover_cr": 138.6,
    "historical_winner_rate": 0.3453
   },
   {
@@ -253,6 +274,7 @@
    "close": 1274.0,
    "rule_signal": "HOLD",
    "rule_score": 0.0,
+   "turnover_cr": 282.0,
    "historical_winner_rate": 0.3453
   },
   {
@@ -264,6 +286,7 @@
    "close": 1815.3,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 154.1,
    "historical_winner_rate": 0.3453
   },
   {
@@ -275,6 +298,7 @@
    "close": 1232.0,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 165.5,
    "historical_winner_rate": 0.3453
   },
   {
@@ -286,6 +310,7 @@
    "close": 1012.5,
    "rule_signal": "HOLD",
    "rule_score": -1.0,
+   "turnover_cr": 118.4,
    "historical_winner_rate": 0.3453
   },
   {
@@ -297,6 +322,7 @@
    "close": 3390.0,
    "rule_signal": "HOLD",
    "rule_score": 0.5,
+   "turnover_cr": 628.0,
    "historical_winner_rate": 0.3453
   },
   {
@@ -308,6 +334,7 @@
    "close": 83.0,
    "rule_signal": "BUY",
    "rule_score": 2.0,
+   "turnover_cr": 114.1,
    "historical_winner_rate": 0.3453
   },
   {
@@ -319,6 +346,7 @@
    "close": 340.0,
    "rule_signal": "BUY",
    "rule_score": 2.0,
+   "turnover_cr": 161.7,
    "historical_winner_rate": 0.3453
   },
   {
@@ -330,6 +358,7 @@
    "close": 185.9,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 392.4,
    "historical_winner_rate": 0.3453
   },
   {
@@ -341,6 +370,7 @@
    "close": 757.25,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 167.4,
    "historical_winner_rate": 0.3453
   },
   {
@@ -352,6 +382,7 @@
    "close": 346.35,
    "rule_signal": "HOLD",
    "rule_score": -1.0,
+   "turnover_cr": 111.1,
    "historical_winner_rate": 0.3453
   },
   {
@@ -363,6 +394,7 @@
    "close": 1471.0,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 322.6,
    "historical_winner_rate": 0.3453
   },
   {
@@ -374,6 +406,7 @@
    "close": 867.5,
    "rule_signal": "SELL",
    "rule_score": -2.0,
+   "turnover_cr": 193.9,
    "historical_winner_rate": 0.3453
   },
   {
@@ -385,6 +418,7 @@
    "close": 323.0,
    "rule_signal": "SELL",
    "rule_score": -2.0,
+   "turnover_cr": 696.1,
    "historical_winner_rate": 0.3453
   },
   {
@@ -396,6 +430,7 @@
    "close": 567.15,
    "rule_signal": "SELL",
    "rule_score": -2.0,
+   "turnover_cr": 390.0,
    "historical_winner_rate": 0.3453
   },
   {
@@ -407,6 +442,7 @@
    "close": 1051.0,
    "rule_signal": "BUY",
    "rule_score": 2.5,
+   "turnover_cr": 96.5,
    "historical_winner_rate": 0.3453
   },
   {
@@ -418,6 +454,7 @@
    "close": 20334.0,
    "rule_signal": "BUY",
    "rule_score": 2.0,
+   "turnover_cr": 512.3,
    "historical_winner_rate": 0.3453
   },
   {
@@ -429,6 +466,7 @@
    "close": 70.34,
    "rule_signal": "HOLD",
    "rule_score": -1.0,
+   "turnover_cr": 103.2,
    "historical_winner_rate": 0.3263
   },
   {
@@ -440,6 +478,7 @@
    "close": 39.57,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 260.4,
    "historical_winner_rate": 0.3263
   },
   {
@@ -451,6 +490,7 @@
    "close": 2913.0,
    "rule_signal": "BUY",
    "rule_score": 2.5,
+   "turnover_cr": 313.5,
    "historical_winner_rate": 0.3263
   },
   {
@@ -462,6 +502,7 @@
    "close": 348.0,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 70.1,
    "historical_winner_rate": 0.3263
   },
   {
@@ -473,6 +514,7 @@
    "close": 4018.9,
    "rule_signal": "HOLD",
    "rule_score": -0.5,
+   "turnover_cr": 168.5,
    "historical_winner_rate": 0.3263
   },
   {
@@ -484,6 +526,7 @@
    "close": 6855.5,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 136.0,
    "historical_winner_rate": 0.3263
   },
   {
@@ -495,6 +538,7 @@
    "close": 1791.8,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 35.5,
    "historical_winner_rate": 0.3263
   },
   {
@@ -506,6 +550,7 @@
    "close": 1429.5,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 87.9,
    "historical_winner_rate": 0.3263
   },
   {
@@ -517,6 +562,7 @@
    "close": 1203.9,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 183.7,
    "historical_winner_rate": 0.3263
   },
   {
@@ -528,6 +574,7 @@
    "close": 192.74,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 100.9,
    "historical_winner_rate": 0.3263
   },
   {
@@ -539,6 +586,7 @@
    "close": 5787.0,
    "rule_signal": "BUY",
    "rule_score": 2.5,
+   "turnover_cr": 234.9,
    "historical_winner_rate": 0.3263
   },
   {
@@ -550,6 +598,7 @@
    "close": 156.99,
    "rule_signal": "SELL",
    "rule_score": -2.0,
+   "turnover_cr": 197.8,
    "historical_winner_rate": 0.3263
   },
   {
@@ -561,6 +610,7 @@
    "close": 1306.5,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 218.0,
    "historical_winner_rate": 0.3263
   },
   {
@@ -572,6 +622,7 @@
    "close": 7775.0,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 536.0,
    "historical_winner_rate": 0.3263
   },
   {
@@ -583,6 +634,7 @@
    "close": 1754.0,
    "rule_signal": "SELL",
    "rule_score": -2.0,
+   "turnover_cr": 502.2,
    "historical_winner_rate": 0.3263
   },
   {
@@ -594,6 +646,7 @@
    "close": 171.0,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 304.3,
    "historical_winner_rate": 0.3263
   },
   {
@@ -605,6 +658,7 @@
    "close": 44585.0,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 109.0,
    "historical_winner_rate": 0.3263
   },
   {
@@ -616,6 +670,7 @@
    "close": 310.0,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 258.9,
    "historical_winner_rate": 0.3263
   },
   {
@@ -627,6 +682,7 @@
    "close": 404.8,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 276.3,
    "historical_winner_rate": 0.3263
   },
   {
@@ -638,6 +694,7 @@
    "close": 1544.5,
    "rule_signal": "HOLD",
    "rule_score": -1.0,
+   "turnover_cr": 103.1,
    "historical_winner_rate": 0.3251
   },
   {
@@ -649,6 +706,7 @@
    "close": 394.15,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 78.2,
    "historical_winner_rate": 0.3251
   },
   {
@@ -660,6 +718,7 @@
    "close": 977.2,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 153.5,
    "historical_winner_rate": 0.3251
   },
   {
@@ -671,6 +730,7 @@
    "close": 2157.4,
    "rule_signal": "HOLD",
    "rule_score": 0.0,
+   "turnover_cr": 123.9,
    "historical_winner_rate": 0.3251
   },
   {
@@ -682,6 +742,7 @@
    "close": 3330.2,
    "rule_signal": "BUY",
    "rule_score": 2.0,
+   "turnover_cr": 1879.0,
    "historical_winner_rate": 0.3251
   },
   {
@@ -693,6 +754,7 @@
    "close": 1690.0,
    "rule_signal": "SELL",
    "rule_score": -2.0,
+   "turnover_cr": 864.1,
    "historical_winner_rate": 0.3251
   },
   {
@@ -704,6 +766,7 @@
    "close": 882.5,
    "rule_signal": "HOLD",
    "rule_score": -1.0,
+   "turnover_cr": 382.1,
    "historical_winner_rate": 0.3251
   },
   {
@@ -715,6 +778,7 @@
    "close": 2131.5,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 67.4,
    "historical_winner_rate": 0.3251
   },
   {
@@ -726,6 +790,7 @@
    "close": 929.4,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 450.0,
    "historical_winner_rate": 0.3251
   },
   {
@@ -737,6 +802,7 @@
    "close": 262.7,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 181.2,
    "historical_winner_rate": 0.3251
   },
   {
@@ -748,6 +814,7 @@
    "close": 77.5,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 80.9,
    "historical_winner_rate": 0.3251
   },
   {
@@ -759,6 +826,7 @@
    "close": 1840.0,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 89.4,
    "historical_winner_rate": 0.3251
   },
   {
@@ -770,6 +838,7 @@
    "close": 380.25,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 127.4,
    "historical_winner_rate": 0.3251
   },
   {
@@ -781,6 +850,7 @@
    "close": 322.4,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 59.1,
    "historical_winner_rate": 0.3251
   },
   {
@@ -792,6 +862,7 @@
    "close": 171.33,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 140.0,
    "historical_winner_rate": 0.3251
   },
   {
@@ -803,6 +874,7 @@
    "close": 89.5,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 170.4,
    "historical_winner_rate": 0.3251
   },
   {
@@ -814,6 +886,7 @@
    "close": 563.2,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 175.2,
    "historical_winner_rate": 0.3251
   },
   {
@@ -825,6 +898,7 @@
    "close": 79.44,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 193.2,
    "historical_winner_rate": 0.3251
   },
   {
@@ -836,6 +910,7 @@
    "close": 2069.2,
    "rule_signal": "HOLD",
    "rule_score": 0.5,
+   "turnover_cr": 341.6,
    "historical_winner_rate": 0.3017
   },
   {
@@ -847,6 +922,7 @@
    "close": 1767.0,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 112.0,
    "historical_winner_rate": 0.3017
   },
   {
@@ -858,6 +934,7 @@
    "close": 4400.0,
    "rule_signal": "HOLD",
    "rule_score": -1.0,
+   "turnover_cr": 396.7,
    "historical_winner_rate": 0.3017
   },
   {
@@ -869,6 +946,7 @@
    "close": 4835.0,
    "rule_signal": "HOLD",
    "rule_score": -0.5,
+   "turnover_cr": 208.4,
    "historical_winner_rate": 0.3017
   },
   {
@@ -880,6 +958,7 @@
    "close": 467.35,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 85.4,
    "historical_winner_rate": 0.3017
   },
   {
@@ -891,6 +970,7 @@
    "close": 433.3,
    "rule_signal": "BUY",
    "rule_score": 2.0,
+   "turnover_cr": 227.4,
    "historical_winner_rate": 0.3017
   },
   {
@@ -902,6 +982,7 @@
    "close": 439.9,
    "rule_signal": "BUY",
    "rule_score": 2.5,
+   "turnover_cr": 382.2,
    "historical_winner_rate": 0.3017
   },
   {
@@ -913,6 +994,7 @@
    "close": 1662.7,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 42.4,
    "historical_winner_rate": 0.3017
   },
   {
@@ -924,6 +1006,7 @@
    "close": 3493.8,
    "rule_signal": "BUY",
    "rule_score": 2.0,
+   "turnover_cr": 57.2,
    "historical_winner_rate": 0.3017
   },
   {
@@ -935,6 +1018,7 @@
    "close": 650.0,
    "rule_signal": "SELL",
    "rule_score": -2.0,
+   "turnover_cr": 240.7,
    "historical_winner_rate": 0.3017
   },
   {
@@ -946,6 +1030,7 @@
    "close": 244.6,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 34.6,
    "historical_winner_rate": 0.3017
   },
   {
@@ -957,6 +1042,7 @@
    "close": 2858.0,
    "rule_signal": "HOLD",
    "rule_score": -1.0,
+   "turnover_cr": 187.8,
    "historical_winner_rate": 0.3017
   },
   {
@@ -968,6 +1054,7 @@
    "close": 2289.7,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 179.6,
    "historical_winner_rate": 0.3017
   },
   {
@@ -979,6 +1066,7 @@
    "close": 1020.0,
    "rule_signal": "HOLD",
    "rule_score": -0.5,
+   "turnover_cr": 1066.5,
    "historical_winner_rate": 0.3017
   },
   {
@@ -990,6 +1078,7 @@
    "close": 257.9,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 503.9,
    "historical_winner_rate": 0.3017
   },
   {
@@ -1001,6 +1090,7 @@
    "close": 375.65,
    "rule_signal": "HOLD",
    "rule_score": 0.0,
+   "turnover_cr": 198.7,
    "historical_winner_rate": 0.3017
   },
   {
@@ -1012,6 +1102,7 @@
    "close": 161.8,
    "rule_signal": "HOLD",
    "rule_score": -0.5,
+   "turnover_cr": 349.1,
    "historical_winner_rate": 0.3017
   },
   {
@@ -1023,6 +1114,7 @@
    "close": 4654.2,
    "rule_signal": "HOLD",
    "rule_score": 0.0,
+   "turnover_cr": 161.0,
    "historical_winner_rate": 0.3017
   },
   {
@@ -1034,6 +1126,7 @@
    "close": 4682.0,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 182.4,
    "historical_winner_rate": 0.3017
   },
   {
@@ -1045,6 +1138,7 @@
    "close": 36905.0,
    "rule_signal": "BUY",
    "rule_score": 2.0,
+   "turnover_cr": 86.6,
    "historical_winner_rate": 0.2895
   },
   {
@@ -1056,6 +1150,7 @@
    "close": 1570.0,
    "rule_signal": "BUY",
    "rule_score": 2.0,
+   "turnover_cr": 97.2,
    "historical_winner_rate": 0.2895
   },
   {
@@ -1067,6 +1162,7 @@
    "close": 125.35,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 117.9,
    "historical_winner_rate": 0.2895
   },
   {
@@ -1078,6 +1174,7 @@
    "close": 144.25,
    "rule_signal": "HOLD",
    "rule_score": -1.0,
+   "turnover_cr": 192.8,
    "historical_winner_rate": 0.2895
   },
   {
@@ -1089,6 +1186,7 @@
    "close": 2400.0,
    "rule_signal": "SELL",
    "rule_score": -2.0,
+   "turnover_cr": 148.7,
    "historical_winner_rate": 0.2895
   },
   {
@@ -1100,6 +1198,7 @@
    "close": 133.4,
    "rule_signal": "HOLD",
    "rule_score": -0.5,
+   "turnover_cr": 80.4,
    "historical_winner_rate": 0.2895
   },
   {
@@ -1111,6 +1210,7 @@
    "close": 941.0,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 853.9,
    "historical_winner_rate": 0.2895
   },
   {
@@ -1122,6 +1222,7 @@
    "close": 3654.0,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 94.1,
    "historical_winner_rate": 0.2895
   },
   {
@@ -1133,6 +1234,7 @@
    "close": 361.35,
    "rule_signal": "SELL",
    "rule_score": -2.0,
+   "turnover_cr": 230.6,
    "historical_winner_rate": 0.2895
   },
   {
@@ -1144,6 +1246,7 @@
    "close": 12660.0,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 390.9,
    "historical_winner_rate": 0.2895
   },
   {
@@ -1155,6 +1258,7 @@
    "close": 10750.0,
    "rule_signal": "SELL",
    "rule_score": -2.0,
+   "turnover_cr": 46.4,
    "historical_winner_rate": 0.2895
   },
   {
@@ -1166,6 +1270,7 @@
    "close": 1430.4,
    "rule_signal": "BUY",
    "rule_score": 2.0,
+   "turnover_cr": 70.1,
    "historical_winner_rate": 0.2895
   },
   {
@@ -1177,6 +1282,7 @@
    "close": 1674.0,
    "rule_signal": "BUY",
    "rule_score": 2.5,
+   "turnover_cr": 156.3,
    "historical_winner_rate": 0.2895
   },
   {
@@ -1188,6 +1294,7 @@
    "close": 1935.0,
    "rule_signal": "HOLD",
    "rule_score": -1.0,
+   "turnover_cr": 139.1,
    "historical_winner_rate": 0.2895
   },
   {
@@ -1199,6 +1306,7 @@
    "close": 908.85,
    "rule_signal": "HOLD",
    "rule_score": 0.0,
+   "turnover_cr": 121.7,
    "historical_winner_rate": 0.2895
   },
   {
@@ -1210,6 +1318,7 @@
    "close": 374.4,
    "rule_signal": "HOLD",
    "rule_score": -0.5,
+   "turnover_cr": 87.8,
    "historical_winner_rate": 0.2895
   },
   {
@@ -1221,6 +1330,7 @@
    "close": 1324.7,
    "rule_signal": "HOLD",
    "rule_score": -0.5,
+   "turnover_cr": 178.9,
    "historical_winner_rate": 0.2895
   },
   {
@@ -1232,6 +1342,7 @@
    "close": 1349.7,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 146.1,
    "historical_winner_rate": 0.2895
   },
   {
@@ -1243,6 +1354,7 @@
    "close": 2027.0,
    "rule_signal": "HOLD",
    "rule_score": -1.0,
+   "turnover_cr": 136.2,
    "historical_winner_rate": 0.2799
   },
   {
@@ -1254,6 +1366,7 @@
    "close": 1778.7,
    "rule_signal": "HOLD",
    "rule_score": -0.5,
+   "turnover_cr": 1140.8,
    "historical_winner_rate": 0.2799
   },
   {
@@ -1265,6 +1378,7 @@
    "close": 2488.4,
    "rule_signal": "HOLD",
    "rule_score": 0.0,
+   "turnover_cr": 56.9,
    "historical_winner_rate": 0.2799
   },
   {
@@ -1276,6 +1390,7 @@
    "close": 1719.9,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 153.5,
    "historical_winner_rate": 0.2799
   },
   {
@@ -1287,6 +1402,7 @@
    "close": 116.0,
    "rule_signal": "BUY",
    "rule_score": 2.0,
+   "turnover_cr": 155.8,
    "historical_winner_rate": 0.2799
   },
   {
@@ -1298,6 +1414,7 @@
    "close": 568.0,
    "rule_signal": "HOLD",
    "rule_score": 0.5,
+   "turnover_cr": 228.4,
    "historical_winner_rate": 0.2799
   },
   {
@@ -1309,6 +1426,7 @@
    "close": 11315.0,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 496.4,
    "historical_winner_rate": 0.2799
   },
   {
@@ -1320,6 +1438,7 @@
    "close": 814.1,
    "rule_signal": "HOLD",
    "rule_score": -0.5,
+   "turnover_cr": 81.6,
    "historical_winner_rate": 0.2799
   },
   {
@@ -1331,6 +1450,7 @@
    "close": 2283.0,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 149.0,
    "historical_winner_rate": 0.2799
   },
   {
@@ -1342,6 +1462,7 @@
    "close": 2125.0,
    "rule_signal": "HOLD",
    "rule_score": 0.0,
+   "turnover_cr": 814.6,
    "historical_winner_rate": 0.2799
   },
   {
@@ -1353,6 +1474,7 @@
    "close": 1089.0,
    "rule_signal": "HOLD",
    "rule_score": -0.5,
+   "turnover_cr": 108.8,
    "historical_winner_rate": 0.2799
   },
   {
@@ -1364,6 +1486,7 @@
    "close": 852.05,
    "rule_signal": "HOLD",
    "rule_score": -0.5,
+   "turnover_cr": 82.1,
    "historical_winner_rate": 0.2799
   },
   {
@@ -1375,6 +1498,7 @@
    "close": 441.55,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 87.7,
    "historical_winner_rate": 0.2799
   },
   {
@@ -1386,6 +1510,7 @@
    "close": 559.25,
    "rule_signal": "BUY",
    "rule_score": 2.5,
+   "turnover_cr": 260.5,
    "historical_winner_rate": 0.2799
   },
   {
@@ -1397,6 +1522,7 @@
    "close": 711.5,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 249.4,
    "historical_winner_rate": 0.2799
   },
   {
@@ -1408,6 +1534,7 @@
    "close": 1477.7,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 99.9,
    "historical_winner_rate": 0.2799
   },
   {
@@ -1419,6 +1546,7 @@
    "close": 235.4,
    "rule_signal": "BUY",
    "rule_score": 2.0,
+   "turnover_cr": 151.7,
    "historical_winner_rate": 0.2799
   },
   {
@@ -1430,6 +1558,7 @@
    "close": 118.38,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 153.3,
    "historical_winner_rate": 0.2799
   },
   {
@@ -1441,6 +1570,7 @@
    "close": 1340.0,
    "rule_signal": "HOLD",
    "rule_score": 0.0,
+   "turnover_cr": 1286.4,
    "historical_winner_rate": 0.2799
   },
   {
@@ -1452,6 +1582,7 @@
    "close": 558.7,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 70.9,
    "historical_winner_rate": 0.2708
   },
   {
@@ -1463,6 +1594,7 @@
    "close": 1253.0,
    "rule_signal": "BUY",
    "rule_score": 2.0,
+   "turnover_cr": 743.3,
    "historical_winner_rate": 0.2708
   },
   {
@@ -1474,6 +1606,7 @@
    "close": 104.6,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 55.9,
    "historical_winner_rate": 0.2708
   },
   {
@@ -1485,6 +1618,7 @@
    "close": 1134.4,
    "rule_signal": "SELL",
    "rule_score": -2.0,
+   "turnover_cr": 181.4,
    "historical_winner_rate": 0.2708
   },
   {
@@ -1496,6 +1630,7 @@
    "close": 2353.5,
    "rule_signal": "BUY",
    "rule_score": 2.5,
+   "turnover_cr": 112.8,
    "historical_winner_rate": 0.2708
   },
   {
@@ -1507,6 +1642,7 @@
    "close": 2331.0,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 142.0,
    "historical_winner_rate": 0.2708
   },
   {
@@ -1518,6 +1654,7 @@
    "close": 2634.1,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 167.8,
    "historical_winner_rate": 0.2708
   },
   {
@@ -1529,6 +1666,7 @@
    "close": 957.25,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 709.9,
    "historical_winner_rate": 0.2708
   },
   {
@@ -1540,6 +1678,7 @@
    "close": 122410.0,
    "rule_signal": "HOLD",
    "rule_score": -0.5,
+   "turnover_cr": 37.2,
    "historical_winner_rate": 0.2708
   },
   {
@@ -1551,6 +1690,7 @@
    "close": 4795.0,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 348.3,
    "historical_winner_rate": 0.2708
   },
   {
@@ -1562,6 +1702,7 @@
    "close": 301.0,
    "rule_signal": "HOLD",
    "rule_score": -0.5,
+   "turnover_cr": 213.9,
    "historical_winner_rate": 0.2708
   },
   {
@@ -1573,6 +1714,7 @@
    "close": 1020.0,
    "rule_signal": "HOLD",
    "rule_score": -1.0,
+   "turnover_cr": 80.6,
    "historical_winner_rate": 0.2708
   },
   {
@@ -1584,6 +1726,7 @@
    "close": 284.5,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 149.0,
    "historical_winner_rate": 0.2708
   },
   {
@@ -1595,6 +1738,7 @@
    "close": 391.5,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 274.8,
    "historical_winner_rate": 0.2708
   },
   {
@@ -1606,6 +1750,7 @@
    "close": 4774.5,
    "rule_signal": "HOLD",
    "rule_score": -0.5,
+   "turnover_cr": 119.0,
    "historical_winner_rate": 0.2708
   },
   {
@@ -1617,6 +1762,7 @@
    "close": 220.0,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 270.8,
    "historical_winner_rate": 0.2708
   },
   {
@@ -1628,6 +1774,7 @@
    "close": 1820.7,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 250.2,
    "historical_winner_rate": 0.2708
   },
   {
@@ -1639,6 +1786,7 @@
    "close": 782.4,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 125.1,
    "historical_winner_rate": 0.2708
   },
   {
@@ -1650,6 +1798,7 @@
    "close": 10034.0,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 323.1,
    "historical_winner_rate": 0.2651
   },
   {
@@ -1661,6 +1810,7 @@
    "close": 1700.0,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 82.3,
    "historical_winner_rate": 0.2651
   },
   {
@@ -1672,6 +1822,7 @@
    "close": 1680.8,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 222.3,
    "historical_winner_rate": 0.2651
   },
   {
@@ -1683,6 +1834,7 @@
    "close": 1580.7,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 274.0,
    "historical_winner_rate": 0.2651
   },
   {
@@ -1694,6 +1846,7 @@
    "close": 10520.0,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 313.2,
    "historical_winner_rate": 0.2651
   },
   {
@@ -1705,6 +1858,7 @@
    "close": 337.9,
    "rule_signal": "BUY",
    "rule_score": 2.0,
+   "turnover_cr": 296.9,
    "historical_winner_rate": 0.2651
   },
   {
@@ -1716,6 +1870,7 @@
    "close": 443.4,
    "rule_signal": "BUY",
    "rule_score": 2.5,
+   "turnover_cr": 942.9,
    "historical_winner_rate": 0.2651
   },
   {
@@ -1727,6 +1882,7 @@
    "close": 440.75,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 53.5,
    "historical_winner_rate": 0.2651
   },
   {
@@ -1738,6 +1894,7 @@
    "close": 1158.9,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 1593.5,
    "historical_winner_rate": 0.2651
   },
   {
@@ -1749,6 +1906,7 @@
    "close": 462.7,
    "rule_signal": "BUY",
    "rule_score": 2.0,
+   "turnover_cr": 38.3,
    "historical_winner_rate": 0.2651
   },
   {
@@ -1760,6 +1918,7 @@
    "close": 8405.0,
    "rule_signal": "BUY",
    "rule_score": 2.0,
+   "turnover_cr": 333.3,
    "historical_winner_rate": 0.2651
   },
   {
@@ -1771,6 +1930,7 @@
    "close": 332.25,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 154.6,
    "historical_winner_rate": 0.2651
   },
   {
@@ -1782,6 +1942,7 @@
    "close": 4937.0,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 258.5,
    "historical_winner_rate": 0.2651
   },
   {
@@ -1793,6 +1954,7 @@
    "close": 343.7,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 141.5,
    "historical_winner_rate": 0.2651
   },
   {
@@ -1804,6 +1966,7 @@
    "close": 1052.0,
    "rule_signal": "HOLD",
    "rule_score": -0.5,
+   "turnover_cr": 79.6,
    "historical_winner_rate": 0.2651
   },
   {
@@ -1815,6 +1978,7 @@
    "close": 1311.3,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 133.3,
    "historical_winner_rate": 0.2651
   },
   {
@@ -1826,6 +1990,7 @@
    "close": 4760.0,
    "rule_signal": "HOLD",
    "rule_score": 0.0,
+   "turnover_cr": 322.0,
    "historical_winner_rate": 0.2651
   },
   {
@@ -1837,6 +2002,7 @@
    "close": 546.9,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 197.8,
    "historical_winner_rate": 0.2651
   },
   {
@@ -1848,6 +2014,7 @@
    "close": 958.8,
    "rule_signal": "HOLD",
    "rule_score": -0.5,
+   "turnover_cr": 122.0,
    "historical_winner_rate": 0.2651
   },
   {
@@ -1859,6 +2026,7 @@
    "close": 166.91,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 121.9,
    "historical_winner_rate": 0.2351
   },
   {
@@ -1870,6 +2038,7 @@
    "close": 20.44,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 191.2,
    "historical_winner_rate": 0.2351
   },
   {
@@ -1881,6 +2050,7 @@
    "close": 1173.0,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 195.5,
    "historical_winner_rate": 0.2351
   },
   {
@@ -1892,6 +2062,7 @@
    "close": 1760.0,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 294.2,
    "historical_winner_rate": 0.2351
   },
   {
@@ -1903,6 +2074,7 @@
    "close": 3627.5,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 619.4,
    "historical_winner_rate": 0.2351
   },
   {
@@ -1914,6 +2086,7 @@
    "close": 514.85,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 132.1,
    "historical_winner_rate": 0.2351
   },
   {
@@ -1925,6 +2098,7 @@
    "close": 213.45,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 292.0,
    "historical_winner_rate": 0.2351
   },
   {
@@ -1936,6 +2110,7 @@
    "close": 172.24,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 455.1,
    "historical_winner_rate": 0.2351
   },
   {
@@ -1947,6 +2122,7 @@
    "close": 7119.0,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 270.1,
    "historical_winner_rate": 0.2351
   },
   {
@@ -1958,6 +2134,7 @@
    "close": 1223.0,
    "rule_signal": "SELL",
    "rule_score": -2.0,
+   "turnover_cr": 343.8,
    "historical_winner_rate": 0.2351
   },
   {
@@ -1969,6 +2146,7 @@
    "close": 3940.3,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 299.2,
    "historical_winner_rate": 0.2351
   },
   {
@@ -1980,6 +2158,7 @@
    "close": 249.0,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 252.8,
    "historical_winner_rate": 0.2351
   },
   {
@@ -1991,6 +2170,7 @@
    "close": 73.4,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 64.2,
    "historical_winner_rate": 0.2351
   },
   {
@@ -2002,6 +2182,7 @@
    "close": 704.9,
    "rule_signal": "SELL",
    "rule_score": -2.0,
+   "turnover_cr": 2301.5,
    "historical_winner_rate": 0.2351
   },
   {
@@ -2013,6 +2194,7 @@
    "close": 2813.0,
    "rule_signal": "HOLD",
    "rule_score": -1.0,
+   "turnover_cr": 718.4,
    "historical_winner_rate": 0.2351
   },
   {
@@ -2024,6 +2206,7 @@
    "close": 1068.7,
    "rule_signal": "HOLD",
    "rule_score": 0.0,
+   "turnover_cr": 96.6,
    "historical_winner_rate": 0.2351
   },
   {
@@ -2035,6 +2218,7 @@
    "close": 373.9,
    "rule_signal": "SELL",
    "rule_score": -2.5,
+   "turnover_cr": 404.5,
    "historical_winner_rate": 0.2351
   },
   {
@@ -2046,10 +2230,11 @@
    "close": 1229.4,
    "rule_signal": "BUY",
    "rule_score": 2.5,
+   "turnover_cr": 281.8,
    "historical_winner_rate": 0.2351
   }
  ],
- "generated": "2026-10-12 16:13 IST",
+ "generated": "2026-10-12 19:59 IST",
  "data_source": "Yahoo Finance daily prices (free, not exchange-licensed)",
  "warnings": []
 }

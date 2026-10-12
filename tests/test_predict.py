@@ -99,6 +99,7 @@ def test_bad_data_is_refused():
     assert pr.check(ok, "2026-10-09", "2026-10-11") == []
     assert any("days old" in p for p in pr.check(ok, "2026-10-09", "2026-10-20"))
     assert any("no price" in p for p in pr.check(dict(ok, with_fresh_price=100), "2026-10-09", "2026-10-10"))
+    assert any("no price" in p for p in pr.check(dict(ok, with_fresh_price=162), "2026-10-09", "2026-10-10"))   # 13% missing
     assert any("could be scored" in p for p in pr.check(dict(ok, eligible=40), "2026-10-09", "2026-10-10"))
     assert any("outside" in p for p in pr.check(dict(ok, stocks=[{"score": 1.4}]), "2026-10-09", "2026-10-10"))
 
@@ -111,3 +112,24 @@ def test_scoring_refuses_missing_or_infinite_features(world):
     rows.loc[rows.index[0], "ret_5"] = np.inf
     with pytest.raises(ValueError, match="infinite"):
         inf.model_scores(booster, meta, schema, rows)
+
+
+def test_companies_that_failed_to_download_are_counted_as_missing(world):
+    """25 of 187 companies missing from a download once changed the ranking silently — it must be refused."""
+    prices, market, _, booster, meta, schema = world
+    day = prices["date"].max()
+    everyone = sorted(prices["symbol"].unique())
+    partial = prices[~prices["symbol"].isin(everyone[:6])]            # 6 of 40 never arrived
+    pred = pr.make_predictions(partial, market, booster, meta, schema, day, universe=everyone)
+    assert pred["universe_size"] == 40 and pred["with_fresh_price"] == 34
+    assert set(everyone[:6]) <= set(pred["not_scored"])
+    assert any("no price" in p for p in pr.check(pred, day, day))
+
+
+def test_a_published_ranking_is_not_replaced_by_one_with_fewer_stocks(tmp_path):
+    path = tmp_path / "predictions.json"
+    path.write_text('{"as_of": "2026-10-12", "eligible": 185}')
+    assert pr.worse_than_published({"as_of": "2026-10-12", "eligible": 160}, str(path))
+    assert pr.worse_than_published({"as_of": "2026-10-12", "eligible": 185}, str(path)) == []
+    assert pr.worse_than_published({"as_of": "2026-10-13", "eligible": 150}, str(path)) == []     # a new day is fine
+    assert pr.worse_than_published({"as_of": "2026-10-12", "eligible": 1}, str(tmp_path / "none.json")) == []

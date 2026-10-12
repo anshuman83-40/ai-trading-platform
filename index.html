@@ -367,6 +367,19 @@ a.ipo-flag.ipo-allot:hover{text-decoration:underline;text-underline-offset:3px}
 .ai-facts div:last-child{border-bottom:none}
 .ai-facts b{font-weight:600}
 .ai-warn{margin:0 18px 14px;padding:11px 14px;border-left:4px solid var(--amber);border-radius:14px;background:rgba(255,176,32,0.12);font-size:13px;line-height:1.6}
+.pp-row{display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid var(--border)}
+.pp-row:last-child{border-bottom:none}
+.pp-m{flex:1;min-width:0}
+.pp-n{font-weight:600;font-size:14px}
+.pp-s{font-size:12px;color:var(--muted);line-height:1.4}
+.pp-r{text-align:right;flex-shrink:0}
+.pp-v{font-weight:600;font-size:14px}
+.pp-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.pp-chart{position:relative;height:230px;padding:6px 14px 10px}
+.pp-sub{padding:10px 18px 4px;font-size:12px;font-weight:600;color:var(--muted)}
+.pp-tbl{padding:0 18px 12px;font-size:13px;line-height:1.7}
+.pp-tbl div{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid var(--border);padding:4px 0}
+.pp-tbl div:last-child{border-bottom:none}
 .ai-g{font-size:11px;font-weight:600;color:var(--muted);background:var(--bg3);padding:3px 8px;border-radius:999px;flex-shrink:0}
 .more{border-top:1px solid var(--border)}
 .more summary{list-style:none;cursor:pointer;padding:14px 18px;font-size:13px;font-weight:600;color:var(--pri);display:flex;justify-content:space-between;align-items:center;user-select:none}
@@ -465,6 +478,10 @@ select.fi{cursor:pointer}
   .pl-sum.three>:nth-child(2){grid-column:1/-1;grid-row:1}
   .more summary{padding:14px}
   .ai-facts{padding:4px 14px 6px}
+  .pp-row{padding:12px 14px}
+  .pp-sub{padding:10px 14px 4px}
+  .pp-tbl{padding:0 14px 12px}
+  .pp-chart{height:200px;padding:6px 6px 8px}
   .ai-warn{margin:0 14px 12px}
   .mini-note{padding:0 14px 12px}
   .pl-body{grid-template-columns:1fr;padding:0 14px 12px}
@@ -574,6 +591,16 @@ select.fi{cursor:pointer}
         <div class="list" id="aiTop"><div class="list-empty">Loading…</div></div>
         <details class="more"><summary>How well did it do in tests?</summary><div class="ai-facts" id="aiFacts"></div></details>
         <details class="more"><summary>How it works · what the tests leave out</summary><div class="ipo-note" id="aiHow"></div></details>
+      </div>
+
+      <div class="panel" id="paperPanel">
+        <div class="ph"><div>Paper Trading <span class="tag" id="ppSrc">LOADING...</span></div><span class="tag-edu">VIRTUAL MONEY</span></div>
+        <div class="pl-intro" id="ppIntro">The AI and four other "players" trade with virtual money on real prices every market day. No real order is ever placed.</div>
+        <div class="pp-chart" id="ppChartBox" style="display:none"><canvas id="ppCanvas"></canvas></div>
+        <div id="ppPlayers"><div class="list-empty">Loading…</div></div>
+        <details class="more"><summary>AI weekly player: holdings, next orders, recent trades</summary><div id="ppDetail"></div></details>
+        <details class="more"><summary>Is the model doing what the tests said?</summary><div class="ai-facts" id="ppCheck"></div></details>
+        <details class="more"><summary>Rules of the paper trading</summary><div class="ai-facts" id="ppRules"></div></details>
       </div>
     </div>
 
@@ -1873,6 +1900,61 @@ async function loadAIPanel(){
      ${esc(info.disclaimer||'')}`;
 }
 
+// PAPER TRADING — virtual money on real prices (server: /api/ml/paper). Read-only; nothing here places an order.
+let ppChart=null;
+const PP_COL={ai_weekly:'#1757f5',ai_monthly:'#8b5cf6',ai_small:'#06b6d4',rule:'#f59e0b',random:'#9aa1b0',nifty:'#12b76a',average:'#ec4899'};
+async function loadPaper(){
+  const src=document.getElementById('ppSrc'), box=document.getElementById('ppPlayers');
+  let d;
+  try{d=await api('/ml/paper',15000)}catch(e){src.textContent='UNAVAILABLE';box.innerHTML='<div class="list-empty">Paper-trading results are not available right now.</div>';return}
+  if(d.status==='missing'||!d.players.length){src.textContent='NOT STARTED';box.innerHTML='<div class="list-empty">Paper trading has not started yet.</div>';return}
+  src.textContent=(d.status==='stale'?'OUT OF DATE · ':'')+'TO '+niceDay(d.as_of).toUpperCase();
+  const traded=d.players.some(p=>p.open_positions.length||p.closed_trades);
+  document.getElementById('ppIntro').innerHTML=`Started ${niceDay(d.started)} · ${d.market_days} market day${d.market_days>1?'s':''} so far. `+
+    (traded?'The AI and four other "players" trade with virtual money on real prices. No real order is ever placed.'
+           :'The first virtual orders are placed at the next market open. No real order is ever placed.')+
+    (d.market_days<40?' <b>Too early to judge:</b> a few weeks of results are needed before the numbers mean anything.':'');
+  const row=(id,name,sub,right,ret)=>`<div class="pp-row"><span class="pp-dot" style="background:${PP_COL[id]||'#999'}"></span>
+      <div class="pp-m"><div class="pp-n">${esc(name)}</div><div class="pp-s">${sub}</div></div>
+      <div class="pp-r"><div class="pp-v">${right}</div><div class="chg ${ret>0?'up':ret<0?'dn':''}">${ret>0?'+':''}${ret.toFixed(2)}%</div></div></div>`;
+  box.innerHTML=d.players.map(p=>row(p.id,p.name,`${esc(p.about)}<br>${p.open_positions.length} stocks held · ${p.closed_trades} finished trades · charges paid ₹${fmtI(p.costs_paid)}${p.paused?' · <b>paused by a safety rule</b>':''}`,
+      '₹'+fmtI(p.value),p.return_pct)).join('')+
+    d.benchmarks.map(b=>row(b.id,b.name,'For comparison only',(b.return_pct>0?'+':'')+b.return_pct.toFixed(2)+'%',b.return_pct)).join('');
+  // chart: every player as growth of Rs 100 (so different starting amounts can be compared)
+  const cb=document.getElementById('ppChartBox');
+  if(typeof Chart!=='undefined'&&d.market_days>=2){
+    cb.style.display='';
+    try{
+      const labels=d.players[0].equity.map(x=>niceDay(x[0]));
+      const sets=d.players.map(p=>({label:p.name,data:p.equity.map(x=>+(100*x[1]/p.start_capital).toFixed(2)),borderColor:PP_COL[p.id],borderWidth:p.id==='ai_weekly'?2.5:1.5}))
+        .concat(d.benchmarks.map(b=>({label:b.name.split(' (')[0],data:b.equity.map(x=>+(100*x[1]/b.equity[0][1]).toFixed(2)),borderColor:PP_COL[b.id],borderWidth:1.5,borderDash:[5,4]})));
+      sets.forEach(s=>{s.pointRadius=0;s.tension=0.15;s.fill=false});
+      if(ppChart)ppChart.destroy();
+      ppChart=new Chart(document.getElementById('ppCanvas').getContext('2d'),{type:'line',data:{labels,datasets:sets},
+        options:{responsive:true,maintainAspectRatio:false,animation:{duration:0},interaction:{mode:'index',intersect:false},
+          plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${c.raw}`}}},
+          scales:{x:{ticks:{color:tc('muted'),font:{size:10},maxTicksLimit:6,maxRotation:0},grid:{display:false}},
+                  y:{ticks:{color:tc('muted'),font:{size:10},maxTicksLimit:5},grid:{color:tc('border')}}}}});
+    }catch(e){reportErr('paper chart: '+e.message)}
+  }else cb.style.display='none';
+  // details of the main player
+  const p=d.players[0], o=p.orders_for_next_open||{buy:[],sell:{}}, sells=Object.keys(o.sell||{});
+  const line=(a,b)=>`<div><span>${a}</span><span>${b}</span></div>`;
+  document.getElementById('ppDetail').innerHTML=
+    `<div class="pp-sub">HOLDING NOW (${p.open_positions.length}) · cash ₹${fmtI(p.cash)}</div><div class="pp-tbl">${p.open_positions.map(x=>
+        line(`${esc(x.symbol)} · ${x.shares} × ₹${fmt(x.buy_price)}`,`<span class="${x.pnl>=0?'up':'dn'}">${x.pnl>=0?'+':'−'}₹${fmtI(Math.abs(x.pnl))} (${x.return_pct>=0?'+':''}${x.return_pct}%)</span>`)).join('')||line('Nothing held yet','')}</div>
+     <div class="pp-sub">PLANNED FOR THE NEXT MARKET OPEN</div><div class="pp-tbl">${line('Buy',o.buy.length?o.buy.map(esc).join(', '):'nothing')}${line('Sell',sells.length?sells.map(s=>esc(s)+' ('+esc(String(o.sell[s]).replace(/_/g,' '))+')').join(', '):'nothing')}</div>
+     <div class="pp-sub">RECENT FINISHED TRADES</div><div class="pp-tbl">${(p.recent_trades||[]).slice(0,10).map(t=>
+        line(`${esc(t.symbol)} · ${niceDay(t.buy_date)} → ${niceDay(t.sell_date)} · ${esc(String(t.reason).replace(/_/g,' '))}`,`<span class="${t.pnl>=0?'up':'dn'}">${t.pnl>=0?'+':'−'}₹${fmtI(Math.abs(t.pnl))}</span>`)).join('')||line('No finished trades yet','')}</div>`;
+  const m=d.monitoring||{}, ex=m.expected_from_tests||{}, av=m.average, h=d.health||{};
+  document.getElementById('ppCheck').innerHTML=
+    `<div>${av?`So far <b>${m.days_judged}</b> published day${m.days_judged>1?'s have':' has'} a known 5-day result. The model's top picks were winners <b>${pct(av.winner_rate_top10pct)}</b> of the time${ex.winner_rate_top10pct?` (in the tests: ${pct(ex.winner_rate_top10pct)}; by chance: 30%)`:''}.`
+        :'No published day has a known 5-day result yet. The first check appears about 6 market days after the start.'}</div>
+     <div>${esc(m.note||'')}</div>
+     <div>Rankings published: <b>${h.prediction_days||0}</b> of ${d.market_days} market days${(h.missing_prediction_days||[]).length?` · missing: ${h.missing_prediction_days.map(niceDay).join(', ')}`:' · none missing'}. ${esc(h.note||'')}</div>`;
+  document.getElementById('ppRules').innerHTML=(d.rules||[]).map(r=>`<div>${esc(r)}</div>`).join('');
+}
+
 // LOOK — colours come from the page theme, so charts match light and dark mode
 const tc=n=>getComputedStyle(document.documentElement).getPropertyValue('--'+n).trim();
 const AVA=['#1757f5','#8b5cf6','#ec4899','#f59e0b','#12b76a','#06b6d4','#e5372b','#6366f1'];
@@ -1973,7 +2055,8 @@ route();
 setInterval(loadMovers,60000);      // market-wide movers every 60s
 loadIPO();
 loadAIPanel().catch(e=>reportErr('loadAIPanel: '+e.message));
-setInterval(()=>loadAIPanel().catch(()=>{}),900000);   // AI research data every 15 min
+loadPaper().catch(e=>reportErr('loadPaper: '+e.message));
+setInterval(()=>{loadAIPanel().catch(()=>{});loadPaper().catch(()=>{})},900000);   // AI research data every 15 min
 setInterval(loadIPO,600000);        // IPO data every 10 min
 setInterval(masterTick,2000);
 setInterval(loadLivePrices,15000);  // real prices every 15s

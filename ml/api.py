@@ -7,6 +7,7 @@ training/predict.py, training/evaluate_model.py and training/backtest.py, so it 
   GET /api/ml/info               what the model is, how it did in tests, and whether today's file is fresh
   GET /api/ml/top?n=10           the highest-scored stocks of the latest prediction day
   GET /api/ml/predict/<symbol>   one stock: rank, group, score, the website's rule signal for comparison
+  GET /api/ml/paper              paper trading (virtual money): every player's value, positions and trades
 
 A prediction is only returned when the file is recent enough. Otherwise the answer says "stale" and carries
 no score — an old ranking must never be shown as if it were today's.
@@ -115,6 +116,24 @@ def ml_top():
     except ValueError:
         n = 10
     out["stocks"] = [_public(s) for s in pred["stocks"][:n]] if status == "fresh" else []
+    return jsonify(out)
+
+
+@bp.route("/api/ml/paper")
+def ml_paper():
+    """Paper-trading results written by training/paper_trade.py. Virtual money only."""
+    doc = _read(os.path.join("paper", "paper.json"))
+    if not doc or not doc.get("players"):
+        return jsonify({"status": "missing", "disclaimer": DISCLAIMER, "players": [], "benchmarks": []})
+    try:
+        age = (today_ist() - date.fromisoformat(doc["as_of"])).days
+    except (KeyError, ValueError):
+        age = None
+    out = {k: doc.get(k) for k in ("started", "as_of", "generated", "market_days", "rules", "benchmarks", "monitoring", "health")}
+    out["status"] = "fresh" if age is not None and 0 <= age <= MAX_AGE_DAYS else "stale"
+    out["age_days"], out["disclaimer"] = age, DISCLAIMER
+    out["players"] = [dict({k: v for k, v in p.items() if k != "trades"}, recent_trades=(p.get("trades") or [])[-20:][::-1])
+                      for p in doc["players"]]
     return jsonify(out)
 
 

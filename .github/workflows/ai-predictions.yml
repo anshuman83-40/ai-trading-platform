@@ -1,8 +1,8 @@
 # Makes the AI ranking for TradePulse by itself after every market day.
 #
 # What it does: on GitHub's free computers it runs training/predict.py (downloads recent prices, scores the
-# stocks with the SAVED model — no training), and if there is a new trading day it commits the small
-# predictions file. That commit makes Render publish the site again (about a minute of restart).
+# stocks with the SAVED model — no training) and training/paper_trade.py (virtual money only), and if there
+# is a new trading day it commits the small result files. That commit makes Render publish the site again (about a minute of restart).
 #
 # It never trades and has no passwords or keys. To stop it: GitHub → Actions → "AI predictions (daily)" →
 # "…" → Disable workflow.  To run it by hand: same page → "Run workflow".
@@ -40,6 +40,9 @@ jobs:
       - name: Make predictions with the saved model
         run: python training/predict.py
 
+      - name: Update the paper trading (virtual money)
+        run: python training/paper_trade.py
+
       - name: Publish only if there is a new trading day
         run: |
           new=$(python -c "import json; print(json.load(open('models/xgb_v1/predictions.json'))['as_of'])")
@@ -51,7 +54,7 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add models/xgb_v1/predictions.json models/xgb_v1/history
-          git commit -m "AI predictions for $new"
+          git add models/xgb_v1/predictions.json models/xgb_v1/history models/xgb_v1/paper
+          git commit -m "AI predictions and paper trading for $new"
           git pull --rebase origin main
           git push origin HEAD:main

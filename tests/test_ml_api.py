@@ -125,3 +125,32 @@ def test_file_change_is_picked_up_without_restart(client, tmp_path):
     (tmp_path / "predictions.json").write_text(json.dumps(doc))
     os.utime(tmp_path / "predictions.json", (1_900_000_000, 1_900_000_000))     # a clearly different modified time
     assert client.get("/api/ml/predict/AAA").get_json()["prediction"]["score"] == 0.41
+
+
+def paper_doc(as_of="2026-10-12"):
+    trades = [{"symbol": f"S{i}", "sell_date": f"2026-10-{i + 1:02d}", "pnl": i} for i in range(25)]
+    return {"started": "2026-09-01", "as_of": as_of, "generated": "x", "market_days": 30, "rules": ["Virtual money only."],
+            "players": [{"id": "ai_weekly", "name": "AI model, weekly", "value": 101000.0, "return_pct": 1.0,
+                         "open_positions": [{"symbol": "AAA"}], "trades": trades, "equity": [["2026-09-01", 100000.0]]}],
+            "benchmarks": [{"id": "nifty", "return_pct": 0.5}], "monitoring": {"days_judged": 3}, "health": {"missing_prediction_days": []}}
+
+
+def test_paper_endpoint_returns_players_and_only_recent_trades(client, tmp_path):
+    (tmp_path / "paper").mkdir()
+    (tmp_path / "paper" / "paper.json").write_text(json.dumps(paper_doc()))
+    api._cache.clear()
+    r = client.get("/api/ml/paper").get_json()
+    assert r["status"] == "fresh" and r["age_days"] == 1 and r["started"] == "2026-09-01" and r["market_days"] == 30
+    p = r["players"][0]
+    assert p["value"] == 101000.0 and "trades" not in p and len(p["recent_trades"]) == 20
+    assert p["recent_trades"][0]["symbol"] == "S24"                   # newest first
+    assert r["benchmarks"][0]["id"] == "nifty" and r["rules"] == ["Virtual money only."] and "not investment advice" in r["disclaimer"]
+
+
+def test_paper_endpoint_when_missing_or_old(client, tmp_path):
+    assert client.get("/api/ml/paper").get_json() == {"status": "missing", "disclaimer": api.DISCLAIMER, "players": [], "benchmarks": []}
+    (tmp_path / "paper").mkdir()
+    (tmp_path / "paper" / "paper.json").write_text(json.dumps(paper_doc(as_of="2026-09-20")))
+    api._cache.clear()
+    r = client.get("/api/ml/paper").get_json()
+    assert r["status"] == "stale" and len(r["players"]) == 1          # old results are still shown, marked as out of date

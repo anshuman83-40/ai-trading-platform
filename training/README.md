@@ -4,7 +4,7 @@ Goal: a reproducible swing-trading model (hold about 5 trading days) for NIFTY 2
 on past data with all trading costs subtracted. This folder is separate from the website: nothing here runs
 on the live server, and the server never retrains a model.
 
-**Status: steps 1–6 are done. The model's ranking is shown in TradePulse as a research experiment. The backtest does NOT show a strategy that can be relied on to make money (see step 5).**
+**Status: steps 1–7 are built. Paper trading with virtual money started on 12 Oct 2026 and updates automatically after each market day. The backtest does NOT show a strategy that can be relied on to make money (see step 5); the paper trading is the fair test and needs weeks of data.**
 
 ## Setup (once)
 
@@ -257,12 +257,61 @@ training table (history from 2012) gave the same 185 stocks, the same top 10 and
 |---|---|---|---|---|---|---|---|---|---|---|
 | Were winners | 24% | 27% | 27% | 28% | 29% | 30% | 33% | 33% | 35% | 38% |
 
+## Step 7 — paper trading (virtual money)
+
+```bash
+python training/paper_trade.py
+```
+
+Writes `models/xgb_v1/paper/paper.json`. It runs automatically after `predict.py` in the daily GitHub Action.
+No real order is ever placed: there is no broker code anywhere in this project.
+
+**Why it is a fair test**
+
+- It only uses the scores that were **published** each evening (`models/xgb_v1/history/<date>.json`; git
+  shows when each file was made). Nothing is re-scored later.
+- Every evening the whole result is **re-calculated from the first day** with the same engine as the backtest,
+  so there is no running state that can drift or be edited. A test checks that adding a day never changes
+  earlier days.
+- A decision after the close of day D is traded at the open of day D+1, with slippage and all Groww charges.
+- The rules and the players were fixed on 12 Oct 2026, before any paper day existed.
+
+**Players**
+
+| Player | Start | What it does |
+|---|---|---|
+| AI model, weekly | Rs 1,00,000 | Best 10 by AI score, changed every 5 trading days (the backtested strategy) |
+| AI model, monthly | Rs 1,00,000 | The same, changed every 20 trading days — far fewer trades and charges |
+| AI model, weekly, small capital | Rs 25,000 | Shows what fixed charges do to small amounts |
+| Website rule signal | Rs 1,00,000 | Best 10 by the RSI / MACD / EMA rule score, every 5 trading days |
+| Random stocks | Rs 1,00,000 | 10 random eligible stocks every 5 trading days — luck with the same charges |
+
+Compared with NIFTY 50 and the average covered stock (both without trading or costs).
+
+**Risk rules for every player:** equal position size (1/10 of the portfolio), whole shares, no borrowing, at
+most 3 stocks per industry, 10% stop-loss per position, sell everything and pause 20 days after a 20% fall
+from the high, sell everything and pause 5 days after losing 6% in one day.
+
+**Monitoring and failures**
+
+- *Model check:* each published day is judged once its 5 trading days are over — winner rate of the top 10%
+  picks, rank correlation, return versus all scored stocks — next to what the tests expected.
+- *Missing ranking:* no new orders that day; holdings and stop-losses still apply; the day is listed.
+- *Incomplete prices:* downloads ask again for companies that came back empty or without the latest day
+  (`download_complete`). If more than 5% are still missing, nothing is written and the old file stays. A ranking
+  already published for a day is never replaced by one made from fewer stocks. (Found on 12 Oct 2026: one
+  download returned 162 of 187 companies and silently changed the top 10.)
+- *Old files:* the website marks results older than 5 days as out of date.
+
+In the app: Markets → AI Research → "Paper Trading". API: `GET /api/ml/paper`.
+
 ## Tests
 
 ```bash
 python -m pytest tests -q
 ```
 
-## Next steps (not built yet)
+## What is left
 
-7. Paper trading with virtual money — the only fair test left, because it uses data that does not exist yet
+8. Wait. After several weeks of paper trading, compare the players with each other and with the benchmarks and
+   decide whether the idea is worth developing further. Real-money trading is not part of this project.

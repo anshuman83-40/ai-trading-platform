@@ -146,6 +146,37 @@ def download(pairs, start, end, chunk=25, pause=1.0):
     return out
 
 
+def incomplete(tables, symbols):
+    """Symbols whose table is missing, empty, or ends before the latest date most others have."""
+    last = {s: (tables[s]["date"].max() if s in tables and len(tables[s]) else None) for s in symbols}
+    dates = [d for d in last.values() if d is not None]
+    if not dates:
+        return list(symbols)
+    newest = max(dates)
+    return [s for s in symbols if last[s] is None or last[s] < newest]
+
+
+def download_complete(pairs, start, end, rounds=3, fetch=None, pause=3.0):
+    """download(), then ask again (in small groups) for every company that came back empty or without the
+    latest day. Yahoo sometimes drops part of a large request; a ranking made from a partial download would
+    silently be a different ranking. `fetch` is only for tests."""
+    fetch = fetch or download
+    ticker = dict(pairs)
+    tables = fetch(pairs, start, end)
+    for r in range(rounds):
+        todo = incomplete(tables, [s for s, _ in pairs])
+        if not todo:
+            break
+        print(f"  {len(todo)} companies incomplete — asking again (round {r + 1})")
+        time.sleep(pause * (r + 1))
+        again = fetch([(s, ticker[s]) for s in todo], start, end, chunk=5)
+        for s, t in again.items():
+            old = tables.get(s)
+            if len(t) and (old is None or not len(old) or t["date"].max() >= old["date"].max()):
+                tables[s] = t
+    return tables
+
+
 # ───────────────────────── validation (pure functions — tested in tests/) ─────────────────────────
 def validate_symbol(df, calendar):
     """Check one company's tidy table against the market calendar (list of dates the market was open).

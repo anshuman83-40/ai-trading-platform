@@ -37,7 +37,7 @@ from ml.inference import load_model, model_scores      # noqa: E402
 IST = timezone(timedelta(hours=5, minutes=30))
 HISTORY_DAYS = 1100          # calendar days downloaded: about 750 trading days, enough for every feature
 MAX_DATA_AGE_DAYS = 4        # latest completed trading day must be this recent (covers a weekend + a holiday)
-MAX_MISSING_SHARE = 0.20     # stop if more than 20% of the companies have no price for that day
+MAX_MISSING_SHARE = 0.05     # stop if more than 5% of the companies have no price for that day
 MIN_ELIGIBLE = 100           # stop if fewer stocks than this can be scored
 MARKET_CLOSE = (15, 45)      # IST; before this, today's candle is still changing and must not be used
 
@@ -51,7 +51,7 @@ def last_completed_day(calendar, now_ist):
     return days[-1] if len(days) else None
 
 
-def make_predictions(prices, market, booster, meta, schema, as_of, groups=None):
+def make_predictions(prices, market, booster, meta, schema, as_of, groups=None, universe=None):
     """Pure function (no internet): price tables -> the predictions document for the day `as_of`.
     Only rows up to `as_of` are used, exactly as on that evening."""
     as_of = pd.Timestamp(as_of)
@@ -59,7 +59,7 @@ def make_predictions(prices, market, booster, meta, schema, as_of, groups=None):
     market = market[market["date"] <= as_of]
     panel = bd.build(prices, market)
     day = panel[panel["date"] == as_of].copy()
-    universe = sorted(prices["symbol"].unique())
+    universe = sorted(universe) if universe is not None else sorted(prices["symbol"].unique())
     fresh = set(day["symbol"])
     day = day[day["eligible"]].copy()
     if len(day):
@@ -73,6 +73,7 @@ def make_predictions(prices, market, booster, meta, schema, as_of, groups=None):
     stocks = [{"symbol": r.symbol, "rank": int(r.rank), "of": int(len(day)), "group": int(r.group),
                "score": round(float(r.score), 4), "close": round(float(r.close), 2),
                "rule_signal": r.rule_signal, "rule_score": float(r.rule_score),
+               "turnover_cr": round(float(10 ** r.turnover_20_log / 1e7), 1),      # Rs crore traded per day, 20-day average
                "historical_winner_rate": rates.get(int(r.group), {}).get("winner_rate")}
               for r in day.itertuples()]
     return {
@@ -106,6 +107,18 @@ def check(pred, as_of, today):
     return problems
 
 
+def worse_than_published(pred, path):
+    """A ranking already published for the same day must not be replaced by one made from fewer stocks."""
+    try:
+        with open(path, encoding="utf-8") as f:
+            old = json.load(f)
+    except (OSError, ValueError):
+        return []
+    if old.get("as_of") == pred["as_of"] and old.get("eligible", 0) > pred["eligible"]:
+        return [f"the ranking already published for {pred['as_of']} has {old['eligible']} stocks, this one only {pred['eligible']}"]
+    return []
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Write today's predictions from the saved model.")
     ap.add_argument("--model", default=os.path.join(ROOT, "models", "xgb_v1"))
@@ -130,16 +143,16 @@ def main(argv=None):
     market_t = dc.download([(n, t) for n, t in dc.MARKET_SERIES.items()], start, end)
     if len(market_t.get("NIFTY50", [])) < 300:
         sys.exit("Could not download NIFTY 50 — no predictions written.")
-    tables = dc.download([(s, dc.yahoo_ticker(s)) for s in universe], start, end)
+    tables = dc.download_complete([(s, dc.yahoo_ticker(s)) for s in universe], start, end)
     prices = pd.concat([t for t in tables.values() if len(t)], ignore_index=True)
     market = pd.concat(market_t.values(), ignore_index=True)
 
     as_of = last_completed_day(market.loc[market["symbol"] == "NIFTY50", "date"], now)
-    pred = make_predictions(prices, market, booster, meta, schema, as_of, groups)
-    pred["universe_size"] = len(universe)
+    pred = make_predictions(prices, market, booster, meta, schema, as_of, groups, universe)
     pred["generated"] = now.strftime("%Y-%m-%d %H:%M IST")
     pred["data_source"] = "Yahoo Finance daily prices (free, not exchange-licensed)"
     problems = check(pred, as_of, now.date())
+    problems += worse_than_published(pred, os.path.join(args.model, "predictions.json"))
     if problems and not args.allow_stale:
         sys.exit("No predictions written: " + "; ".join(problems))
     pred["warnings"] = problems

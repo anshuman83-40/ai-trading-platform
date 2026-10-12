@@ -1,0 +1,271 @@
+{
+ "started": "2026-10-12",
+ "as_of": "2026-10-12",
+ "generated": "2026-10-12 20:04 IST",
+ "market_days": 1,
+ "rules": [
+  "Virtual money only. No real order is placed and nothing here can reach a broker.",
+  "Scores are the ones published each evening; a decision after the close of day D is traded at the open of day D+1.",
+  "Buys cost 0.05% more than the open and sells get 0.05% less; all Groww delivery charges and taxes are subtracted.",
+  "10 stocks, equal size, whole shares, no borrowing, at most 3 per industry.",
+  "Stop-loss: a position closing 10% below its buy price is sold at the next open.",
+  "After a 20% fall from the portfolio's high: sell everything, pause 20 trading days.",
+  "After losing 6% in one day: sell everything, pause 5 trading days.",
+  "If a day's AI ranking is missing or a stock has no price, nothing is guessed: that order is simply not made."
+ ],
+ "players": [
+  {
+   "id": "ai_weekly",
+   "name": "AI model, weekly",
+   "about": "Best 10 stocks by AI score, changed every 5 trading days. This is the strategy that was backtested.",
+   "changes_every_days": 5,
+   "start_capital": 100000.0,
+   "value": 100000.0,
+   "return_pct": 0.0,
+   "cash": 100000.0,
+   "invested_pct": 0.0,
+   "max_drawdown_pct": 0.0,
+   "closed_trades": 0,
+   "winning_trades": 0,
+   "realised_profit": 0,
+   "costs_paid": 0.0,
+   "orders_not_filled": 0,
+   "open_positions": [],
+   "orders_for_next_open": {
+    "buy": [
+     "POLICYBZR",
+     "APARINDS",
+     "NATIONALUM",
+     "TIINDIA",
+     "LODHA",
+     "FEDERALBNK",
+     "MAXHEALTH",
+     "JUBLFOOD",
+     "GVT&D",
+     "IDEA"
+    ],
+    "sell": {}
+   },
+   "risk_events": [],
+   "paused": null,
+   "trades": [],
+   "equity": [
+    [
+     "2026-10-12",
+     100000.0
+    ]
+   ]
+  },
+  {
+   "id": "ai_monthly",
+   "name": "AI model, monthly",
+   "about": "Best 10 stocks by AI score, changed every 20 trading days: far fewer trades and charges.",
+   "changes_every_days": 20,
+   "start_capital": 100000.0,
+   "value": 100000.0,
+   "return_pct": 0.0,
+   "cash": 100000.0,
+   "invested_pct": 0.0,
+   "max_drawdown_pct": 0.0,
+   "closed_trades": 0,
+   "winning_trades": 0,
+   "realised_profit": 0,
+   "costs_paid": 0.0,
+   "orders_not_filled": 0,
+   "open_positions": [],
+   "orders_for_next_open": {
+    "buy": [
+     "POLICYBZR",
+     "APARINDS",
+     "NATIONALUM",
+     "TIINDIA",
+     "LODHA",
+     "FEDERALBNK",
+     "MAXHEALTH",
+     "JUBLFOOD",
+     "GVT&D",
+     "IDEA"
+    ],
+    "sell": {}
+   },
+   "risk_events": [],
+   "paused": null,
+   "trades": [],
+   "equity": [
+    [
+     "2026-10-12",
+     100000.0
+    ]
+   ]
+  },
+  {
+   "id": "ai_small",
+   "name": "AI model, weekly, small capital",
+   "about": "The weekly AI strategy with Rs 25,000, to show what fixed charges do to small amounts.",
+   "changes_every_days": 5,
+   "start_capital": 25000.0,
+   "value": 25000.0,
+   "return_pct": 0.0,
+   "cash": 25000.0,
+   "invested_pct": 0.0,
+   "max_drawdown_pct": 0.0,
+   "closed_trades": 0,
+   "winning_trades": 0,
+   "realised_profit": 0,
+   "costs_paid": 0.0,
+   "orders_not_filled": 0,
+   "open_positions": [],
+   "orders_for_next_open": {
+    "buy": [
+     "POLICYBZR",
+     "APARINDS",
+     "NATIONALUM",
+     "TIINDIA",
+     "LODHA",
+     "FEDERALBNK",
+     "MAXHEALTH",
+     "JUBLFOOD",
+     "GVT&D",
+     "IDEA"
+    ],
+    "sell": {}
+   },
+   "risk_events": [],
+   "paused": null,
+   "trades": [],
+   "equity": [
+    [
+     "2026-10-12",
+     25000.0
+    ]
+   ]
+  },
+  {
+   "id": "rule",
+   "name": "Website rule signal",
+   "about": "Best 10 stocks by the website's RSI / MACD / EMA rule score, changed every 5 trading days.",
+   "changes_every_days": 5,
+   "start_capital": 100000.0,
+   "value": 100000.0,
+   "return_pct": 0.0,
+   "cash": 100000.0,
+   "invested_pct": 0.0,
+   "max_drawdown_pct": 0.0,
+   "closed_trades": 0,
+   "winning_trades": 0,
+   "realised_profit": 0,
+   "costs_paid": 0.0,
+   "orders_not_filled": 0,
+   "open_positions": [],
+   "orders_for_next_open": {
+    "buy": [
+     "KOTAKBANK",
+     "BHEL",
+     "TRENT",
+     "DRREDDY",
+     "HDFCLIFE",
+     "PERSISTENT",
+     "ICICIGI",
+     "RADICO",
+     "MPHASIS",
+     "SOLARINDS"
+    ],
+    "sell": {}
+   },
+   "risk_events": [],
+   "paused": null,
+   "trades": [],
+   "equity": [
+    [
+     "2026-10-12",
+     100000.0
+    ]
+   ]
+  },
+  {
+   "id": "random",
+   "name": "Random stocks",
+   "about": "10 random eligible stocks, changed every 5 trading days: what luck gives with the same charges.",
+   "changes_every_days": 5,
+   "start_capital": 100000.0,
+   "value": 100000.0,
+   "return_pct": 0.0,
+   "cash": 100000.0,
+   "invested_pct": 0.0,
+   "max_drawdown_pct": 0.0,
+   "closed_trades": 0,
+   "winning_trades": 0,
+   "realised_profit": 0,
+   "costs_paid": 0.0,
+   "orders_not_filled": 0,
+   "open_positions": [],
+   "orders_for_next_open": {
+    "buy": [
+     "UPL",
+     "RVNL",
+     "NATIONALUM",
+     "FORTIS",
+     "COLPAL",
+     "BAJAJFINSV",
+     "SUNPHARMA",
+     "MFSL",
+     "BIOCON",
+     "SUZLON"
+    ],
+    "sell": {}
+   },
+   "risk_events": [],
+   "paused": null,
+   "trades": [],
+   "equity": [
+    [
+     "2026-10-12",
+     100000.0
+    ]
+   ]
+  }
+ ],
+ "benchmarks": [
+  {
+   "id": "nifty",
+   "name": "NIFTY 50 (no trading, no costs)",
+   "return_pct": 0.0,
+   "max_drawdown_pct": 0.0,
+   "equity": [
+    [
+     "2026-10-12",
+     100000.0
+    ]
+   ]
+  },
+  {
+   "id": "average",
+   "name": "Average of all covered stocks (no trading, no costs)",
+   "return_pct": 0.0,
+   "max_drawdown_pct": 0.0,
+   "equity": [
+    [
+     "2026-10-12",
+     100000.0
+    ]
+   ]
+  }
+ ],
+ "monitoring": {
+  "days_judged": 0,
+  "average": null,
+  "days": [],
+  "expected_from_tests": {
+   "winner_rate_top10pct": 0.3758,
+   "excess_5d": 0.00482,
+   "rank_ic": 0.0333
+  },
+  "note": "Each published day is judged once its 5 trading days are over. A few days prove nothing: weeks of results are needed before the averages mean anything."
+ },
+ "health": {
+  "prediction_days": 1,
+  "missing_prediction_days": [],
+  "stocks_with_prices": 187,
+  "note": "On a day without a published ranking no new orders are made; open positions and stop-losses still apply."
+ }
+}

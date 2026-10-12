@@ -52,6 +52,8 @@ class Settings:
     stop_loss: float = 0.10            # None = no stop-loss
     max_drawdown_halt: float = 0.20    # None = no maximum-loss rule
     halt_days: int = 20
+    max_daily_loss: float = None       # e.g. 0.06: if the portfolio loses 6% in ONE day, sell everything next open
+    daily_loss_pause: int = 5          # … and open nothing new for this many trading days
     max_per_industry: int = 3          # None = no industry limit
     plan: dict = field(default_factory=lambda: cs.GROWW_DELIVERY)
 
@@ -60,16 +62,18 @@ def _pivot(prices, col, days):
     return prices.pivot(index="date", columns="symbol", values=col).reindex(days)
 
 
-def run(scores, prices, s=None, industry=None, breaks=None, start=None, end=None):
+def run(scores, prices, s=None, industry=None, breaks=None, start=None, end=None, liquidate_at_end=True):
     """Simulate the strategy. scores: table [date, symbol, score] with ELIGIBLE rows only (optional column
     'tie' breaks equal scores, higher first). prices: the raw daily price table. Returns a dict with the daily
-    portfolio value, every completed trade and the settings."""
+    portfolio value, every completed trade and the settings.
+    liquidate_at_end=False is for paper trading: positions stay open on the last day, are valued at the close,
+    and the orders decided on the last day are returned as 'pending' (they would be placed the next morning)."""
     s = s or Settings()
     industry = industry or {}
     days = pd.DatetimeIndex(sorted(prices["date"].unique()))
     days = days[(days >= pd.Timestamp(start or days[0])) & (days <= pd.Timestamp(end or days[-1]))]
-    if len(days) < 2:
-        raise ValueError("need at least two trading days")
+    if len(days) < (2 if liquidate_at_end else 1):
+        raise ValueError("not enough trading days")
     px = prices[prices["date"].isin(days)]
     O, C, V, D = (_pivot(px, c, days) for c in ("open", "close", "volume", "dividends"))
     Cff = C.ffill()                                         # last known close, for valuing a stock on a day it did not trade
@@ -85,6 +89,7 @@ def run(scores, prices, s=None, industry=None, breaks=None, start=None, end=None
     pending_sell, pending_buy, target_size = {}, [], 0.0
     equity_curve, trades, skipped = [], [], 0
     peak, halted_until, cost_total, bought_value = float(s.capital), -1, 0.0, 0.0
+    prev_equity, events = float(s.capital), []
 
     def price_ok(sym, d):
         o = O.at[d, sym] if sym in O.columns else np.nan
@@ -166,9 +171,17 @@ def run(scores, prices, s=None, industry=None, breaks=None, start=None, end=None
             for sym in pos:
                 pending_sell[sym] = "max_loss_rule"
             halted_until = i + s.halt_days
+            events.append({"date": str(d.date()), "event": "max_loss_rule", "pause_days": s.halt_days})
+        # 6b) one-day loss rule
+        if s.max_daily_loss is not None and i > halted_until and pos and equity <= prev_equity * (1 - s.max_daily_loss):
+            for sym in pos:
+                pending_sell[sym] = "daily_loss_rule"
+            halted_until = i + s.daily_loss_pause
+            events.append({"date": str(d.date()), "event": "daily_loss_rule", "pause_days": s.daily_loss_pause})
+        prev_equity = equity
 
         # 7) rebalance day: choose tomorrow's portfolio from TODAY's scores
-        if i % s.rebalance_every == 0 and i > halted_until and i < len(days) - 1:
+        if i % s.rebalance_every == 0 and i > halted_until and (i < len(days) - 1 or not liquidate_at_end):
             chosen, per_ind = [], {}
             for sym in ranked.get(d, []):
                 ind = industry.get(sym)
@@ -185,15 +198,28 @@ def run(scores, prices, s=None, industry=None, breaks=None, start=None, end=None
                 pending_buy = [x for x in chosen if x not in pos or x in pending_sell]
                 target_size = equity / s.top_k
 
-    # the end: sell everything at the last close, with costs, so the final number is real money
     last = days[-1]
-    for sym in list(pos):
-        close_position(sym, last, float(Cff.at[last, sym]) * (1 - s.slippage), "end_of_test")
     eq = pd.DataFrame(equity_curve, columns=["date", "equity", "holdings"]).set_index("date")
-    eq.iloc[-1, eq.columns.get_loc("equity")] = cash
-    eq.iloc[-1, eq.columns.get_loc("holdings")] = 0.0
+    open_positions = []
+    if liquidate_at_end:
+        # the end: sell everything at the last close, with costs, so the final number is real money
+        for sym in list(pos):
+            close_position(sym, last, float(Cff.at[last, sym]) * (1 - s.slippage), "end_of_test")
+        eq.iloc[-1, eq.columns.get_loc("equity")] = cash
+        eq.iloc[-1, eq.columns.get_loc("holdings")] = 0.0
+    else:
+        for sym, p in sorted(pos.items()):
+            px = float(Cff.at[last, sym])
+            open_positions.append({"symbol": sym, "shares": p["shares"], "buy_date": str(p["date"].date()),
+                                   "buy_price": round(p["price"], 2), "last_price": round(px, 2),
+                                   "value": round(p["shares"] * px, 2),
+                                   "pnl": round(p["shares"] * px - p["paid"] + p["dividends"], 2),
+                                   "return_pct": round(100 * (p["shares"] * px - p["paid"] + p["dividends"]) / p["paid"], 2)})
     return {"equity": eq, "trades": trades, "costs": cost_total, "bought_value": bought_value,
-            "skipped_buys": skipped, "settings": s}
+            "skipped_buys": skipped, "settings": s, "cash": cash, "open_positions": open_positions,
+            "pending": {"sell": dict(pending_sell), "buy": list(pending_buy)}, "events": events,
+            "paused_until": str(days[halted_until].date()) if 0 <= halted_until < len(days) and halted_until >= len(days) - 1 else
+                            ("after %d more trading days" % (halted_until - len(days) + 1) if halted_until >= len(days) else None)}
 
 
 # ───────────────────────── statistics ─────────────────────────
