@@ -127,8 +127,11 @@ def download(pairs, start, end, chunk=25, pause=1.0):
         tickers = [t for _, t in part]
         for attempt in range(3):
             try:
+                # one thread for tiny requests: several threads creating yfinance's cache file at the same
+                # moment on a fresh computer fail with "database is locked" (seen on GitHub Actions)
                 data = yf.download(tickers, start=start, end=end_excl, interval="1d", group_by="ticker",
-                                   auto_adjust=False, actions=True, progress=False, threads=4)
+                                   auto_adjust=False, actions=True, progress=False,
+                                   threads=4 if len(tickers) > 2 else False)
                 break
             except Exception as e:                       # network trouble: wait and try again
                 if attempt == 2:

@@ -226,7 +226,7 @@ def main(argv=None):
     start = str((hist["date"].min() - timedelta(days=20)).date())      # a little earlier, for the first day's returns
     end = str(now.date())
     print(f"Downloading prices {start} to {end}…")
-    market_t = dc.download([(n, t) for n, t in dc.MARKET_SERIES.items()], start, end)
+    market_t = dc.download_complete([(n, t) for n, t in dc.MARKET_SERIES.items()], start, end)
     if not len(market_t.get("NIFTY50", [])):
         sys.exit("Could not download NIFTY 50 — paper trading not updated.")
     tables = dc.download_complete([(s, dc.yahoo_ticker(s)) for s in uni["symbols"]], start, end)
