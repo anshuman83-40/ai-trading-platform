@@ -4,7 +4,7 @@ Goal: a reproducible swing-trading model (hold about 5 trading days) for NIFTY 2
 on past data with all trading costs subtracted. This folder is separate from the website: nothing here runs
 on the live server, and the server never retrains a model.
 
-**Status: steps 1–3 are done. Model `xgb_v1` is trained and saved; it has NOT been evaluated on the test period or backtested yet.**
+**Status: steps 1–4 are done. Model `xgb_v1` has been evaluated on the test period (before costs). It has NOT been backtested with costs yet, so nothing here shows it can make money.**
 
 ## Setup (once)
 
@@ -105,6 +105,45 @@ The model is better than chance, but only slightly better than two one-line rule
 from choosing volatile stocks, which are more often in the top 30% and also more often in the bottom.
 Whether anything is left after trading costs is the question for steps 4 and 5.
 
+## Step 4 — evaluation on unseen data
+
+```bash
+python training/evaluate_model.py
+```
+
+Writes `models/xgb_v1/evaluation.json`. The test period (Jan 2023 – Sep 2026) was opened for the first time
+on 12 Oct 2026, after the model and its settings were fixed. Nothing was tuned afterwards.
+
+**Test period, picking the 10% highest-scored stocks each day, BEFORE trading costs:**
+
+| Picking by | Winners among picks | 5-day return | Versus all stocks | t-stat | Rank IC |
+|---|---|---|---|---|---|
+| AI model (xgb_v1) | 37.6% | 0.95% | +0.48% | 3.4 | +0.033 |
+| Most volatile (`atr_14`) | 37.3% | 0.91% | +0.44% | 2.6 | +0.016 |
+| Best 6-month return | 35.7% | 0.69% | +0.22% | 1.5 | +0.009 |
+| Fell most in 5 days | 31.6% | 0.56% | +0.09% | 0.6 | +0.021 |
+| Website rule score | 31.2% | 0.44% | −0.03% | 0.5 | +0.001 |
+| All eligible stocks | 30.2% | 0.47% | — | — | — |
+| NIFTY 50 | — | 0.13% | — | — | — |
+
+- **Website BUY / SELL rule:** BUY stocks did −0.05% versus all stocks (no skill); SELL stocks did −0.11%.
+- **Year by year (model versus all stocks):** 2023 +0.55%, 2024 +0.58%, 2025 +0.31%, 2026 +0.49%.
+- **Walk-forward** (model retrained each year on the past only): +0.56% versus all stocks, rank IC +0.033.
+- **Calibration:** scores run only from about 0.27 to 0.35, and the real winner rate in those groups runs from
+  0.25 to 0.37. The score is a weak ranking, not a confident probability.
+- t-statistics use every 5th day only, because consecutive 5-day trades overlap.
+
+**How to read this honestly**
+
+- The model's picks beat the average stock by about half a percent per 5-day trade, in every test year.
+- Simply buying the most volatile stocks did almost as well. So most of the model's result is "it prefers
+  risky stocks during a rising market", which is extra risk, not skill. Its ranking (IC) is better than
+  volatility alone, which is the part that may be real skill.
+- A round trip in delivery costs roughly 0.25–0.4% in taxes, charges and slippage before brokerage. That
+  would take most of a +0.48% edge.
+- "All eligible stocks" earned 0.47% per 5 days, which is unusually high: these were strong years, and the
+  data only contains companies that are in the NIFTY 200 today (survivorship bias).
+
 ## Tests
 
 ```bash
@@ -113,5 +152,4 @@ python -m pytest tests -q
 
 ## Next steps (not built yet)
 
-4. Evaluation on the untouched test period, against the existing rule signal and simple baselines
-5. Backtest with brokerage, taxes and slippage
+5. Backtest with brokerage, taxes, slippage, position sizes and drawdowns

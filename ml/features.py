@@ -124,3 +124,18 @@ def build_panel(prices, market, series_col="symbol"):
     panel = panel.merge(mkt, left_on="date", right_index=True, how="left")
     panel = add_ranks(add_relative(panel))
     return panel
+
+
+def rule_score(panel):
+    """The website's existing rule-based signal (server.py build_quote), for the whole table at once:
+    +1 / -1 for MACD above / below its signal line, +1 / -1 for price above / below EMA 20, and the RSI zone
+    (+1 below 30, -1 above 70, +0.5 above 55, -0.5 below 45).  BUY when the score is >= 1.5, SELL when <= -1.5.
+    Used to compare the model with what TradePulse already shows — it is not a model input."""
+    r = panel["rsi_14"]
+    score = (np.where(panel["macd_hist"] > 0, 1.0, -1.0) + np.where(panel["dist_ema20"] > 0, 1.0, -1.0) +
+             np.select([r < 30, r > 70, r > 55, r < 45], [1.0, -1.0, 0.5, -0.5], default=0.0))
+    return pd.Series(score, index=panel.index)
+
+
+def rule_signal(score):
+    return pd.Series(np.select([score >= 1.5, score <= -1.5], ["BUY", "SELL"], default="HOLD"), index=score.index)

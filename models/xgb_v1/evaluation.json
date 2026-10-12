@@ -1,0 +1,447 @@
+{
+ "model_version": "xgb_v1",
+ "evaluated": "2026-10-12 11:32:25",
+ "note": "All returns are BEFORE trading costs. 'excess' = the picks' 5-day return minus the average of all eligible stocks.",
+ "top_fraction_picked": 0.1,
+ "periods": {
+  "valid": {
+   "first": "2021-01-01",
+   "last": "2022-12-22",
+   "rows": 85860,
+   "base_rate": 0.3026,
+   "model_auc": 0.5449,
+   "nifty50_5d": 0.00272,
+   "rankings": {
+    "model": {
+     "days": 490,
+     "hit_rate_top10pct": 0.375,
+     "ret_top10pct_5d": 0.01167,
+     "ret_all_5d": 0.00593,
+     "excess_5d": 0.00574,
+     "excess_t_stat": 2.88,
+     "excess_positive_days": 0.6245,
+     "rank_ic": 0.0281,
+     "rank_ic_t_stat": 1.31
+    },
+    "volatility": {
+     "days": 490,
+     "hit_rate_top10pct": 0.36,
+     "ret_top10pct_5d": 0.00972,
+     "ret_all_5d": 0.00593,
+     "excess_5d": 0.00379,
+     "excess_t_stat": 1.3,
+     "excess_positive_days": 0.5551,
+     "rank_ic": 0.0031,
+     "rank_ic_t_stat": 0.14
+    },
+    "reversal": {
+     "days": 490,
+     "hit_rate_top10pct": 0.3248,
+     "ret_top10pct_5d": 0.00708,
+     "ret_all_5d": 0.00593,
+     "excess_5d": 0.00114,
+     "excess_t_stat": 0.28,
+     "excess_positive_days": 0.5184,
+     "rank_ic": 0.0307,
+     "rank_ic_t_stat": 1.64
+    },
+    "momentum": {
+     "days": 490,
+     "hit_rate_top10pct": 0.3662,
+     "ret_top10pct_5d": 0.01046,
+     "ret_all_5d": 0.00593,
+     "excess_5d": 0.00453,
+     "excess_t_stat": 1.99,
+     "excess_positive_days": 0.5755,
+     "rank_ic": 0.0031,
+     "rank_ic_t_stat": -0.11
+    },
+    "rule": {
+     "days": 490,
+     "hit_rate_top10pct": 0.311,
+     "ret_top10pct_5d": 0.00594,
+     "ret_all_5d": 0.00593,
+     "excess_5d": 1e-05,
+     "excess_t_stat": -0.44,
+     "excess_positive_days": 0.4551,
+     "rank_ic": -0.0125,
+     "rank_ic_t_stat": -0.85
+    }
+   },
+   "rule_signal": {
+    "BUY": {
+     "share_of_rows": 0.328,
+     "winner_rate": 0.3032,
+     "ret_5d": 0.00529,
+     "excess_5d": -0.00064,
+     "excess_t_stat": -1.31
+    },
+    "HOLD": {
+     "share_of_rows": 0.3521,
+     "winner_rate": 0.3118,
+     "ret_5d": 0.00659,
+     "excess_5d": 0.00066,
+     "excess_t_stat": 1.36
+    },
+    "SELL": {
+     "share_of_rows": 0.3199,
+     "winner_rate": 0.2918,
+     "ret_5d": 0.00494,
+     "excess_5d": -0.00099,
+     "excess_t_stat": -1.01
+    }
+   }
+  },
+  "test": {
+   "first": "2023-01-02",
+   "last": "2026-09-30",
+   "rows": 169916,
+   "base_rate": 0.3019,
+   "model_auc": 0.5506,
+   "nifty50_5d": 0.00132,
+   "rankings": {
+    "model": {
+     "days": 923,
+     "hit_rate_top10pct": 0.3758,
+     "ret_top10pct_5d": 0.00951,
+     "ret_all_5d": 0.00469,
+     "excess_5d": 0.00482,
+     "excess_t_stat": 3.43,
+     "excess_positive_days": 0.6121,
+     "rank_ic": 0.0333,
+     "rank_ic_t_stat": 3.06
+    },
+    "volatility": {
+     "days": 923,
+     "hit_rate_top10pct": 0.3727,
+     "ret_top10pct_5d": 0.0091,
+     "ret_all_5d": 0.00469,
+     "excess_5d": 0.00441,
+     "excess_t_stat": 2.55,
+     "excess_positive_days": 0.5785,
+     "rank_ic": 0.0157,
+     "rank_ic_t_stat": 1.22
+    },
+    "reversal": {
+     "days": 923,
+     "hit_rate_top10pct": 0.3165,
+     "ret_top10pct_5d": 0.00559,
+     "ret_all_5d": 0.00469,
+     "excess_5d": 0.0009,
+     "excess_t_stat": 0.56,
+     "excess_positive_days": 0.493,
+     "rank_ic": 0.0211,
+     "rank_ic_t_stat": 1.34
+    },
+    "momentum": {
+     "days": 923,
+     "hit_rate_top10pct": 0.3573,
+     "ret_top10pct_5d": 0.00686,
+     "ret_all_5d": 0.00469,
+     "excess_5d": 0.00217,
+     "excess_t_stat": 1.5,
+     "excess_positive_days": 0.559,
+     "rank_ic": 0.0087,
+     "rank_ic_t_stat": 0.68
+    },
+    "rule": {
+     "days": 923,
+     "hit_rate_top10pct": 0.3123,
+     "ret_top10pct_5d": 0.00437,
+     "ret_all_5d": 0.00469,
+     "excess_5d": -0.00032,
+     "excess_t_stat": 0.5,
+     "excess_positive_days": 0.493,
+     "rank_ic": 0.0013,
+     "rank_ic_t_stat": 0.42
+    }
+   },
+   "rule_signal": {
+    "BUY": {
+     "share_of_rows": 0.3251,
+     "winner_rate": 0.3066,
+     "ret_5d": 0.00422,
+     "excess_5d": -0.00047,
+     "excess_t_stat": -0.21
+    },
+    "HOLD": {
+     "share_of_rows": 0.36,
+     "winner_rate": 0.3104,
+     "ret_5d": 0.00549,
+     "excess_5d": 0.0008,
+     "excess_t_stat": 1.23
+    },
+    "SELL": {
+     "share_of_rows": 0.3149,
+     "winner_rate": 0.2872,
+     "ret_5d": 0.00362,
+     "excess_5d": -0.00107,
+     "excess_t_stat": -2.07
+    }
+   }
+  }
+ },
+ "test_by_year": {
+  "2023": {
+   "model": {
+    "days": 245,
+    "hit_rate_top10pct": 0.3868,
+    "ret_top10pct_5d": 0.01482,
+    "ret_all_5d": 0.00932,
+    "excess_5d": 0.00551,
+    "excess_t_stat": 1.42,
+    "excess_positive_days": 0.6204,
+    "rank_ic": 0.0288,
+    "rank_ic_t_stat": 1.38
+   },
+   "volatility": {
+    "days": 245,
+    "hit_rate_top10pct": 0.388,
+    "ret_top10pct_5d": 0.01514,
+    "ret_all_5d": 0.00932,
+    "excess_5d": 0.00583,
+    "excess_t_stat": 1.26,
+    "excess_positive_days": 0.6041,
+    "rank_ic": 0.026,
+    "rank_ic_t_stat": 0.92
+   },
+   "reversal": {
+    "days": 245,
+    "hit_rate_top10pct": 0.3304,
+    "ret_top10pct_5d": 0.01026,
+    "ret_all_5d": 0.00932,
+    "excess_5d": 0.00094,
+    "excess_t_stat": 0.05,
+    "excess_positive_days": 0.502,
+    "rank_ic": 0.0251,
+    "rank_ic_t_stat": 1.64
+   },
+   "model_auc": 0.5598
+  },
+  "2024": {
+   "model": {
+    "days": 246,
+    "hit_rate_top10pct": 0.3757,
+    "ret_top10pct_5d": 0.01161,
+    "ret_all_5d": 0.00585,
+    "excess_5d": 0.00576,
+    "excess_t_stat": 1.82,
+    "excess_positive_days": 0.5935,
+    "rank_ic": 0.0368,
+    "rank_ic_t_stat": 1.58
+   },
+   "volatility": {
+    "days": 246,
+    "hit_rate_top10pct": 0.3701,
+    "ret_top10pct_5d": 0.01031,
+    "ret_all_5d": 0.00585,
+    "excess_5d": 0.00447,
+    "excess_t_stat": 1.4,
+    "excess_positive_days": 0.5325,
+    "rank_ic": 0.0238,
+    "rank_ic_t_stat": 0.76
+   },
+   "reversal": {
+    "days": 246,
+    "hit_rate_top10pct": 0.3233,
+    "ret_top10pct_5d": 0.00807,
+    "ret_all_5d": 0.00585,
+    "excess_5d": 0.00223,
+    "excess_t_stat": 1.04,
+    "excess_positive_days": 0.4878,
+    "rank_ic": 0.0226,
+    "rank_ic_t_stat": 0.4
+   },
+   "model_auc": 0.5564
+  },
+  "2025": {
+   "model": {
+    "days": 248,
+    "hit_rate_top10pct": 0.3739,
+    "ret_top10pct_5d": 0.00588,
+    "ret_all_5d": 0.00274,
+    "excess_5d": 0.00313,
+    "excess_t_stat": 1.52,
+    "excess_positive_days": 0.6089,
+    "rank_ic": 0.0161,
+    "rank_ic_t_stat": 0.1
+   },
+   "volatility": {
+    "days": 248,
+    "hit_rate_top10pct": 0.3632,
+    "ret_top10pct_5d": 0.00576,
+    "ret_all_5d": 0.00274,
+    "excess_5d": 0.00301,
+    "excess_t_stat": 0.71,
+    "excess_positive_days": 0.5605,
+    "rank_ic": -0.009,
+    "rank_ic_t_stat": -0.86
+   },
+   "reversal": {
+    "days": 248,
+    "hit_rate_top10pct": 0.3164,
+    "ret_top10pct_5d": 0.00415,
+    "ret_all_5d": 0.00274,
+    "excess_5d": 0.00141,
+    "excess_t_stat": 0.93,
+    "excess_positive_days": 0.5202,
+    "rank_ic": 0.0302,
+    "rank_ic_t_stat": 1.81
+   },
+   "model_auc": 0.5433
+  },
+  "2026": {
+   "model": {
+    "days": 184,
+    "hit_rate_top10pct": 0.3639,
+    "ret_top10pct_5d": 0.00452,
+    "ret_all_5d": -0.00041,
+    "excess_5d": 0.00493,
+    "excess_t_stat": 1.8,
+    "excess_positive_days": 0.6304,
+    "rank_ic": 0.0579,
+    "rank_ic_t_stat": 2.38
+   },
+   "volatility": {
+    "days": 184,
+    "hit_rate_top10pct": 0.3685,
+    "ret_top10pct_5d": 0.00394,
+    "ret_all_5d": -0.00041,
+    "excess_5d": 0.00435,
+    "excess_t_stat": 1.05,
+    "excess_positive_days": 0.6304,
+    "rank_ic": 0.0243,
+    "rank_ic_t_stat": 0.68
+   },
+   "reversal": {
+    "days": 184,
+    "hit_rate_top10pct": 0.2891,
+    "ret_top10pct_5d": -0.00201,
+    "ret_all_5d": -0.00041,
+    "excess_5d": -0.0016,
+    "excess_t_stat": -1.67,
+    "excess_positive_days": 0.4511,
+    "rank_ic": 0.0016,
+    "rank_ic_t_stat": -0.18
+   },
+   "model_auc": 0.5534
+  }
+ },
+ "calibration_test": [
+  {
+   "bin": 1,
+   "mean_score": 0.2677,
+   "actual_rate": 0.2482,
+   "rows": 16992
+  },
+  {
+   "bin": 2,
+   "mean_score": 0.2744,
+   "actual_rate": 0.2675,
+   "rows": 16992
+  },
+  {
+   "bin": 3,
+   "mean_score": 0.2793,
+   "actual_rate": 0.2688,
+   "rows": 16991
+  },
+  {
+   "bin": 4,
+   "mean_score": 0.2838,
+   "actual_rate": 0.2778,
+   "rows": 16992
+  },
+  {
+   "bin": 5,
+   "mean_score": 0.2881,
+   "actual_rate": 0.2901,
+   "rows": 16991
+  },
+  {
+   "bin": 6,
+   "mean_score": 0.2925,
+   "actual_rate": 0.3021,
+   "rows": 16993
+  },
+  {
+   "bin": 7,
+   "mean_score": 0.2979,
+   "actual_rate": 0.3148,
+   "rows": 16990
+  },
+  {
+   "bin": 8,
+   "mean_score": 0.305,
+   "actual_rate": 0.3385,
+   "rows": 16992
+  },
+  {
+   "bin": 9,
+   "mean_score": 0.3157,
+   "actual_rate": 0.3365,
+   "rows": 16991
+  },
+  {
+   "bin": 10,
+   "mean_score": 0.3468,
+   "actual_rate": 0.3743,
+   "rows": 16992
+  }
+ ],
+ "walk_forward": {
+  "folds": [
+   {
+    "test_year": 2023,
+    "train_to": "2021-12-31",
+    "valid_year": 2022,
+    "trees": 87,
+    "test_rows": 44666
+   },
+   {
+    "test_year": 2024,
+    "train_to": "2022-12-31",
+    "valid_year": 2023,
+    "trees": 336,
+    "test_rows": 45005
+   },
+   {
+    "test_year": 2025,
+    "train_to": "2023-12-31",
+    "valid_year": 2024,
+    "trees": 349,
+    "test_rows": 46133
+   },
+   {
+    "test_year": 2026,
+    "train_to": "2024-12-31",
+    "valid_year": 2025,
+    "trees": 189,
+    "test_rows": 34112
+   }
+  ],
+  "all_years": {
+   "days": 923,
+   "hit_rate_top10pct": 0.3879,
+   "ret_top10pct_5d": 0.01029,
+   "ret_all_5d": 0.00469,
+   "excess_5d": 0.0056,
+   "excess_t_stat": 3.34,
+   "excess_positive_days": 0.6295,
+   "rank_ic": 0.033,
+   "rank_ic_t_stat": 2.83
+  },
+  "auc": 0.5564,
+  "fixed_model_same_rows": {
+   "days": 923,
+   "hit_rate_top10pct": 0.3758,
+   "ret_top10pct_5d": 0.00951,
+   "ret_all_5d": 0.00469,
+   "excess_5d": 0.00482,
+   "excess_t_stat": 3.43,
+   "excess_positive_days": 0.6121,
+   "rank_ic": 0.0333,
+   "rank_ic_t_stat": 3.06
+  }
+ }
+}
