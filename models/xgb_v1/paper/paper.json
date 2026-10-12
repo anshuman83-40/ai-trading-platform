@@ -1,7 +1,7 @@
 {
- "started": "2026-10-12",
- "as_of": "2026-10-12",
- "generated": "2026-10-12 20:04 IST",
+ "started": "2026-10-09",
+ "as_of": "2026-10-09",
+ "generated": "2026-10-13 03:42 IST",
  "market_days": 1,
  "rules": [
   "Virtual money only. No real order is placed and nothing here can reach a broker.",
@@ -35,14 +35,14 @@
     "buy": [
      "POLICYBZR",
      "APARINDS",
-     "NATIONALUM",
+     "POWERINDIA",
      "TIINDIA",
      "LODHA",
-     "FEDERALBNK",
-     "MAXHEALTH",
-     "JUBLFOOD",
-     "GVT&D",
-     "IDEA"
+     "COCHINSHIP",
+     "PAYTM",
+     "NATIONALUM",
+     "MCX",
+     "ADANIENSOL"
     ],
     "sell": {}
    },
@@ -51,7 +51,7 @@
    "trades": [],
    "equity": [
     [
-     "2026-10-12",
+     "2026-10-09",
      100000.0
     ]
    ]
@@ -77,14 +77,14 @@
     "buy": [
      "POLICYBZR",
      "APARINDS",
-     "NATIONALUM",
+     "POWERINDIA",
      "TIINDIA",
      "LODHA",
-     "FEDERALBNK",
-     "MAXHEALTH",
-     "JUBLFOOD",
-     "GVT&D",
-     "IDEA"
+     "COCHINSHIP",
+     "PAYTM",
+     "NATIONALUM",
+     "MCX",
+     "ADANIENSOL"
     ],
     "sell": {}
    },
@@ -93,7 +93,7 @@
    "trades": [],
    "equity": [
     [
-     "2026-10-12",
+     "2026-10-09",
      100000.0
     ]
    ]
@@ -119,14 +119,14 @@
     "buy": [
      "POLICYBZR",
      "APARINDS",
-     "NATIONALUM",
+     "POWERINDIA",
      "TIINDIA",
      "LODHA",
-     "FEDERALBNK",
-     "MAXHEALTH",
-     "JUBLFOOD",
-     "GVT&D",
-     "IDEA"
+     "COCHINSHIP",
+     "PAYTM",
+     "NATIONALUM",
+     "MCX",
+     "ADANIENSOL"
     ],
     "sell": {}
    },
@@ -135,7 +135,7 @@
    "trades": [],
    "equity": [
     [
-     "2026-10-12",
+     "2026-10-09",
      25000.0
     ]
    ]
@@ -160,15 +160,15 @@
    "orders_for_next_open": {
     "buy": [
      "KOTAKBANK",
-     "BHEL",
+     "AXISBANK",
+     "COFORGE",
      "TRENT",
-     "DRREDDY",
      "HDFCLIFE",
      "PERSISTENT",
-     "ICICIGI",
-     "RADICO",
+     "VBL",
+     "NYKAA",
      "MPHASIS",
-     "SOLARINDS"
+     "BLUESTARCO"
     ],
     "sell": {}
    },
@@ -177,7 +177,7 @@
    "trades": [],
    "equity": [
     [
-     "2026-10-12",
+     "2026-10-09",
      100000.0
     ]
    ]
@@ -201,16 +201,16 @@
    "open_positions": [],
    "orders_for_next_open": {
     "buy": [
-     "UPL",
-     "RVNL",
-     "NATIONALUM",
-     "FORTIS",
-     "COLPAL",
-     "BAJAJFINSV",
-     "SUNPHARMA",
-     "MFSL",
-     "BIOCON",
-     "SUZLON"
+     "ADANIENT",
+     "TATACOMM",
+     "NHPC",
+     "MOTILALOFS",
+     "NESTLEIND",
+     "HINDCOPPER",
+     "LT",
+     "AXISBANK",
+     "BHEL",
+     "SRF"
     ],
     "sell": {}
    },
@@ -219,7 +219,7 @@
    "trades": [],
    "equity": [
     [
-     "2026-10-12",
+     "2026-10-09",
      100000.0
     ]
    ]
@@ -233,7 +233,7 @@
    "max_drawdown_pct": 0.0,
    "equity": [
     [
-     "2026-10-12",
+     "2026-10-09",
      100000.0
     ]
    ]
@@ -245,7 +245,7 @@
    "max_drawdown_pct": 0.0,
    "equity": [
     [
-     "2026-10-12",
+     "2026-10-09",
      100000.0
     ]
    ]
