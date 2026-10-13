@@ -202,7 +202,7 @@
    "close": 3364.9,
    "rule_signal": "HOLD",
    "rule_score": -1.0,
-   "turnover_cr": 276.7,
+   "turnover_cr": 276.8,
    "historical_winner_rate": 0.3761
   },
   {
@@ -250,7 +250,7 @@
    "close": 9426.0,
    "rule_signal": "HOLD",
    "rule_score": 0.5,
-   "turnover_cr": 463.2,
+   "turnover_cr": 463.3,
    "historical_winner_rate": 0.3453
   },
   {
@@ -302,20 +302,8 @@
    "historical_winner_rate": 0.3453
   },
   {
-   "symbol": "JINDALSTEL",
-   "rank": 25,
-   "of": 185,
-   "group": 9,
-   "score": 0.2956,
-   "close": 1012.5,
-   "rule_signal": "HOLD",
-   "rule_score": -1.0,
-   "turnover_cr": 118.4,
-   "historical_winner_rate": 0.3453
-  },
-  {
    "symbol": "MCX",
-   "rank": 26,
+   "rank": 25,
    "of": 185,
    "group": 9,
    "score": 0.2955,
@@ -327,7 +315,7 @@
   },
   {
    "symbol": "MAHABANK",
-   "rank": 27,
+   "rank": 26,
    "of": 185,
    "group": 9,
    "score": 0.2955,
@@ -339,7 +327,7 @@
   },
   {
    "symbol": "NYKAA",
-   "rank": 28,
+   "rank": 27,
    "of": 185,
    "group": 9,
    "score": 0.295,
@@ -351,7 +339,7 @@
   },
   {
    "symbol": "ADANIPOWER",
-   "rank": 29,
+   "rank": 28,
    "of": 185,
    "group": 9,
    "score": 0.2945,
@@ -359,6 +347,18 @@
    "rule_signal": "SELL",
    "rule_score": -2.5,
    "turnover_cr": 392.4,
+   "historical_winner_rate": 0.3453
+  },
+  {
+   "symbol": "JINDALSTEL",
+   "rank": 29,
+   "of": 185,
+   "group": 9,
+   "score": 0.2942,
+   "close": 1012.5,
+   "rule_signal": "HOLD",
+   "rule_score": -1.0,
+   "turnover_cr": 118.4,
    "historical_winner_rate": 0.3453
   },
   {
@@ -422,8 +422,20 @@
    "historical_winner_rate": 0.3453
   },
   {
-   "symbol": "KALYANKJIL",
+   "symbol": "AMBUJACEM",
    "rank": 35,
+   "of": 185,
+   "group": 9,
+   "score": 0.2911,
+   "close": 348.0,
+   "rule_signal": "SELL",
+   "rule_score": -2.5,
+   "turnover_cr": 70.2,
+   "historical_winner_rate": 0.3453
+  },
+  {
+   "symbol": "KALYANKJIL",
+   "rank": 36,
    "of": 185,
    "group": 9,
    "score": 0.2909,
@@ -435,7 +447,7 @@
   },
   {
    "symbol": "MOTILALOFS",
-   "rank": 36,
+   "rank": 37,
    "of": 185,
    "group": 9,
    "score": 0.2907,
@@ -447,19 +459,19 @@
   },
   {
    "symbol": "SOLARINDS",
-   "rank": 37,
+   "rank": 38,
    "of": 185,
-   "group": 9,
+   "group": 8,
    "score": 0.2901,
    "close": 20334.0,
    "rule_signal": "BUY",
    "rule_score": 2.0,
    "turnover_cr": 512.3,
-   "historical_winner_rate": 0.3453
+   "historical_winner_rate": 0.3263
   },
   {
    "symbol": "NMDC",
-   "rank": 38,
+   "rank": 39,
    "of": 185,
    "group": 8,
    "score": 0.2893,
@@ -471,7 +483,7 @@
   },
   {
    "symbol": "SUZLON",
-   "rank": 39,
+   "rank": 40,
    "of": 185,
    "group": 8,
    "score": 0.2886,
@@ -483,7 +495,7 @@
   },
   {
    "symbol": "TRENT",
-   "rank": 40,
+   "rank": 41,
    "of": 185,
    "group": 8,
    "score": 0.2872,
@@ -491,18 +503,6 @@
    "rule_signal": "BUY",
    "rule_score": 2.5,
    "turnover_cr": 313.5,
-   "historical_winner_rate": 0.3263
-  },
-  {
-   "symbol": "AMBUJACEM",
-   "rank": 41,
-   "of": 185,
-   "group": 8,
-   "score": 0.2872,
-   "close": 348.0,
-   "rule_signal": "SELL",
-   "rule_score": -2.5,
-   "turnover_cr": 70.1,
    "historical_winner_rate": 0.3263
   },
   {
@@ -634,7 +634,7 @@
    "close": 1754.0,
    "rule_signal": "SELL",
    "rule_score": -2.0,
-   "turnover_cr": 502.2,
+   "turnover_cr": 502.4,
    "historical_winner_rate": 0.3263
   },
   {
@@ -646,7 +646,7 @@
    "close": 171.0,
    "rule_signal": "SELL",
    "rule_score": -2.5,
-   "turnover_cr": 304.3,
+   "turnover_cr": 304.4,
    "historical_winner_rate": 0.3263
   },
   {
@@ -682,7 +682,7 @@
    "close": 404.8,
    "rule_signal": "SELL",
    "rule_score": -2.5,
-   "turnover_cr": 276.3,
+   "turnover_cr": 276.4,
    "historical_winner_rate": 0.3263
   },
   {
@@ -742,7 +742,7 @@
    "close": 3330.2,
    "rule_signal": "BUY",
    "rule_score": 2.0,
-   "turnover_cr": 1879.0,
+   "turnover_cr": 1879.1,
    "historical_winner_rate": 0.3251
   },
   {
@@ -754,7 +754,7 @@
    "close": 1690.0,
    "rule_signal": "SELL",
    "rule_score": -2.0,
-   "turnover_cr": 864.1,
+   "turnover_cr": 864.2,
    "historical_winner_rate": 0.3251
   },
   {
@@ -1102,7 +1102,7 @@
    "close": 161.8,
    "rule_signal": "HOLD",
    "rule_score": -0.5,
-   "turnover_cr": 349.1,
+   "turnover_cr": 349.2,
    "historical_winner_rate": 0.3017
   },
   {
@@ -1210,7 +1210,7 @@
    "close": 941.0,
    "rule_signal": "SELL",
    "rule_score": -2.5,
-   "turnover_cr": 853.9,
+   "turnover_cr": 854.0,
    "historical_winner_rate": 0.2895
   },
   {
@@ -1366,7 +1366,7 @@
    "close": 1778.7,
    "rule_signal": "HOLD",
    "rule_score": -0.5,
-   "turnover_cr": 1140.8,
+   "turnover_cr": 1140.9,
    "historical_winner_rate": 0.2799
   },
   {
@@ -1426,7 +1426,7 @@
    "close": 11315.0,
    "rule_signal": "SELL",
    "rule_score": -2.5,
-   "turnover_cr": 496.4,
+   "turnover_cr": 496.5,
    "historical_winner_rate": 0.2799
   },
   {
@@ -1462,7 +1462,7 @@
    "close": 2125.0,
    "rule_signal": "HOLD",
    "rule_score": 0.0,
-   "turnover_cr": 814.6,
+   "turnover_cr": 814.7,
    "historical_winner_rate": 0.2799
   },
   {
@@ -1858,7 +1858,7 @@
    "close": 337.9,
    "rule_signal": "BUY",
    "rule_score": 2.0,
-   "turnover_cr": 296.9,
+   "turnover_cr": 297.0,
    "historical_winner_rate": 0.2651
   },
   {
@@ -1894,7 +1894,7 @@
    "close": 1158.9,
    "rule_signal": "SELL",
    "rule_score": -2.5,
-   "turnover_cr": 1593.5,
+   "turnover_cr": 1593.6,
    "historical_winner_rate": 0.2651
   },
   {
@@ -2026,7 +2026,7 @@
    "close": 166.91,
    "rule_signal": "SELL",
    "rule_score": -2.5,
-   "turnover_cr": 121.9,
+   "turnover_cr": 122.0,
    "historical_winner_rate": 0.2351
   },
   {
@@ -2134,7 +2134,7 @@
    "close": 1223.0,
    "rule_signal": "SELL",
    "rule_score": -2.0,
-   "turnover_cr": 343.8,
+   "turnover_cr": 343.9,
    "historical_winner_rate": 0.2351
   },
   {
@@ -2218,7 +2218,7 @@
    "close": 373.9,
    "rule_signal": "SELL",
    "rule_score": -2.5,
-   "turnover_cr": 404.5,
+   "turnover_cr": 404.6,
    "historical_winner_rate": 0.2351
   },
   {
@@ -2234,7 +2234,7 @@
    "historical_winner_rate": 0.2351
   }
  ],
- "generated": "2026-10-12 19:59 IST",
+ "generated": "2026-10-14 01:49 IST",
  "data_source": "Yahoo Finance daily prices (free, not exchange-licensed)",
  "warnings": []
 }
