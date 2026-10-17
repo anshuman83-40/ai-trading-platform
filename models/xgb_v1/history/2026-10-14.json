@@ -94,7 +94,7 @@
    "close": 12.67,
    "rule_signal": "SELL",
    "rule_score": -2.5,
-   "turnover_cr": 465.3,
+   "turnover_cr": 465.2,
    "historical_winner_rate": 0.3761
   },
   {
@@ -406,7 +406,7 @@
    "close": 6999.0,
    "rule_signal": "HOLD",
    "rule_score": 0.0,
-   "turnover_cr": 135.5,
+   "turnover_cr": 135.4,
    "historical_winner_rate": 0.3453
   },
   {
@@ -850,7 +850,7 @@
    "close": 1383.2,
    "rule_signal": "BUY",
    "rule_score": 2.0,
-   "turnover_cr": 209.5,
+   "turnover_cr": 209.4,
    "historical_winner_rate": 0.3251
   },
   {
@@ -1006,7 +1006,7 @@
    "close": 124.76,
    "rule_signal": "BUY",
    "rule_score": 2.5,
-   "turnover_cr": 179.4,
+   "turnover_cr": 179.3,
    "historical_winner_rate": 0.3017
   },
   {
@@ -1162,7 +1162,7 @@
    "close": 1748.7,
    "rule_signal": "SELL",
    "rule_score": -2.0,
-   "turnover_cr": 519.9,
+   "turnover_cr": 519.8,
    "historical_winner_rate": 0.2895
   },
   {
@@ -1414,7 +1414,7 @@
    "close": 1895.5,
    "rule_signal": "BUY",
    "rule_score": 2.0,
-   "turnover_cr": 277.8,
+   "turnover_cr": 277.0,
    "historical_winner_rate": 0.2799
   },
   {
@@ -1546,7 +1546,7 @@
    "close": 8335.0,
    "rule_signal": "BUY",
    "rule_score": 2.0,
-   "turnover_cr": 385.6,
+   "turnover_cr": 385.5,
    "historical_winner_rate": 0.2799
   },
   {
@@ -1966,7 +1966,7 @@
    "close": 382.35,
    "rule_signal": "SELL",
    "rule_score": -2.5,
-   "turnover_cr": 390.6,
+   "turnover_cr": 390.5,
    "historical_winner_rate": 0.2651
   },
   {
@@ -2218,7 +2218,7 @@
    "close": 289.65,
    "rule_signal": "SELL",
    "rule_score": -2.5,
-   "turnover_cr": 145.2,
+   "turnover_cr": 145.1,
    "historical_winner_rate": 0.2351
   },
   {
@@ -2234,7 +2234,7 @@
    "historical_winner_rate": 0.2351
   }
  ],
- "generated": "2026-10-16 00:01 IST",
+ "generated": "2026-10-14 21:23 IST",
  "data_source": "Yahoo Finance daily prices (free, not exchange-licensed)",
  "warnings": []
 }

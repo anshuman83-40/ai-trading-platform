@@ -107,6 +107,22 @@ def check(pred, as_of, today):
     return problems
 
 
+def already_published(pred, path):
+    """A ranking that has been published is never changed or replaced by an older day. Late re-runs (GitHub can
+    start the evening job hours late) saw slightly revised prices and quietly changed earlier rankings, and once
+    published 9 Oct after 12 Oct. Returns a reason to stop, or None."""
+    try:
+        with open(path, encoding="utf-8") as f:
+            old = json.load(f)
+    except (OSError, ValueError):
+        return None
+    if old.get("as_of", "") > pred["as_of"]:
+        return f"a newer ranking ({old['as_of']}) is already published; not going back to {pred['as_of']}"
+    if old.get("as_of") == pred["as_of"]:
+        return f"the ranking for {pred['as_of']} is already published and is kept unchanged"
+    return None
+
+
 def worse_than_published(pred, path):
     """A ranking already published for the same day must not be replaced by one made from fewer stocks."""
     try:
@@ -151,6 +167,10 @@ def main(argv=None):
     pred = make_predictions(prices, market, booster, meta, schema, as_of, groups, universe)
     pred["generated"] = now.strftime("%Y-%m-%d %H:%M IST")
     pred["data_source"] = "Yahoo Finance daily prices (free, not exchange-licensed)"
+    done = already_published(pred, os.path.join(args.model, "predictions.json"))
+    if done and not args.allow_stale:
+        print("Nothing to do: " + done)
+        return None
     problems = check(pred, as_of, now.date())
     problems += worse_than_published(pred, os.path.join(args.model, "predictions.json"))
     if problems and not args.allow_stale:
@@ -159,7 +179,10 @@ def main(argv=None):
 
     hist = os.path.join(args.model, "history")
     os.makedirs(hist, exist_ok=True)
-    for path in (os.path.join(args.model, "predictions.json"), os.path.join(hist, pred["as_of"] + ".json")):
+    day_file = os.path.join(hist, pred["as_of"] + ".json")
+    if os.path.exists(day_file) and not args.allow_stale:
+        sys.exit(f"{day_file} already exists — a published day is never rewritten.")
+    for path in (os.path.join(args.model, "predictions.json"), day_file):
         with open(path, "w", encoding="utf-8") as f:
             json.dump(pred, f, indent=1)
     print(f"Predictions for {pred['as_of']}: {pred['eligible']} stocks scored, "

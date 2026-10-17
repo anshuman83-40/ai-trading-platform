@@ -43,13 +43,13 @@ jobs:
       - name: Update the paper trading (virtual money)
         run: python training/paper_trade.py
 
-      - name: Publish only if there is a new trading day
+      - name: Publish only if there is a newer trading day
         run: |
           new=$(python -c "import json; print(json.load(open('models/xgb_v1/predictions.json'))['as_of'])")
           old=$(git show HEAD:models/xgb_v1/predictions.json | python -c "import json, sys; print(json.load(sys.stdin)['as_of'])" || echo none)
           echo "published: $old   new: $new"
-          if [ "$new" = "$old" ]; then
-            echo "No new trading day - nothing to publish."
+          if [ "$old" != "none" ] && [ ! "$new" \> "$old" ]; then
+            echo "No newer trading day - nothing to publish."
             exit 0
           fi
           git config user.name "github-actions[bot]"

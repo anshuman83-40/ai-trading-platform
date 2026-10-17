@@ -133,3 +133,12 @@ def test_a_published_ranking_is_not_replaced_by_one_with_fewer_stocks(tmp_path):
     assert pr.worse_than_published({"as_of": "2026-10-12", "eligible": 185}, str(path)) == []
     assert pr.worse_than_published({"as_of": "2026-10-13", "eligible": 150}, str(path)) == []     # a new day is fine
     assert pr.worse_than_published({"as_of": "2026-10-12", "eligible": 1}, str(tmp_path / "none.json")) == []
+
+
+def test_published_rankings_are_never_changed_or_replaced_by_an_older_day(tmp_path):
+    path = tmp_path / "predictions.json"
+    path.write_text('{"as_of": "2026-10-12", "eligible": 185}')
+    assert "already published" in pr.already_published({"as_of": "2026-10-12"}, str(path))
+    assert "newer ranking" in pr.already_published({"as_of": "2026-10-09"}, str(path))
+    assert pr.already_published({"as_of": "2026-10-13"}, str(path)) is None
+    assert pr.already_published({"as_of": "2026-10-13"}, str(tmp_path / "none.json")) is None

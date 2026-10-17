@@ -136,3 +136,27 @@ def test_load_history_reads_published_files_and_skips_broken_ones(tmp_path):
     assert h["date"].nunique() == 1 and h["symbol"].tolist() == ["AAA", "BBB"]
     assert h["tie"].tolist() == [120.5, 0.0] and h["rule_score"].tolist() == [1.5, 0.0]
     assert pt.load_history(str(tmp_path / "nothing")).empty
+
+
+def test_ranking_made_after_the_next_market_open_is_not_used():
+    cal = pd.to_datetime(["2026-10-12", "2026-10-13", "2026-10-14"])
+    d = pd.Timestamp("2026-10-12")
+    assert pt.on_time(pt.made_at("2026-10-12 17:05 IST"), d, cal)
+    assert pt.on_time(pt.made_at("2026-10-13 09:10 IST"), d, cal)          # just before the 9:15 open
+    assert not pt.on_time(pt.made_at("2026-10-13 09:20 IST"), d, cal)
+    assert not pt.on_time(pt.made_at("2026-10-14 01:49 IST"), d, cal)      # the late re-run seen on 14 Oct
+    assert pt.on_time(None, d, cal) and pt.on_time(pt.made_at("2026-10-15 10:00 IST"), pd.Timestamp("2026-10-14"), cal)
+    assert pt.made_at("nonsense") is None
+
+
+def test_late_rankings_are_left_out_and_reported(world):
+    prices, market, hist, industry, days = world
+    h = hist.copy()
+    h["made"] = h["date"] + pd.Timedelta(hours=17)                         # normally made at 5 pm on the day
+    late_day = days[3]
+    h.loc[h["date"] == late_day, "made"] = late_day + pd.Timedelta(days=2)  # this one only two days later
+    doc = pt.build(h, prices, market, industry, days[10])
+    assert doc["health"]["late_rankings_not_used"] == [str(late_day.date())]
+    assert str(late_day.date()) in doc["health"]["missing_prediction_days"]
+    ok = pt.build(h[h["date"] != late_day], prices, market, industry, days[10])
+    assert [p["equity"] for p in doc["players"]] == [p["equity"] for p in ok["players"]]   # exactly as if it never existed

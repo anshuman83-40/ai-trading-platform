@@ -78,21 +78,40 @@ def random_score(day, symbol):
     return int(h[:12], 16) / float(16 ** 12)
 
 
+def made_at(text):
+    """'2026-10-12 16:13 IST' -> Timestamp in IST (no time zone attached), or None."""
+    try:
+        return pd.Timestamp(datetime.strptime(str(text).replace(" IST", ""), "%Y-%m-%d %H:%M"))
+    except (TypeError, ValueError):
+        return None
+
+
+def on_time(made, day, calendar, open_time=(9, 15)):
+    """True if a ranking for `day`, made at `made` (IST), existed before the market opened on the next
+    trading day — the moment its orders would be placed. Unknown time or no next day yet: accepted."""
+    if made is None:
+        return True
+    later = [d for d in calendar if d > day]
+    if not later:
+        return True
+    return made < later[0] + pd.Timedelta(hours=open_time[0], minutes=open_time[1])
+
+
 def load_history(folder):
-    """Published prediction files -> one table [date, symbol, score, rule_score, tie, random]."""
+    """Published prediction files -> one table [date, symbol, score, rule_score, tie, random, made]."""
     rows, files = [], sorted(glob.glob(os.path.join(folder, "*.json")))
     for path in files:
         try:
             with open(path, encoding="utf-8") as f:
                 doc = json.load(f)
-            day = doc["as_of"]
+            day, made = doc["as_of"], made_at(doc.get("generated"))
             for s in doc["stocks"]:
                 rows.append({"date": pd.Timestamp(day), "symbol": s["symbol"], "score": float(s["score"]),
                              "rule_score": float(s.get("rule_score", 0.0)), "tie": float(s.get("turnover_cr", 0.0)),
-                             "random": random_score(day, s["symbol"])})
+                             "random": random_score(day, s["symbol"]), "made": made})
         except (OSError, ValueError, KeyError, TypeError):
             continue                                            # an unreadable file counts as a missing day
-    cols = ["date", "symbol", "score", "rule_score", "tie", "random"]
+    cols = ["date", "symbol", "score", "rule_score", "tie", "random", "made"]
     return pd.DataFrame(rows, columns=cols)
 
 
@@ -182,14 +201,21 @@ def monitor(hist, prices, calendar, horizon=cfg.HORIZON, top_fraction=cfg.TOP_FR
 def build(hist, prices, market, industry, as_of, expected=None, generated=None):
     """Pure function (no internet): published scores + prices -> the whole paper-trading document."""
     as_of = pd.Timestamp(as_of)
+    cal = pd.DatetimeIndex(sorted(market.loc[market["symbol"] == "NIFTY50", "date"].unique()))
+    # a ranking published after the next market open could not have been traded on: it is not used
+    late = []
+    if "made" in hist.columns:
+        ok = {d: on_time(g["made"].iloc[0] if g["made"].notna().any() else None, d, cal) for d, g in hist.groupby("date")}
+        late = sorted(str(d.date()) for d, v in ok.items() if not v)
+        hist = hist[hist["date"].map(ok)]
     start = hist["date"].min()
     prices = prices[prices["date"] <= as_of]
     market = market[market["date"] <= as_of]
     hist = hist[hist["date"] <= as_of]
-    cal = pd.DatetimeIndex(sorted(market.loc[market["symbol"] == "NIFTY50", "date"].unique()))
     market_days = cal[(cal >= start) & (cal <= as_of)]
     have = set(hist["date"].unique())
     missing = [str(d.date()) for d in market_days if d not in have]
+    hist = hist.drop(columns=["made"], errors="ignore")
     players = [run_player(p, hist, prices, industry, start, as_of) for p in PLAYERS]
     mon = monitor(hist, prices, cal)
     mon["expected_from_tests"] = expected
@@ -201,6 +227,7 @@ def build(hist, prices, market, industry, as_of, expected=None, generated=None):
         "players": players, "benchmarks": benchmarks(prices, market, start, as_of),
         "monitoring": mon,
         "health": {"prediction_days": int(len(have)), "missing_prediction_days": missing,
+                   "late_rankings_not_used": late,
                    "stocks_with_prices": int(prices.loc[prices["date"] == as_of, "symbol"].nunique()),
                    "note": "On a day without a published ranking no new orders are made; open positions and stop-losses still apply."},
     }

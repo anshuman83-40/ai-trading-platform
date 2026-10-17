@@ -302,6 +302,12 @@ from the high, sell everything and pause 5 days after losing 6% in one day.
   already published for a day is never replaced by one made from fewer stocks. (Found on 12 Oct 2026: one
   download returned 162 of 187 companies and silently changed the top 10.)
 - *Old files:* the website marks results older than 5 days as out of date.
+- *Late or repeated runs:* GitHub sometimes starts the evening job hours late (seen 13–16 Oct 2026, up to 3:42 am).
+  A published day is now permanent: a later run never rewrites it and never publishes an older day.
+  Paper trading only uses a ranking made before the next market open (9:15 am IST); later ones are listed as
+  "late" and treated as missing. On 17 Oct 2026 the first on-time version of the 12, 13 and 14 Oct rankings was
+  restored from git (late re-runs had replaced them with slightly different scores), and a 9 Oct ranking that was
+  only made on 13 Oct at 3:42 am was removed. Paper trading starts on 12 Oct 2026 as declared.
 
 In the app: Markets → AI Research → "Paper Trading". API: `GET /api/ml/paper`.
 
