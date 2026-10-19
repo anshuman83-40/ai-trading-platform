@@ -14,7 +14,7 @@ An intraday trading dashboard for Indian stocks (NSE/BSE) with real market price
 - **IPO center**: ongoing, upcoming, closed and listed IPOs (mainboard and SME) with live GMP, subscription, price, lot size, open / close / allotment / refund / listing dates, and a one-click link to each IPO's registrar to check allotment status
 - **Smart Portfolio Builder (for beginners)**: enter an amount and a risk level; the app analyses 1 year of prices for NIFTY 200 stocks (returns, volatility, biggest fall, trend, RSI), picks a diversified basket (limited per sector), splits the money by inverse volatility (max 30% per stock), converts it to whole shares and explains every choice in plain language
 - **News sentiment**: latest headlines scored with VADER (bullish / bearish / neutral)
-- Watchlist, portfolio P&L tracker and price alerts
+- Watchlist, portfolio P&L tracker and price alerts.
 
 ## Tech stack
 - **Frontend:** HTML, CSS, JavaScript, Chart.js
