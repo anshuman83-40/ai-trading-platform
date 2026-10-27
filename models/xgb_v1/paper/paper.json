@@ -1,8 +1,8 @@
 {
  "started": "2026-10-12",
- "as_of": "2026-10-26",
- "generated": "2026-10-26 23:01 IST",
- "market_days": 10,
+ "as_of": "2026-10-27",
+ "generated": "2026-10-27 22:17 IST",
+ "market_days": 11,
  "rules": [
   "Virtual money only. No real order is placed and nothing here can reach a broker.",
   "Scores are the ones published each evening; a decision after the close of day D is traded at the open of day D+1.",
@@ -20,11 +20,11 @@
    "about": "Best 10 stocks by AI score, changed every 5 trading days. This is the strategy that was backtested.",
    "changes_every_days": 5,
    "start_capital": 100000.0,
-   "value": 94101.14,
-   "return_pct": -5.9,
+   "value": 93428.06,
+   "return_pct": -6.57,
    "cash": 40058.36,
-   "invested_pct": 57.4,
-   "max_drawdown_pct": -6.67,
+   "invested_pct": 57.1,
+   "max_drawdown_pct": -6.94,
    "closed_trades": 7,
    "winning_trades": 2,
    "realised_profit": -2113.12,
@@ -36,65 +36,77 @@
      "shares": 22,
      "buy_date": "2026-10-21",
      "buy_price": 441.72,
-     "last_price": 407.55,
-     "value": 8966.1,
-     "pnl": -774.76,
-     "return_pct": -7.95
+     "last_price": 407.35,
+     "value": 8961.7,
+     "pnl": -779.16,
+     "return_pct": -8.0
     },
     {
      "symbol": "KALYANKJIL",
      "shares": 17,
      "buy_date": "2026-10-21",
      "buy_price": 555.28,
-     "last_price": 504.8,
-     "value": 8581.6,
-     "pnl": -880.47,
-     "return_pct": -9.31
+     "last_price": 500.0,
+     "value": 8500.0,
+     "pnl": -962.07,
+     "return_pct": -10.17
     },
     {
      "symbol": "M&MFIN",
      "shares": 32,
      "buy_date": "2026-10-21",
      "buy_price": 306.65,
-     "last_price": 279.25,
-     "value": 8936.0,
-     "pnl": -900.14,
-     "return_pct": -9.15
+     "last_price": 260.85,
+     "value": 8347.2,
+     "pnl": -1488.93,
+     "return_pct": -15.14
     },
     {
      "symbol": "MAXHEALTH",
      "shares": 11,
      "buy_date": "2026-10-13",
      "buy_price": 860.43,
-     "last_price": 835.0,
-     "value": 9185.0,
-     "pnl": -302.14,
-     "return_pct": -3.18
+     "last_price": 845.0,
+     "value": 9295.0,
+     "pnl": -192.14,
+     "return_pct": -2.03
     },
     {
      "symbol": "POLICYBZR",
      "shares": 9,
      "buy_date": "2026-10-13",
      "buy_price": 1050.52,
-     "last_price": 1023.0,
-     "value": 9207.0,
-     "pnl": -270.11,
-     "return_pct": -2.85
+     "last_price": 1008.4,
+     "value": 9075.6,
+     "pnl": -401.51,
+     "return_pct": -4.24
     },
     {
      "symbol": "YESBANK",
      "shares": 578,
      "buy_date": "2026-10-21",
      "buy_price": 16.96,
-     "last_price": 15.86,
-     "value": 9167.08,
-     "pnl": -658.12,
-     "return_pct": -6.7
+     "last_price": 15.9,
+     "value": 9190.2,
+     "pnl": -635.0,
+     "return_pct": -6.46
     }
    ],
    "orders_for_next_open": {
-    "buy": [],
-    "sell": {}
+    "buy": [
+     "MAZDOCK",
+     "M&MFIN",
+     "APARINDS",
+     "COCHINSHIP",
+     "TIINDIA",
+     "NATIONALUM",
+     "PIIND"
+    ],
+    "sell": {
+     "M&MFIN": "stop_loss",
+     "MAXHEALTH": "rebalance",
+     "HINDCOPPER": "rebalance"
+    }
    },
    "risk_events": [],
    "paused": null,
@@ -224,6 +236,10 @@
     [
      "2026-10-26",
      94101.14
+    ],
+    [
+     "2026-10-27",
+     93428.06
     ]
    ]
   },
@@ -233,7 +249,7 @@
    "about": "Best 10 stocks by AI score, changed every 20 trading days: far fewer trades and charges.",
    "changes_every_days": 20,
    "start_capital": 100000.0,
-   "value": 95721.5,
+   "value": 95716.9,
    "return_pct": -4.28,
    "cash": 39245.6,
    "invested_pct": 59.0,
@@ -249,60 +265,60 @@
      "shares": 30,
      "buy_date": "2026-10-13",
      "buy_price": 329.56,
-     "last_price": 344.4,
-     "value": 10332.0,
-     "pnl": 421.65,
-     "return_pct": 4.25
+     "last_price": 341.6,
+     "value": 10248.0,
+     "pnl": 337.65,
+     "return_pct": 3.41
     },
     {
      "symbol": "JUBLFOOD",
      "shares": 23,
      "buy_date": "2026-10-13",
      "buy_price": 420.46,
-     "last_price": 422.9,
-     "value": 9726.7,
-     "pnl": 33.22,
-     "return_pct": 0.34
+     "last_price": 429.5,
+     "value": 9878.5,
+     "pnl": 185.02,
+     "return_pct": 1.91
     },
     {
      "symbol": "MAXHEALTH",
      "shares": 11,
      "buy_date": "2026-10-13",
      "buy_price": 860.43,
-     "last_price": 835.0,
-     "value": 9185.0,
-     "pnl": -302.14,
-     "return_pct": -3.18
+     "last_price": 845.0,
+     "value": 9295.0,
+     "pnl": -192.14,
+     "return_pct": -2.03
     },
     {
      "symbol": "NATIONALUM",
      "shares": 31,
      "buy_date": "2026-10-13",
      "buy_price": 314.16,
-     "last_price": 312.4,
-     "value": 9684.4,
-     "pnl": -77.52,
-     "return_pct": -0.79
+     "last_price": 308.2,
+     "value": 9554.2,
+     "pnl": -207.72,
+     "return_pct": -2.13
     },
     {
      "symbol": "POLICYBZR",
      "shares": 9,
      "buy_date": "2026-10-13",
      "buy_price": 1050.52,
-     "last_price": 1023.0,
-     "value": 9207.0,
-     "pnl": -270.11,
-     "return_pct": -2.85
+     "last_price": 1008.4,
+     "value": 9075.6,
+     "pnl": -401.51,
+     "return_pct": -4.24
     },
     {
      "symbol": "TIINDIA",
      "shares": 4,
      "buy_date": "2026-10-13",
      "buy_price": 2221.11,
-     "last_price": 2085.2,
-     "value": 8340.8,
-     "pnl": -564.67,
-     "return_pct": -6.34
+     "last_price": 2105.0,
+     "value": 8420.0,
+     "pnl": -485.47,
+     "return_pct": -5.45
     }
    ],
    "orders_for_next_open": {
@@ -389,6 +405,10 @@
     [
      "2026-10-26",
      95721.5
+    ],
+    [
+     "2026-10-27",
+     95716.9
     ]
    ]
   },
@@ -398,11 +418,11 @@
    "about": "The weekly AI strategy with Rs 25,000, to show what fixed charges do to small amounts.",
    "changes_every_days": 5,
    "start_capital": 25000.0,
-   "value": 23578.92,
-   "return_pct": -5.68,
+   "value": 23408.12,
+   "return_pct": -6.37,
    "cash": 11272.27,
-   "invested_pct": 52.2,
-   "max_drawdown_pct": -6.17,
+   "invested_pct": 51.8,
+   "max_drawdown_pct": -6.62,
    "closed_trades": 6,
    "winning_trades": 1,
    "realised_profit": -512.86,
@@ -414,65 +434,77 @@
      "shares": 5,
      "buy_date": "2026-10-21",
      "buy_price": 441.72,
-     "last_price": 407.55,
-     "value": 2037.75,
-     "pnl": -179.38,
-     "return_pct": -8.09
+     "last_price": 407.35,
+     "value": 2036.75,
+     "pnl": -180.38,
+     "return_pct": -8.14
     },
     {
      "symbol": "KALYANKJIL",
      "shares": 4,
      "buy_date": "2026-10-21",
      "buy_price": 555.28,
-     "last_price": 504.8,
-     "value": 2019.2,
-     "pnl": -210.45,
-     "return_pct": -9.44
+     "last_price": 500.0,
+     "value": 2000.0,
+     "pnl": -229.65,
+     "return_pct": -10.3
     },
     {
      "symbol": "M&MFIN",
      "shares": 8,
      "buy_date": "2026-10-21",
      "buy_price": 306.65,
-     "last_price": 279.25,
-     "value": 2234.0,
-     "pnl": -228.04,
-     "return_pct": -9.26
+     "last_price": 260.85,
+     "value": 2086.8,
+     "pnl": -375.24,
+     "return_pct": -15.24
     },
     {
      "symbol": "MAXHEALTH",
      "shares": 2,
      "buy_date": "2026-10-13",
      "buy_price": 860.43,
-     "last_price": 835.0,
-     "value": 1670.0,
-     "pnl": -58.8,
-     "return_pct": -3.4
+     "last_price": 845.0,
+     "value": 1690.0,
+     "pnl": -38.8,
+     "return_pct": -2.24
     },
     {
      "symbol": "POLICYBZR",
      "shares": 2,
      "buy_date": "2026-10-13",
      "buy_price": 1050.52,
-     "last_price": 1023.0,
-     "value": 2046.0,
-     "pnl": -63.44,
-     "return_pct": -3.01
+     "last_price": 1008.4,
+     "value": 2016.8,
+     "pnl": -92.64,
+     "return_pct": -4.39
     },
     {
      "symbol": "YESBANK",
      "shares": 145,
      "buy_date": "2026-10-21",
      "buy_price": 16.96,
-     "last_price": 15.86,
-     "value": 2299.7,
-     "pnl": -168.1,
-     "return_pct": -6.81
+     "last_price": 15.9,
+     "value": 2305.5,
+     "pnl": -162.3,
+     "return_pct": -6.58
     }
    ],
    "orders_for_next_open": {
-    "buy": [],
-    "sell": {}
+    "buy": [
+     "MAZDOCK",
+     "M&MFIN",
+     "APARINDS",
+     "COCHINSHIP",
+     "TIINDIA",
+     "NATIONALUM",
+     "PIIND"
+    ],
+    "sell": {
+     "M&MFIN": "stop_loss",
+     "MAXHEALTH": "rebalance",
+     "HINDCOPPER": "rebalance"
+    }
    },
    "risk_events": [],
    "paused": null,
@@ -590,6 +622,10 @@
     [
      "2026-10-26",
      23578.92
+    ],
+    [
+     "2026-10-27",
+     23408.12
     ]
    ]
   },
@@ -599,8 +635,8 @@
    "about": "Best 10 stocks by the website's RSI / MACD / EMA rule score, changed every 5 trading days.",
    "changes_every_days": 5,
    "start_capital": 100000.0,
-   "value": 100224.14,
-   "return_pct": 0.22,
+   "value": 100932.09,
+   "return_pct": 0.93,
    "cash": 1812.84,
    "invested_pct": 98.2,
    "max_drawdown_pct": -2.55,
@@ -615,105 +651,119 @@
      "shares": 5,
      "buy_date": "2026-10-21",
      "buy_price": 1888.14,
-     "last_price": 1917.5,
-     "value": 9587.5,
-     "pnl": 124.43,
-     "return_pct": 1.31
+     "last_price": 1978.8,
+     "value": 9894.0,
+     "pnl": 430.93,
+     "return_pct": 4.55
     },
     {
      "symbol": "COFORGE",
      "shares": 5,
      "buy_date": "2026-10-21",
      "buy_price": 1938.57,
-     "last_price": 1993.0,
-     "value": 9965.0,
-     "pnl": 249.21,
-     "return_pct": 2.56
+     "last_price": 1997.0,
+     "value": 9985.0,
+     "pnl": 269.21,
+     "return_pct": 2.77
     },
     {
      "symbol": "DRREDDY",
      "shares": 8,
      "buy_date": "2026-10-13",
      "buy_price": 1231.52,
-     "last_price": 1310.9,
-     "value": 10487.2,
-     "pnl": 611.75,
-     "return_pct": 6.19
+     "last_price": 1310.0,
+     "value": 10480.0,
+     "pnl": 604.55,
+     "return_pct": 6.12
     },
     {
      "symbol": "FEDERALBNK",
      "shares": 28,
      "buy_date": "2026-10-21",
      "buy_price": 347.17,
-     "last_price": 344.4,
-     "value": 9643.2,
-     "pnl": -100.67,
-     "return_pct": -1.03
+     "last_price": 341.6,
+     "value": 9564.8,
+     "pnl": -179.07,
+     "return_pct": -1.84
     },
     {
      "symbol": "HAL",
      "shares": 2,
      "buy_date": "2026-10-21",
      "buy_price": 4951.27,
-     "last_price": 4775.0,
-     "value": 9550.0,
-     "pnl": -375.99,
-     "return_pct": -3.79
+     "last_price": 4855.0,
+     "value": 9710.0,
+     "pnl": -215.99,
+     "return_pct": -2.18
     },
     {
      "symbol": "INDHOTEL",
      "shares": 13,
      "buy_date": "2026-10-21",
      "buy_price": 760.68,
-     "last_price": 795.5,
-     "value": 10341.5,
-     "pnl": 429.25,
-     "return_pct": 4.33
+     "last_price": 812.85,
+     "value": 10567.05,
+     "pnl": 654.8,
+     "return_pct": 6.61
     },
     {
      "symbol": "INFY",
      "shares": 8,
      "buy_date": "2026-10-21",
      "buy_price": 1155.43,
-     "last_price": 1166.0,
-     "value": 9328.0,
-     "pnl": 62.7,
-     "return_pct": 0.68
+     "last_price": 1163.0,
+     "value": 9304.0,
+     "pnl": 38.7,
+     "return_pct": 0.42
     },
     {
      "symbol": "KOTAKBANK",
      "shares": 22,
      "buy_date": "2026-10-13",
      "buy_price": 443.32,
-     "last_price": 440.75,
-     "value": 9696.5,
-     "pnl": -79.66,
-     "return_pct": -0.81
+     "last_price": 442.5,
+     "value": 9735.0,
+     "pnl": -41.16,
+     "return_pct": -0.42
     },
     {
      "symbol": "UNIONBANK",
      "shares": 54,
      "buy_date": "2026-10-21",
      "buy_price": 182.09,
-     "last_price": 181.2,
-     "value": 9784.8,
-     "pnl": -71.39,
-     "return_pct": -0.72
+     "last_price": 184.6,
+     "value": 9968.4,
+     "pnl": 112.21,
+     "return_pct": 1.14
     },
     {
      "symbol": "WIPRO",
      "shares": 53,
      "buy_date": "2026-10-21",
      "buy_price": 184.08,
-     "last_price": 189.2,
-     "value": 10027.6,
-     "pnl": 248.16,
-     "return_pct": 2.54
+     "last_price": 187.0,
+     "value": 9911.0,
+     "pnl": 131.56,
+     "return_pct": 1.35
     }
    ],
    "orders_for_next_open": {
-    "buy": [],
-    "sell": {}
+    "buy": [
+     "BSE",
+     "TCS",
+     "ETERNAL",
+     "ULTRACEMCO",
+     "PNB",
+     "MANKIND"
+    ],
+    "sell": {
+     "KOTAKBANK": "rebalance",
+     "DRREDDY": "rebalance",
+     "COFORGE": "rebalance",
+     "HAL": "rebalance",
+     "INDHOTEL": "rebalance",
+     "FEDERALBNK": "rebalance"
+    }
    },
    "risk_events": [],
    "paused": null,
@@ -843,6 +893,10 @@
     [
      "2026-10-26",
      100224.14
+    ],
+    [
+     "2026-10-27",
+     100932.09
     ]
    ]
   },
@@ -852,10 +906,10 @@
    "about": "10 random eligible stocks, changed every 5 trading days: what luck gives with the same charges.",
    "changes_every_days": 5,
    "start_capital": 100000.0,
-   "value": 95316.79,
-   "return_pct": -4.68,
+   "value": 94431.39,
+   "return_pct": -5.57,
    "cash": 25603.07,
-   "invested_pct": 73.1,
+   "invested_pct": 72.9,
    "max_drawdown_pct": -6.68,
    "closed_trades": 11,
    "winning_trades": 2,
@@ -868,85 +922,105 @@
      "shares": 24,
      "buy_date": "2026-10-21",
      "buy_price": 411.91,
-     "last_price": 405.0,
-     "value": 9720.0,
-     "pnl": -189.14,
-     "return_pct": -1.91
+     "last_price": 398.0,
+     "value": 9552.0,
+     "pnl": -357.14,
+     "return_pct": -3.6
     },
     {
      "symbol": "GAIL",
      "shares": 59,
      "buy_date": "2026-10-21",
      "buy_price": 167.4,
-     "last_price": 168.28,
-     "value": 9928.52,
-     "pnl": 28.32,
-     "return_pct": 0.29
+     "last_price": 165.68,
+     "value": 9775.12,
+     "pnl": -125.08,
+     "return_pct": -1.26
     },
     {
      "symbol": "ICICIGI",
      "shares": 5,
      "buy_date": "2026-10-21",
      "buy_price": 1655.83,
-     "last_price": 1580.0,
-     "value": 7900.0,
-     "pnl": -363.74,
-     "return_pct": -4.38
+     "last_price": 1576.2,
+     "value": 7881.0,
+     "pnl": -382.74,
+     "return_pct": -4.61
     },
     {
      "symbol": "INDUSINDBK",
      "shares": 11,
      "buy_date": "2026-10-21",
      "buy_price": 865.63,
-     "last_price": 844.5,
-     "value": 9289.5,
-     "pnl": -255.0,
-     "return_pct": -2.67
+     "last_price": 833.3,
+     "value": 9166.3,
+     "pnl": -378.2,
+     "return_pct": -3.96
     },
     {
      "symbol": "MAZDOCK",
      "shares": 4,
      "buy_date": "2026-10-21",
      "buy_price": 2053.03,
-     "last_price": 1875.0,
-     "value": 7500.0,
-     "pnl": -731.55,
-     "return_pct": -8.89
+     "last_price": 1754.0,
+     "value": 7016.0,
+     "pnl": -1215.55,
+     "return_pct": -14.77
     },
     {
      "symbol": "PFC",
      "shares": 29,
      "buy_date": "2026-10-21",
      "buy_price": 331.77,
-     "last_price": 318.3,
-     "value": 9230.7,
-     "pnl": -413.29,
-     "return_pct": -4.29
+     "last_price": 315.6,
+     "value": 9152.4,
+     "pnl": -491.59,
+     "return_pct": -5.1
     },
     {
      "symbol": "POLYCAB",
      "shares": 1,
      "buy_date": "2026-10-21",
      "buy_price": 8099.05,
-     "last_price": 7739.0,
-     "value": 7739.0,
-     "pnl": -379.22,
-     "return_pct": -4.67
+     "last_price": 7718.0,
+     "value": 7718.0,
+     "pnl": -400.22,
+     "return_pct": -4.93
     },
     {
      "symbol": "TATACOMM",
      "shares": 5,
      "buy_date": "2026-10-21",
      "buy_price": 1718.86,
-     "last_price": 1681.2,
-     "value": 8406.0,
-     "pnl": -208.64,
-     "return_pct": -2.42
+     "last_price": 1713.5,
+     "value": 8567.5,
+     "pnl": -47.14,
+     "return_pct": -0.55
     }
    ],
    "orders_for_next_open": {
-    "buy": [],
-    "sell": {}
+    "buy": [
+     "RVNL",
+     "BDL",
+     "BIOCON",
+     "GODREJPROP",
+     "DLF",
+     "IRCTC",
+     "NHPC",
+     "ONGC",
+     "ASTRAL",
+     "AUBANK"
+    ],
+    "sell": {
+     "MAZDOCK": "stop_loss",
+     "TATACOMM": "rebalance",
+     "POLYCAB": "rebalance",
+     "INDUSINDBK": "rebalance",
+     "GAIL": "rebalance",
+     "ICICIGI": "rebalance",
+     "PFC": "rebalance",
+     "COALINDIA": "rebalance"
+    }
    },
    "risk_events": [],
    "paused": null,
@@ -1124,6 +1198,10 @@
     [
      "2026-10-26",
      95316.79
+    ],
+    [
+     "2026-10-27",
+     94431.39
     ]
    ]
   }
@@ -1132,7 +1210,7 @@
   {
    "id": "nifty",
    "name": "NIFTY 50 (no trading, no costs)",
-   "return_pct": 1.74,
+   "return_pct": 1.73,
    "max_drawdown_pct": -2.36,
    "equity": [
     [
@@ -1174,13 +1252,17 @@
     [
      "2026-10-26",
      101743.25
+    ],
+    [
+     "2026-10-27",
+     101727.83
     ]
    ]
   },
   {
    "id": "average",
    "name": "Average of all covered stocks (no trading, no costs)",
-   "return_pct": -2.69,
+   "return_pct": -1.91,
    "max_drawdown_pct": -4.76,
    "equity": [
     [
@@ -1222,16 +1304,20 @@
     [
      "2026-10-26",
      97314.22
+    ],
+    [
+     "2026-10-27",
+     98094.26
     ]
    ]
   }
  ],
  "monitoring": {
-  "days_judged": 4,
+  "days_judged": 5,
   "average": {
-   "winner_rate_top10pct": 0.1111,
-   "excess_5d": -0.028,
-   "rank_ic": -0.2733
+   "winner_rate_top10pct": 0.1,
+   "excess_5d": -0.027,
+   "rank_ic": -0.2504
   },
   "days": [
    {
@@ -1261,6 +1347,13 @@
     "winner_rate_top10pct": 0.0,
     "excess_5d": -0.02792,
     "rank_ic": -0.3552
+   },
+   {
+    "date": "2026-10-16",
+    "stocks": 185,
+    "winner_rate_top10pct": 0.0556,
+    "excess_5d": -0.02304,
+    "rank_ic": -0.159
    }
   ],
   "expected_from_tests": {
@@ -1271,7 +1364,7 @@
   "note": "Each published day is judged once its 5 trading days are over. A few days prove nothing: weeks of results are needed before the averages mean anything."
  },
  "health": {
-  "prediction_days": 10,
+  "prediction_days": 11,
   "missing_prediction_days": [],
   "late_rankings_not_used": [],
   "stocks_with_prices": 187,
