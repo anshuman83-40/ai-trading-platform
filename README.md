@@ -57,3 +57,7 @@ The footer shows **REAL NSE · YAHOO FINANCE** when the website is connected to 
 - Orders are **simulated** unless a Groww API token is set in `server.py`. The order book (market depth) is simulated.
 
 > ⚠️ For educational purposes only. Not financial advice.
+
+## License
+
+[MIT](LICENSE)
